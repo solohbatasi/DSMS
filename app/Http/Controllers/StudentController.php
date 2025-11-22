@@ -244,39 +244,40 @@ class StudentController extends Controller
 
         return response()->json(['success' => true]);
     }
-  public function search(Request $request)
-{
-    $query = $request->get('q');
+    public function search(Request $request)
+    {
+        $query = $request->get('q');
 
-    $students = Student_ef_list::with(['student', 'course', 'payments'])
-        ->whereHas('student', function($q) use ($query) {
-            $q->where('name', 'like', "%$query%")
-              ->orWhere('id_no', 'like', "%$query%")
-              ->orWhere('contact', 'like', "%$query%")
-              ->orWhere('email', 'like', "%$query%");
-        })
-        ->limit(20)
-        ->get()
-        ->map(function($ef) {
-            $totalPaid = $ef->payments->sum('amount');
-            $balance = $ef->total_fee - $totalPaid;
+        $students = Student_ef_list::with(['student', 'course', 'payments'])
+            ->whereHas('student', function($q) use ($query) {
+                $q->where('name', 'like', "%$query%")
+                ->orWhere('id_no', 'like', "%$query%")
+                ->orWhere('contact', 'like', "%$query%")
+                ->orWhere('email', 'like', "%$query%");
+            })
+            ->limit(20)
+            ->get()
+            ->map(function($ef) {
+                $totalPaid = $ef->payments->sum('amount');
+                $balance = $ef->total_fee - $totalPaid;
 
-            return [
-                'id' => $ef->id,
-                'student_name' => $ef->student->name,
-                'course_name' => $ef->course->course ?? '-',
-                'ef_no' => $ef->ef_no,
-                'total_fee' => number_format($ef->total_fee, 2),
-                'total_paid' => number_format($totalPaid, 2),
-                'balance' => number_format($balance, 2)
-            ];
-        });
+                return [
+                    'id' => $ef->id,
+                    'student_name' => $ef->student->name,
+                    'course_name' => $ef->course->course ?? '-',
+                    'ef_no' => $ef->ef_no,
+                    'total_fee' => number_format($ef->total_fee, 2),
+                    'total_paid' => number_format($totalPaid, 2),
+                    'balance' => number_format($balance, 2)
+                ];
+            });
 
-    return response()->json([
-        'success' => true,
-        'students' => $students
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'students' => $students
+        ]);
+    }
+
 
 
 }

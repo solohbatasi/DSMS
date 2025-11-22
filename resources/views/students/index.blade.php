@@ -206,9 +206,8 @@
                             <th class="px-4 py-2">Name</th>
                             <th class="px-4 py-2">Course</th>
                             <th class="px-4 py-2">Reg No</th>
-                            <th class="px-4 py-2">Total Fee</th>
-                            <th class="px-4 py-2">Paid</th>
-                            <th class="px-4 py-2">Balance</th>
+                            <th class="px-4 py-2">Fees</th>
+
                             <th class="px-4 py-2">Actions</th>
                         </tr>
                     </thead>
@@ -223,21 +222,30 @@
                             <td class="px-4 py-2">{{ $ef->student->name }}</td>
                             <td class="px-4 py-2">{{ $ef->course->course }}</td>
                             <td class="px-4 py-2">{{ $ef->ef_no }}</td>
-                            <td class="px-4 py-2">{{ number_format($ef->total_fee, 2) }}</td>
-                            <td class="px-4 py-2 text-green-600">{{ number_format($totalPaid, 2) }}</td>
-                            <td class="px-4 py-2 text-red-600">{{ number_format($balance, 2) }}</td>
+                            <td class="px-4 py-2">
+                                <div class="flex flex-col space-y-1">
+                                    <span>Total: {{ number_format($ef->total_fee, 2) }}</span>
+                                    @can('view payments')
+                                    <span class="text-green-600">Paid: {{ number_format($totalPaid, 2) }}</span>
+                                    <span class="text-red-600">Balance: {{ number_format($balance, 2) }}</span>
+                                    @endcan
+                                </div>
+                            </td>
+
                             <td class="px-4 py-2 flex gap-2">
                                 <!-- Edit -->
+                                 @can('edit students')
                                 <button onclick="openEditModal({{ $ef->id }})"
                                     class="text-blue-600 hover:text-blue-800">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
-
-                            <button onclick="openDeleteModal({{ $ef->id }})"
-                                class="text-red-600 hover:text-red-800">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-
+                                @endcan
+                                @can('delete students')
+                                <button onclick="openDeleteModal({{ $ef->id }})"
+                                    class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                                @endcan
                             </td>
 
                         </tr>
@@ -631,48 +639,45 @@ function confirmDelete() {
     })
     .catch(() => toastr.error("Server error"));
 }
+// Get permissions from Blade
+const canEdit = {{ auth()->user()->can('edit students') ? 'true' : 'false' }};
+const canDelete = {{ auth()->user()->can('delete students') ? 'true' : 'false' }};
+const canViewPayment = {{ auth()->user()->can('view payments') ? 'true' : 'false' }};
+const canViewFees = {{ auth()->user()->can('view fees') ? 'true' : 'false' }};
+
 function filterStudents() {
-    let q = document.getElementById("studentSearch").value.trim();
-    let status = document.getElementById("statusFilter").value;
-    let sort = document.getElementById("sortFilter").value;
+    const q = document.getElementById("studentSearch").value.trim();
+    const status = document.getElementById("statusFilter").value;
+    const sort = document.getElementById("sortFilter").value;
 
     fetch(`/students/search?q=${encodeURIComponent(q)}&status=${status}&sort=${sort}`)
         .then(res => res.json())
         .then(data => {
-            if (data.success) {
-                renderStudents(data.students);
-            }
+            if (data.success) renderStudents(data.students, canEdit, canDelete);
         })
         .catch(() => toastr.error("Filter failed"));
 }
 
-let timeout = null;
-
-
-
+// Debounce search input
 let searchTimeout;
 document.getElementById("studentSearch").addEventListener("keyup", function () {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        let q = this.value.trim();
-        fetch(`/students/search?q=${encodeURIComponent(q)}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) renderStudents(data.students);
-            })
-            .catch(() => toastr.error("Search failed"));
-    }, 400);
+    searchTimeout = setTimeout(() => filterStudents(), 400);
 });
 
-function renderStudents(students) {
-    let tbody = document.querySelector("table tbody");
+// Render students into table
+function renderStudents(students, canEdit, canDelete) {
+    const tbody = document.getElementById("studentsTableBody");
     tbody.innerHTML = "";
 
     if (students.length === 0) {
         tbody.innerHTML = `
-            <tr><td colspan="7" class="text-center py-4 text-gray-500">
-                No matching students found
-            </td></tr>`;
+            <tr>
+                <td colspan="5" class="text-center py-4 text-gray-500">
+                    No matching students found
+                </td>
+            </tr>
+        `;
         return;
     }
 
@@ -682,24 +687,30 @@ function renderStudents(students) {
                 <td class="px-4 py-2">${s.student_name}</td>
                 <td class="px-4 py-2">${s.course_name}</td>
                 <td class="px-4 py-2">${s.ef_no}</td>
-                <td class="px-4 py-2">${s.total_fee}</td>
-                <td class="px-4 py-2 text-green-600">${s.total_paid}</td>
-                <td class="px-4 py-2 text-red-600">${s.balance}</td>
+                <td class="px-4 py-2">
+                    <div class="flex flex-col space-y-1">
+                        <span>Total: ${s.total_fee}</span>
+                         ${canViewPayment ? `
+                        <span class="text-green-600">Paid: ${s.total_paid}</span>
+                        <span class="text-red-600">Balance: ${s.balance}</span>
+                        ` : ''}
+                    </div>
+                </td>
                 <td class="px-4 py-2 flex gap-2">
-                    <button onclick="openEditModal(${s.id})"
-                        class="text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-
-                    <button onclick="openDeleteModal(${s.id})"
-                        class="text-red-600 hover:text-red-800">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
+                    ${canEdit ? `
+                        <button onclick="openEditModal(${s.id})" class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>` : ''}
+                    ${canDelete ? `
+                        <button onclick="openDeleteModal(${s.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>` : ''}
                 </td>
             </tr>
         `;
     });
 }
+
 
 
 
