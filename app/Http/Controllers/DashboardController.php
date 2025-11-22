@@ -10,8 +10,15 @@ use App\Models\Vote;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Notifications\DatabaseNotification;
 use App\Models\User;
+use App\Models\Customer;
+use App\Models\Bill;
+use App\Models\Payment;
+use App\Models\Meter;
+use App\Models\WaterConnectionApplication;
+use App\Models\Student_ef_list;
 use App\Models\Booking;
 use App\Models\VotePurchase;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -60,57 +67,123 @@ class DashboardController extends Controller
                 return view('dashboard.vendor', $data);
 
             default: // attendee or fallback
-                $data = array_merge($data, $this->getAttendeeData($user));
-                return view('dashboard.attendee', $data);
+                $data = array_merge($data, $this->getAdminData($user));
+                return view('dashboard.admin', $data);
         }
     }
 
-    private function getAdminData()
-    {
-        return [
-            // Users
-            'total_users' => User::count(),
-            'total_attendees' => User::role('attendee')->count(),
-            'total_vendors' => User::role('vendor')->count(),
-            'total_organizers' => User::role('organizer')->count(),
+private function getAdminData()
+{
+    // Customers
+    $total_customers = Customer::count();
+    $active_customers = Customer::where('status', 'active')->count();
+    $inactive_customers = Customer::whereIn('status', ['inactive', 'suspended'])->count();
+    $pending_connections = Customer::where('status', 'pending')->count();
 
-            // Events & voting
-            'total_events' => Event::count(),
-            'total_voting_contests' => VotingContest::count(),
-            'active_voting_contests' => VotingContest::where('is_active', true)
-                ->where(function ($query) {
-                    $query->where('end_date', '>=', now())
-                        ->orWhereNull('end_date');
-                })->count(),
+    // Meters
+    $total_meters = Meter::count();
+    $installed_meters = Meter::whereNotNull('customer_id')->count();
+    $available_meters = Meter::whereNull('customer_id')->count();
+    $faulty_meters = Meter::where('status', '!=', 'available')->count();
 
-            // Ticket & vote stats
-            'total_ticket_sales' => TicketPurchase::where('status', 'paid')->count(),
-            'total_votes_cast' => Vote::count(),
-            'total_revenue' => TicketPurchase::where('status', 'paid')->sum('final_amount') +
-                VotePurchase::where('status', 'paid')->sum('amount'),
+    // Bills
+    $total_bills = Bill::count();
+    $paid_bills = Bill::where('bill_status', 'paid')->count();
+    $unpaid_bills = Bill::where('bill_status', 'unpaid')->count();
+    $overdue_bills = Bill::where('due_date', '<', now())
+                         ->where('bill_status', 'unpaid')
+                         ->count();
 
-            // Pending approvals
-            'pending_approvals' => Event::where('status', 'pending_approval')->count() +
-                VotingContest::where('requires_approval', true)
-                ->where('is_active', false)
-                ->count(),
+    // Payments & Revenue
+    $total_revenue = Payment::sum('amount');
+    $payments_today = Payment::whereDate('created_at', today())->sum('amount');
+    $payments_this_month = Payment::whereMonth('created_at', now()->month)
+                                  ->whereYear('created_at', now()->year)
+                                  ->sum('amount');
+    $pending_payments = Payment::where('payment_status', 'pending')->count();
 
-            // Recent users (with pagination)
-            'recent_users' => User::latest()->paginate(10),
+    // Payment methods breakdown
+    $payment_methods = Payment::select('payment_method', DB::raw('SUM(amount) as total'))
+                              ->groupBy('payment_method')
+                              ->get();
 
-            // Recent activities
-            'recent_ticket_purchases' => TicketPurchase::with(['user', 'event'])
-                ->where('status', 'paid')
-                ->latest()
-                ->take(5)
-                ->get(),
+    // Recent logs
+    $recent_payments = Payment::with('bill', 'user')->latest()->take(5)->get();
+    $recent_bills = Bill::with('customer')->latest()->take(5)->get();
+    $total_users = User::count();
+    $recent_users = User::latest()->paginate(10);
+    $recent_customers = Customer::latest()->take(5)->get();
 
-            'recent_votes' => Vote::with(['user', 'contest', 'nominee'])
-                ->latest()
-                ->take(5)
-                ->get(),
-        ];
-    }
+    // 🔥 New: Pending Approvals (water_connection_applications)
+    $pending_approval_items = WaterConnectionApplication::where('status', 'pending')
+                                ->latest()
+                                ->take(10)
+                                ->get();
+
+    $pending_approvals = $pending_approval_items->count();
+    // Monthly billed
+    $monthly_billed = Bill::selectRaw('MONTH(billing_period_start) as month, SUM(total_amount) as total')
+        ->groupBy('month')
+        ->pluck('total', 'month')
+        ->toArray();
+
+    $monthly_billed = array_replace(array_fill(1, 12, 0), $monthly_billed);
+
+    // Monthly collected
+    $monthly_collected = Payment::selectRaw('MONTH(created_at) as month, SUM(amount) as total')
+        ->groupBy('month')
+        ->pluck('total', 'month')
+        ->toArray();
+
+    $monthly_collected = array_replace(array_fill(1, 12, 0), $monthly_collected);
+
+    // Bill status counts
+    $bill_status_counts = [
+        'paid' => Bill::where('bill_status', 'paid')->count(),
+        'unpaid' => Bill::where('bill_status', 'unpaid')->count(),
+        'overdue' => Bill::where('bill_status', 'unpaid')
+                        ->where('due_date', '<', now())->count(),
+    ];
+
+    return [
+        'total_customers'      => $total_customers,
+        'active_customers'     => $active_customers,
+        'inactive_customers'   => $inactive_customers,
+        'pending_connections'  => $pending_connections,
+
+        'total_meters'         => $total_meters,
+        'installed_meters'     => $installed_meters,
+        'available_meters'     => $available_meters,
+        'faulty_meters'        => $faulty_meters,
+
+        'total_bills'          => $total_bills,
+        'paid_bills'           => $paid_bills,
+        'unpaid_bills'         => $unpaid_bills,
+        'overdue_bills'        => $overdue_bills,
+
+        'total_revenue'        => $total_revenue,
+        'payments_today'       => $payments_today,
+        'payments_this_month'  => $payments_this_month,
+        'pending_payments'     => $pending_payments,
+
+        'payment_methods'      => $payment_methods,
+        'recent_payments'      => $recent_payments,
+        'recent_bills'         => $recent_bills,
+        'total_users'          => $total_users,
+        'recent_users'         => $recent_users,
+        'recent_customers'     => $recent_customers,
+
+        // NEW
+        'pending_approvals'        => $pending_approvals,
+        'pending_approval_items'   => $pending_approval_items,
+
+        'monthly_billed' => array_values($monthly_billed),
+        'monthly_collected' => array_values($monthly_collected),
+        'bill_status_counts' => $bill_status_counts,
+    ];
+}
+
+
 
 private function getOrganizerData(User $user)
 {

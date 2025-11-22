@@ -13,56 +13,82 @@ class UserSeeder extends Seeder
         // Create admin user
         $admin = User::create([
             'name' => 'Admin User',
-            'email' => 'admin@eventsphere.com',
+            'email' => 'admin@mail.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'role' => 'admin',
         ]);
         $admin->assignRole('admin');
 
-        // Create organizer users
-        $organizers = [
-            [
-                'name' => 'Event Pro Organizers',
-                'email' => 'events@eventpro.com',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'role' => 'organizer',
-            ],
-            [
-                'name' => 'City Events Ltd',
-                'email' => 'info@cityevents.com',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'role' => 'organizer',
-            ],
-        ];
-
-        foreach ($organizers as $organizerData) {
-            $organizer = User::create($organizerData);
-            $organizer->assignRole('organizer');
-        }
-
-        // Create vendor user
-        $vendor = User::create([
-            'name' => 'Catering Services',
-            'email' => 'catering@example.com',
+        // Create developer user
+        $developer = User::create([
+            'name' => 'Developer',
+            'email' => 'developer@mail.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'role' => 'vendor',
+            'role' => 'developer',
         ]);
-        $vendor->assignRole('vendor');
+        $developer->assignRole('developer');
 
-        // Create regular users
-        for ($i = 1; $i <= 10; $i++) {
-            $user = User::create([
-                'name' => "User {$i}",
-                'email' => "user{$i}@example.com",
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'role' => 'attendee',
-            ]);
-            $user->assignRole('attendee');
-        }
+        // Create manager user
+        $manager = User::create([
+            'name' => 'Manager',
+            'email' => 'manager@mail.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'role' => 'manager',
+        ]);
+        $manager->assignRole('manager');
+
+        // Create CEO user
+        $ceo = User::create([
+            'name' => 'CEO',
+            'email' => 'ceo@mail.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'role' => 'ceo',
+        ]);
+        $ceo->assignRole('ceo');
+
+          // Create Registar user
+        $registrar = User::create([
+            'name' => 'Registar',
+            'email' => 'registrar@mail.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'role' => 'registrar',
+        ]);
+        $registrar->assignRole('registrar');
+
+
+
+          // Create Report user
+        $report = User::create([
+            'name' => 'Reports',
+            'email' => 'report@mail.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'role' => 'report',
+        ]);
+        $report->assignRole('report');
+
+            // Create Chief user
+        $chief = User::create([
+            'name' => 'Chief',
+            'email' => 'chief@mail.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'role' => 'chief',
+        ]);
+        $chief->assignRole('chief');
+
+        $ict = User::create([
+            'name' => 'ICT',
+            'email' => 'ict@mail.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'role' => 'ict',
+        ]);
+        $ict->assignRole('ict');
     }
 }

@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('payments', function (Blueprint $table) {
-            $table->integer('votes_count')->nullable();
+        Schema::table('bills', function (Blueprint $table) {
+           $table->decimal('paid_amount', 10, 2)->default(0)->after('total_amount');
+
         });
     }
-   
+
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::table('payments', function (Blueprint $table) {
-            $table->dropColumn('votes_count');
+        Schema::table('bills', function (Blueprint $table) {
+          $table->dropColumn('paid_amount');
+
         });
     }
 };

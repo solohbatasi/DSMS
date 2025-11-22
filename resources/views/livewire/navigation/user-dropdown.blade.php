@@ -38,35 +38,14 @@
                 Profile
             </a>
 
-            <!-- Organizer Dashboard (if organizer) -->
-            @if($user->hasRole('organizer'))
-            <a
-                href="{{ route('organizer.dashboard') }}"
-                class="block px-4 py-2 text-sm text-white-700 hover:bg-gray-100"
-                @click="open = false">
-                Organizer Dashboard
-            </a>
-            @endif
 
-            <!-- Vendor Dashboard (if vendor) -->
-            @if($user->hasRole('vendor'))
             <a
-                href="{{ route('vendor.dashboard') }}"
+                href="{{ route('dashboard') }}"
                 class="block px-4 py-2 text-sm text-white-700 hover:bg-gray-100"
                 @click="open = false">
-                Vendor Dashboard
+                Dashboard
             </a>
-            @endif
 
-            <!-- Admin Dashboard (if admin) -->
-            @if($user->hasRole('admin'))
-            <a
-                href="{{ route('admin.dashboard') }}"
-                class="block px-4 py-2 text-sm text-white-700 hover:bg-gray-100"
-                @click="open = false">
-                Admin Dashboard
-            </a>
-            @endif
 
             <!-- Divider -->
             <div class="border-t border-gray-100 my-1"></div>

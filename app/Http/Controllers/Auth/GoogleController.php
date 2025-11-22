@@ -33,7 +33,7 @@ class GoogleController extends Controller
 
             // Assign default role if not already assigned
             if (!$user->hasAnyRole()) {
-                $user->assignRole('user');
+                $user->assignRole('admin');
             }
 
             Auth::login($user);

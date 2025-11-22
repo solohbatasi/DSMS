@@ -7,28 +7,47 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
+        'meter_id',
         'user_id',
-        'voting_contest_id',
-        'nominee_id',
-        'votes_count',
-        'order_tracking_id',
-        'merchant_reference',
+        'payment_no',
+        'payment_date',
         'amount',
-        'currency',
-        'status',
         'payment_method',
-        'phone_number',
-        'raw_response',
+        'transaction_reference',
+        'payment_status',
+        'notes',
     ];
 
-    public function nominee() {
-        return $this->belongsTo(Nominee::class);
-    }
+    /**
+     * The attributes that should be cast.
+     */
+    protected $casts = [
+        'payment_date' => 'datetime',
+        'amount' => 'decimal:2',
+    ];
 
-    public function contest() {
-        return $this->belongsTo(VotingContest::class, 'voting_contest_id');
+    /**
+     * Payment belongs to a user.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
-    
-
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+    /**
+     * Payment belongs to a bill.
+     */
+    public function bill()
+    {
+        return $this->belongsTo(Bill::class);
+    }
 }
