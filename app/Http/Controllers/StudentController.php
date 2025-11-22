@@ -73,8 +73,7 @@ class StudentController extends Controller
                 'total_class' => 'required|integer|min:1',
                 'type' => '3',
             ]);
-        }
-        catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'errors' => $e->errors()
@@ -84,7 +83,18 @@ class StudentController extends Controller
         try {
             DB::beginTransaction();
 
+            // Create user first
+            $password = $request->id_no ?? 'Password123';
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email ?? $request->id_no . '@example.com',
+                'password' => Hash::make($password),
+                'role' => 'student',
+            ]);
+
+            // Create student linked to user
             $student = Student::create([
+                'user_id' => $user->id,
                 'id_no' => $request->id_no,
                 'name' => $request->name,
                 'contact' => $request->contact,
@@ -92,6 +102,7 @@ class StudentController extends Controller
                 'email' => $request->email,
             ]);
 
+            // Create EF list
             $ef = Student_ef_list::create([
                 'student_id' => $student->id,
                 'ef_no' => $request->ef_no,
@@ -102,14 +113,6 @@ class StudentController extends Controller
                 'status' => 'active',
             ]);
 
-            // Sync to users table
-            $password = $request->id_no ?? 'Password123';
-            User::create([
-                'name' => $student->name,
-                'email' => $student->email ?? $student->id_no . '@example.com', // fallback email if null
-                'password' => Hash::make($password),
-                'role' => 'student',
-            ]);
             DB::commit();
 
             return response()->json([
@@ -118,16 +121,15 @@ class StudentController extends Controller
             ]);
 
         } catch (\Exception $e) {
-
-            \DB::rollBack();
-
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Something went wrong. Try again.',
-                'debug' => $e->getMessage() // remove in production
+                'debug' => $e->getMessage()
             ], 500);
         }
     }
+
 
 
     /**
@@ -156,18 +158,17 @@ class StudentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
         $ef = Student_ef_list::findOrFail($id);
         $student = $ef->student;
 
         try {
-            // VALIDATION
             $validated = $request->validate([
                 'id_no' => 'required|unique:students,id_no,' . $student->id,
                 'name' => 'required|string',
                 'contact' => 'nullable|string',
-                'email' => 'nullable|unique:users,email,' . $student->id . ',id',
+                'email' => 'nullable|unique:users,email,' . ($student->user_id ?? 'NULL') . ',id',
                 'address' => 'nullable|string',
 
                 'ef_no' => 'required|unique:student_ef_lists,ef_no,' . $ef->id,
@@ -175,8 +176,7 @@ class StudentController extends Controller
                 'total_fee' => 'required|numeric',
                 'total_class' => 'required|integer|min:1',
             ]);
-        }
-        catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'errors' => $e->errors()
@@ -186,16 +186,16 @@ class StudentController extends Controller
         try {
             DB::beginTransaction();
 
-            // UPDATE STUDENT
+            // Update student
             $student->update([
                 'id_no' => $request->id_no,
                 'name' => $request->name,
                 'contact' => $request->contact,
-                'email' => $request->email,
                 'address' => $request->address,
+                'email' => $request->email,
             ]);
 
-            // UPDATE EF LIST
+            // Update EF list
             $ef->update([
                 'ef_no' => $request->ef_no,
                 'course_id' => $request->course_id,
@@ -203,12 +203,9 @@ class StudentController extends Controller
                 'total_class' => $request->total_class,
             ]);
 
-            // UPDATE USER ACCOUNT
-            $user = User::where('email', $student->email)
-                        ->orWhere('name', $student->name)
-                        ->first();
-
-            if ($user) {
+            // Update linked user account
+            if ($student->user_id) {
+                $user = User::find($student->user_id);
                 $user->update([
                     'name' => $student->name,
                     'email' => $student->email ?? ($student->id_no . '@example.com')
@@ -224,14 +221,14 @@ class StudentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-
             return response()->json([
                 'success' => false,
                 'message' => 'An unexpected error occurred.',
-                'debug' => $e->getMessage() // Remove later
+                'debug' => $e->getMessage()
             ], 500);
         }
     }
+
 
     /**
      * Remove the specified resource from storage.
