@@ -51,6 +51,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit results',
             'delete results',
 
+            // Courses management
+            'add courses',
+            'view courses',
+            'edit courses',
+            'delete courses',
+
             // applications management
             'add applications',
             'view applications',
@@ -129,6 +135,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit results',
             'delete results',
 
+            // Courses management
+            'add courses',
+            'view courses',
+            'edit courses',
+            'delete courses',
+
             // applications management
             'add applications',
             'view applications',
@@ -160,6 +172,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'add payments',
             'view payments',
 
+            // Courses management
+            'add courses',
+            'view courses',
+
+
             // applications management
             'add applications',
             'view applications',
@@ -185,6 +202,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'add payments',
             'view payments',
 
+            // Courses management
+            'add courses',
+            'view courses',
+
+
             // applications management
             'add applications',
             'view applications',
@@ -204,6 +226,11 @@ class RolesAndPermissionsSeeder extends Seeder
              // Students management
             'add students',
             'view students',
+
+            // Courses management
+            'add courses',
+            'view courses',
+
 
             // applications management
             'add applications',

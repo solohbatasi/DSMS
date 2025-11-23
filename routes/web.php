@@ -69,15 +69,8 @@ Route::prefix('expenses')->group(function () {
     Route::put('/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
     Route::delete('/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 });
-Route::prefix('courses')->group(function () {
-    Route::get('/', [ExpenseController::class, 'index'])->name('courses.index');
-    Route::get('/create', [ExpenseController::class, 'create'])->name('courses.create');
-    Route::post('/', [ExpenseController::class, 'store'])->name('courses.store');
-    Route::get('/{course}', [ExpenseController::class, 'show'])->name('courses.show');
-    Route::get('/{course}/edit', [ExpenseController::class, 'edit'])->name('courses.edit');
-    Route::put('/{course}', [ExpenseController::class, 'update'])->name('courses.update');
-    Route::delete('/{course}', [ExpenseController::class, 'destroy'])->name('courses.destroy');
-});
+Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
+Route::resource('courses', CourseController::class);
 // web.php
 Route::get('/bills/{bill}/info', [BillController::class, 'info']);
 Route::get('/bills/info/customer/{customer}', [BillController::class, 'infoByCustomer']);
