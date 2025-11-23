@@ -5,13 +5,13 @@
     use Illuminate\Support\Facades\Auth;
 @endphp
 
-@can('view results')
+@can('view courses')
 <div class="min-h-screen bg-gray-50">
     <!-- Header Section -->
     @php
     $actionButtons = [];
 
-    if (auth()->user()->can('add results')) {
+    if (auth()->user()->can('add courses')) {
         $actionButtons[] = [
             'text' => 'Add Course',
             'onclick' => 'openCourseModal()',
@@ -287,13 +287,13 @@
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex gap-2">
-                                    @can('edit results')
+                                    @can('edit courses')
                                     <button onclick="openEditModal({{ $course->id }})"
                                         class="text-blue-600 hover:text-blue-800 text-sm">
                                         <i class="fas fa-edit"></i> Edit
                                     </button>
                                     @endcan
-                                    @can('delete results')
+                                    @can('delete courses')
                                     <button onclick="openDeleteModal({{ $course->id }})"
                                         class="text-red-600 hover:text-red-800 text-sm">
                                         <i class="fas fa-trash"></i> Delete
@@ -905,8 +905,8 @@ function renderCourses(courses) {
         return;
     }
 
-    const canEdit = {{ auth()->user()->can('edit results') ? 'true' : 'false' }};
-    const canDelete = {{ auth()->user()->can('delete results') ? 'true' : 'false' }};
+    const canEdit = {{ auth()->user()->can('edit courses') ? 'true' : 'false' }};
+    const canDelete = {{ auth()->user()->can('delete courses') ? 'true' : 'false' }};
 
     courses.forEach(c => {
         const imageHtml = c.image ?

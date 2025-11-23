@@ -20,6 +20,6 @@ class Student extends Model
 
     public function efLists()
     {
-        return $this->hasMany(StudentEfList::class, 'student_id');
+        return $this->hasMany(Student_ef_list::class, 'student_id');
     }
 }

@@ -40,15 +40,15 @@ use App\Models\Customer;
 
 
 
-Route::prefix('payments')->group(function () {
-    Route::get('/', [PaymentController::class, 'index'])->name('payments.index');
-    Route::get('/create', [PaymentController::class, 'create'])->name('payments.create');
-    Route::post('/', [PaymentController::class, 'store'])->name('payments.store');
-    Route::get('/{payment}', [PaymentController::class, 'show'])->name('payments.show');
-    Route::get('/{payment}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
-    Route::put('/{payment}', [PaymentController::class, 'update'])->name('payments.update');
-    Route::delete('/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
-});
+// payments.php routes
+Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+Route::get('/payments/{id}/edit', [PaymentController::class, 'edit'])->name('payments.edit');
+Route::put('/payments/{id}', [PaymentController::class, 'update'])->name('payments.update');
+Route::delete('/payments/{id}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+Route::get('/payments/search', [PaymentController::class, 'search'])->name('payments.search');
+Route::get('/payments/search-students', [PaymentController::class, 'searchStudents'])->name('payments.search-students');
+
 Route::prefix('students')->group(function () {
      Route::get('/search', [StudentController::class, 'search'])
         ->name('students.search');

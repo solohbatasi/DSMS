@@ -11,23 +11,37 @@ class Student_ef_list extends Model
         'ef_no',
         'course_id',
         'total_fee',
+        'paid_amount',
+        'balance',
+        'last_payment_date',
         'total_class',
         'type',
+        'status'
     ];
 
+    protected $dates = ['last_payment_date'];
+
+    /**
+     * EF belongs to a student
+     */
     public function student()
-{
-    return $this->belongsTo(Student::class);
-}
+    {
+        return $this->belongsTo(Student::class);
+    }
 
-public function course()
-{
-    return $this->belongsTo(Course::class);
-}
+    /**
+     * EF belongs to a course
+     */
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
 
-public function payments()
-{
-    return $this->hasMany(Payment::class, 'ef_id');
-}
-
+    /**
+     * EF has many payments
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'ef_id');
+    }
 }

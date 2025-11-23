@@ -2,50 +2,44 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-    use HasFactory;
-
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
-        'meter_id',
         'user_id',
-        'payment_no',
-        'payment_date',
+        'reference',
+        'ef_id',
         'amount',
-        'payment_method',
-        'transaction_reference',
+        'balance',
+        'payment_date',
+        'remarks',
         'payment_status',
-        'notes',
+        'payment_method',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected $casts = [
-        'payment_date' => 'datetime',
+        'payment_date' => 'date',
         'amount' => 'decimal:2',
+        'balance' => 'decimal:2',
     ];
 
     /**
-     * Payment belongs to a user.
+     * Payment belongs to a StudentEfList through ef_id
+     */
+    public function efList()
+    {
+        return $this->belongsTo(Student_ef_list::class, 'ef_id');
+    }
+
+    /**
+     * Payment recorded by a system user (staff/admin)
      */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class);
-    }
-    /**
-     * Payment belongs to a bill.
-     */
+
     public function bill()
     {
         return $this->belongsTo(Bill::class);
