@@ -60,15 +60,15 @@ Route::prefix('students')->group(function () {
     Route::put('/{student}', [StudentController::class, 'update'])->name('students.update');
     Route::delete('/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 });
-Route::prefix('expenses')->group(function () {
-    Route::get('/', [ExpenseController::class, 'index'])->name('expenses.index');
-    Route::get('/create', [ExpenseController::class, 'create'])->name('expenses.create');
-    Route::post('/', [ExpenseController::class, 'store'])->name('expenses.store');
-    Route::get('/{expense}', [ExpenseController::class, 'show'])->name('expenses.show');
-    Route::get('/{expense}/edit', [ExpenseController::class, 'edit'])->name('expenses.edit');
-    Route::put('/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
-    Route::delete('/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
-});
+
+// Expenses Routes
+Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+Route::get('/expenses/{id}/edit', [ExpenseController::class, 'edit'])->name('expenses.edit');
+Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->name('expenses.update');
+Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+Route::get('/expenses/search', [ExpenseController::class, 'search'])->name('expenses.search');
+
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 Route::resource('courses', CourseController::class);
 // web.php
