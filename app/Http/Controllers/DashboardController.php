@@ -72,328 +72,167 @@ class DashboardController extends Controller
         }
     }
 
-private function getAdminData()
-{
-    // Customers
-    $total_customers = Customer::count();
-    $active_customers = Customer::where('status', 'active')->count();
-    $inactive_customers = Customer::whereIn('status', ['inactive', 'suspended'])->count();
-    $pending_connections = Customer::where('status', 'pending')->count();
-
-    // Meters
-    $total_meters = Meter::count();
-    $installed_meters = Meter::whereNotNull('customer_id')->count();
-    $available_meters = Meter::whereNull('customer_id')->count();
-    $faulty_meters = Meter::where('status', '!=', 'available')->count();
-
-    // Bills
-    $total_bills = Bill::count();
-    $paid_bills = Bill::where('bill_status', 'paid')->count();
-    $unpaid_bills = Bill::where('bill_status', 'unpaid')->count();
-    $overdue_bills = Bill::where('due_date', '<', now())
-                         ->where('bill_status', 'unpaid')
-                         ->count();
-
-    // Payments & Revenue
-    $total_revenue = Payment::sum('amount');
-    $payments_today = Payment::whereDate('created_at', today())->sum('amount');
-    $payments_this_month = Payment::whereMonth('created_at', now()->month)
-                                  ->whereYear('created_at', now()->year)
-                                  ->sum('amount');
-    $pending_payments = Payment::where('payment_status', 'pending')->count();
-
-    // Payment methods breakdown
-    $payment_methods = Payment::select('payment_method', DB::raw('SUM(amount) as total'))
-                              ->groupBy('payment_method')
-                              ->get();
-
-    // Recent logs
-    $recent_payments = Payment::with('bill', 'user')->latest()->take(5)->get();
-    $recent_bills = Bill::with('customer')->latest()->take(5)->get();
-    $total_users = User::count();
-    $recent_users = User::latest()->paginate(10);
-    $recent_customers = Customer::latest()->take(5)->get();
-
-    // 🔥 New: Pending Approvals (water_connection_applications)
-    $pending_approval_items = WaterConnectionApplication::where('status', 'pending')
-                                ->latest()
-                                ->take(10)
-                                ->get();
-
-    $pending_approvals = $pending_approval_items->count();
-    // Monthly billed
-    $monthly_billed = Bill::selectRaw('MONTH(billing_period_start) as month, SUM(total_amount) as total')
-        ->groupBy('month')
-        ->pluck('total', 'month')
-        ->toArray();
-
-    $monthly_billed = array_replace(array_fill(1, 12, 0), $monthly_billed);
-
-    // Monthly collected
-    $monthly_collected = Payment::selectRaw('MONTH(created_at) as month, SUM(amount) as total')
-        ->groupBy('month')
-        ->pluck('total', 'month')
-        ->toArray();
-
-    $monthly_collected = array_replace(array_fill(1, 12, 0), $monthly_collected);
-
-    // Bill status counts
-    $bill_status_counts = [
-        'paid' => Bill::where('bill_status', 'paid')->count(),
-        'unpaid' => Bill::where('bill_status', 'unpaid')->count(),
-        'overdue' => Bill::where('bill_status', 'unpaid')
-                        ->where('due_date', '<', now())->count(),
-    ];
-
-    return [
-        'total_customers'      => $total_customers,
-        'active_customers'     => $active_customers,
-        'inactive_customers'   => $inactive_customers,
-        'pending_connections'  => $pending_connections,
-
-        'total_meters'         => $total_meters,
-        'installed_meters'     => $installed_meters,
-        'available_meters'     => $available_meters,
-        'faulty_meters'        => $faulty_meters,
-
-        'total_bills'          => $total_bills,
-        'paid_bills'           => $paid_bills,
-        'unpaid_bills'         => $unpaid_bills,
-        'overdue_bills'        => $overdue_bills,
-
-        'total_revenue'        => $total_revenue,
-        'payments_today'       => $payments_today,
-        'payments_this_month'  => $payments_this_month,
-        'pending_payments'     => $pending_payments,
-
-        'payment_methods'      => $payment_methods,
-        'recent_payments'      => $recent_payments,
-        'recent_bills'         => $recent_bills,
-        'total_users'          => $total_users,
-        'recent_users'         => $recent_users,
-        'recent_customers'     => $recent_customers,
-
-        // NEW
-        'pending_approvals'        => $pending_approvals,
-        'pending_approval_items'   => $pending_approval_items,
-
-        'monthly_billed' => array_values($monthly_billed),
-        'monthly_collected' => array_values($monthly_collected),
-        'bill_status_counts' => $bill_status_counts,
-    ];
-}
-
-
-
-private function getOrganizerData(User $user)
-{
-    // Organizer's events
-    $events = Event::where('organizer_id', $user->id)->get();
-
-    // Core statistics
-    $totalEvents = $events->count();
-    $activeEvents = $events->where('is_active', true)->count();
-
-    // Voting contests
-    $totalVotingContests = VotingContest::where('organizer_id', $user->id)->count();
-    $activeContests = VotingContest::where('organizer_id', $user->id)
-        ->where('is_active', true)
-        ->where('end_date', '>', now())
-        ->count();
-
-    // Ticket sales and revenue
-    $totalTicketSales = TicketPurchase::whereHas('event', function ($query) use ($user) {
-        $query->where('organizer_id', $user->id);
-    })->where('status', 'paid')->sum('quantity');
-
-    $todaySales = TicketPurchase::whereHas('event', function ($query) use ($user) {
-        $query->where('organizer_id', $user->id);
-    })->where('status', 'paid')
-      ->whereDate('created_at', today())
-      ->sum('quantity');
-
-    $totalRevenue = TicketPurchase::whereHas('event', function ($query) use ($user) {
-        $query->where('organizer_id', $user->id);
-    })->where('status', 'paid')->sum('final_amount');
-
-    $monthRevenue = TicketPurchase::whereHas('event', function ($query) use ($user) {
-        $query->where('organizer_id', $user->id);
-    })->where('status', 'paid')
-      ->whereMonth('created_at', now()->month)
-      ->whereYear('created_at', now()->year)
-      ->sum('final_amount');
-
-    // Total bookings (polymorphic)
-    $totalBookings = Booking::whereHasMorph(
-        'bookable',
-        [Event::class],
-        function ($query) use ($user) {
-            $query->where('organizer_id', $user->id);
-        }
-    )->count();
-
-    // Upcoming events
-    $upcomingEvents = Event::where('organizer_id', $user->id)
-        ->where('is_active', true)
-        ->where('start_date', '>', now())
-        ->orderBy('start_date', 'asc')
-        ->take(5)
-        ->get();
-
-    // Recent bookings
-    $recentBookings = Booking::whereHasMorph(
-        'bookable',
-        [Event::class],
-        function ($query) use ($user) {
-            $query->where('organizer_id', $user->id);
-        }
-    )->with(['bookable', 'user'])
-     ->latest()
-     ->take(5)
-     ->get();
-
-    // Recent ticket sales
-    $recentTicketSales = TicketPurchase::whereHas('event', function ($query) use ($user) {
-        $query->where('organizer_id', $user->id);
-    })->with(['event', 'ticket', 'user'])
-      ->where('status', 'paid')
-      ->latest()
-      ->take(5)
-      ->get();
-
-    // Performance metrics
-    $attendanceRate = $totalEvents > 0 ? min(100, round(($totalBookings / max(1, $totalEvents * 100)) * 100)) : 0;
-    $conversionRate = $totalEvents > 0 ? min(100, round(($totalTicketSales / max(1, $totalEvents * 50)) * 100)) : 0;
-    $satisfactionRate = 95; // Placeholder until feedback system added
-
-    // Combine into unified stats array
-    $stats = [
-        'total_events' => $totalEvents,
-        'active_events' => $activeEvents,
-        'total_voting_contests' => $totalVotingContests,
-        'active_contests' => $activeContests,
-        'total_ticket_sales' => $totalTicketSales,
-        'today_sales' => $todaySales,
-        'total_revenue' => $totalRevenue,
-        'month_revenue' => $monthRevenue,
-        'total_bookings' => $totalBookings,
-        'attendance_rate' => $attendanceRate,
-        'conversion_rate' => $conversionRate,
-        'satisfaction_rate' => $satisfactionRate,
-    ];
-
-    // Build recent activity feed dynamically
-    $recentActivity = collect();
-
-    foreach ($recentTicketSales as $sale) {
-        $recentActivity->push((object)[
-            'type' => 'ticket_sale',
-            'type_color' => 'green',
-            'icon' => 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z',
-            'message' => "New ticket sale for {$sale->event->title}",
-            'created_at' => $sale->created_at,
-        ]);
-    }
-
-    foreach ($recentBookings as $booking) {
-        $recentActivity->push((object)[
-            'type' => 'booking',
-            'type_color' => 'blue',
-            'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-            'message' => "New booking for {$booking->bookable->title}",
-            'created_at' => $booking->created_at,
-        ]);
-    }
-
-    // Sort and trim feed
-    $recentActivity = $recentActivity->sortByDesc('created_at')->take(5);
-
-    // Return the entire dataset
-    return [
-        'stats' => $stats,
-        'upcomingEvents' => $upcomingEvents,
-        'recentBookings' => $recentBookings,
-        'recentTicketSales' => $recentTicketSales,
-        'recentActivity' => $recentActivity,
-    ];
-}
-
-
-    private function getVendorData(User $user)
+    private function getAdminData()
     {
-        return [
-            'vendor_profile' => $user, // All vendor data
-            'total_bookings' => Booking::where('user_id', $user->id)
-                ->where('status', 'confirmed')
-                ->count(),
+        // Financial Data
+        $total_revenue = Payment::where('payment_status', 'completed')->sum('amount');
+        $total_expenses = \App\Models\Expense::where('status', 'approved')->sum('amount');
+        $net_profit = $total_revenue - $total_expenses;
+        $profit_margin = $total_revenue > 0 ? ($net_profit / $total_revenue) * 100 : 0;
 
-            'upcoming_bookings' => Booking::where('user_id', $user->id)
-                ->where('status', 'confirmed')
-                ->whereHas('bookable', function ($query) {
-                    $query->where('start_date', '>=', now());
-                })
-                ->with('bookable')
-                ->latest()
-                ->take(5)
-                ->get(),
+        // Student Data
+        $total_students = \App\Models\Student::count();
+        $students_with_balance = \App\Models\Student_ef_list::where('balance', '>', 0)->count();
+        $outstanding_balance = \App\Models\Student_ef_list::sum('balance');
 
-            'total_revenue' => Booking::where('user_id', $user->id)
-                ->where('status', 'confirmed')
-                ->where('payment_status', 'paid')
-                ->sum('amount_paid'),
-        ];
-    }
+        // Course Data
+        $active_courses = \App\Models\Course::where('status', 1)->count();
 
-    private function getAttendeeData(User $user)
-    {
-        $userId = $user->id;
-
-        // Paid ticket purchases for the user
-        $myTickets = TicketPurchase::where('user_id', $userId)
-            ->where('status', 'paid')
-            ->with('event')
-            ->latest()
-            ->get();
-
-        // Votes by the user
-        $myVotes = Vote::where('user_id', $userId)
-            ->with(['contest', 'nominee'])
-            ->latest()
-            ->get();
-
-        // Upcoming events the user has tickets for
-        $upcomingEvents = TicketPurchase::where('user_id', $userId)
-            ->where('status', 'paid')
-            ->whereHas('event', function ($query) {
-                $query->where('is_active', true)
-                    ->where('start_date', '>=', now());
-            })
-            ->with('event')
+        // Payment Data
+        $pending_payments = Payment::where('payment_status', 'pending')->count();
+        $recent_payments = Payment::with(['EfList.student', 'EfList'])
             ->latest()
             ->take(5)
             ->get();
 
-        // Total tickets purchased
-        $totalTickets = $myTickets->count();
+        // EF Lists Data
+        $active_ef_lists = \App\Models\Student_ef_list::where('status', 'active')->count();
+        $pending_verifications = \App\Models\Student_ef_list::where('status', 'pending')->count();
 
-        // Total votes
-        $totalVotes = $myVotes->count();
+        // User Data (excluding students and developers)
+        $system_users = \App\Models\User::whereNotIn('role', ['student', 'developer'])
 
-        // Total spent (tickets + votes)
-        $totalSpent = $myTickets->sum('final_amount') +
-            VotePurchase::where('user_id', $userId)
-            ->where('status', 'paid')
-            ->sum('amount');
+        ->latest()
+        ->paginate(10);
 
+
+        $staff_users = \App\Models\User::whereNotIn('role', ['student', 'developer', 'instructor'])
+            ->where('is_active', true)
+            ->count();
+
+        $instructors = \App\Models\User::where('role', 'instructor')
+            ->where('is_active', true)
+            ->count();
+
+        // Expense Data
+        $expense_categories = \App\Models\ExpenseCategory::count();
+
+        // Additional Metrics
+        $average_payment = Payment::where('payment_status', 'completed')->avg('amount') ?? 0;
+        $collection_rate = \App\Models\Student_ef_list::sum('total_fee') > 0 ?
+            ((\App\Models\Student_ef_list::sum('paid_amount') / \App\Models\Student_ef_list::sum('total_fee')) * 100) : 0;
+
+        // Chart Data - Monthly Revenue
+        $monthly_revenue = Payment::select(
+                DB::raw('MONTH(payment_date) as month'),
+                DB::raw('SUM(amount) as total')
+            )
+            ->where('payment_status', 'completed')
+            ->whereYear('payment_date', date('Y'))
+            ->groupBy('month')
+            ->pluck('total', 'month')
+            ->toArray();
+
+        $monthly_revenue = array_replace(array_fill(1, 12, 0), $monthly_revenue);
+
+        // Chart Data - Monthly Expenses
+        $monthly_expenses = \App\Models\Expense::select(
+                DB::raw('MONTH(expense_date) as month'),
+                DB::raw('SUM(amount) as total')
+            )
+            ->where('status', 'approved')
+            ->whereYear('expense_date', date('Y'))
+            ->groupBy('month')
+            ->pluck('total', 'month')
+            ->toArray();
+
+        $monthly_expenses = array_replace(array_fill(1, 12, 0), $monthly_expenses);
+
+        // Payment Status Distribution
+        $payment_status_distribution = Payment::select('payment_status', DB::raw('COUNT(*) as count'))
+            ->groupBy('payment_status')
+            ->pluck('count', 'payment_status')
+            ->toArray();
+
+        // Expense Categories Distribution
+        $expense_categories_data = \App\Models\Expense::join('expense_categories', 'expenses.category_id', '=', 'expense_categories.id')
+            ->select('expense_categories.name', DB::raw('SUM(expenses.amount) as total'))
+            ->where('expenses.status', 'approved')
+            ->groupBy('expense_categories.name')
+            ->pluck('total', 'expense_categories.name')
+            ->toArray();
+
+        $expense_categories_labels = array_keys($expense_categories_data);
+        $expense_categories_data = array_values($expense_categories_data);
+
+        // Course Enrollment
+        $course_enrollment = \App\Models\Student_ef_list::join('courses', 'student_ef_lists.course_id', '=', 'courses.id')
+            ->select('courses.course', DB::raw('COUNT(*) as count'))
+            ->groupBy('courses.course')
+            ->pluck('count', 'courses.course')
+            ->toArray();
+
+        $course_enrollment_labels = array_keys($course_enrollment);
+        $course_enrollment_data = array_values($course_enrollment);
+
+        // Revenue Growth (placeholder - you might want to calculate this properly)
+        $revenue_growth = 12.5; // This should be calculated based on previous month comparison
+
+        //spartie permissions
+         $permissions_list = \Spatie\Permission\Models\Permission::all();
+         $roles = \Spatie\Permission\Models\Role::all();
         return [
-            'my_tickets'      => $myTickets,
-            'my_votes'        => $myVotes,
-            'upcoming_tickets' => $upcomingEvents, // rename here
-            'total_tickets'   => $totalTickets,
-            'total_votes'     => $totalVotes,
-            'total_spent'     => $totalSpent,
+            // Financial Metrics
+            'total_revenue' => $total_revenue,
+            'total_expenses' => $total_expenses,
+            'net_profit' => $net_profit,
+            'profit_margin' => $profit_margin,
+            'revenue_growth' => $revenue_growth,
+
+            // Student Metrics
+            'total_students' => $total_students,
+            'students_with_balance' => $students_with_balance,
+            'outstanding_balance' => $outstanding_balance,
+
+            // Course Metrics
+            'active_courses' => $active_courses,
+
+            // Payment Metrics
+            'pending_payments' => $pending_payments,
+            'recent_payments' => $recent_payments,
+            'average_payment' => $average_payment,
+            'collection_rate' => $collection_rate,
+
+            // EF List Metrics
+            'active_ef_lists' => $active_ef_lists,
+            'pending_verifications' => $pending_verifications,
+
+            // User Metrics
+            'system_users' => $system_users,
+            'staff_users' => $staff_users,
+            'instructors' => $instructors,
+
+            // Expense Metrics
+            'expense_categories' => $expense_categories,
+
+            // Chart Data
+            'monthly_revenue' => array_values($monthly_revenue),
+            'monthly_expenses' => array_values($monthly_expenses),
+            'payment_status_distribution' => $payment_status_distribution,
+            'expense_categories_labels' => $expense_categories_labels,
+            'expense_categories_data' => $expense_categories_data,
+            'course_enrollment_labels' => $course_enrollment_labels,
+            'course_enrollment_data' => $course_enrollment_data,
+            //permissions list
+            'permissions_list' => $permissions_list,
+            'roles'=>$roles,
         ];
     }
+
+
+
+
+
 
     public function notifications()
     {

@@ -69,6 +69,14 @@ Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->name('expens
 Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 Route::get('/expenses/search', [ExpenseController::class, 'search'])->name('expenses.search');
 
+// Fetch user permissions
+Route::get('/admin/users/{user}/permissions', [App\Http\Controllers\Admin\UserController::class, 'getPermissions'])
+    ->name('admin.users.permissions');
+
+// Update user permissions
+Route::post('/admin/users/{user}/permissions', [App\Http\Controllers\Admin\UserController::class, 'updatePermissions'])
+    ->name('admin.users.permissions.update');
+
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 Route::resource('courses', CourseController::class);
 // web.php
