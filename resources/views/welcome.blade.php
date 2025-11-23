@@ -9,155 +9,503 @@
     use Illuminate\Support\Facades\Auth;
 @endphp
 
-<style>
-    /* Fade-in animation for sections */
-    .fade-in-section {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity 0.6s ease, transform 0.6s ease;
-    }
+    <style>
+        /* Fade-in animation for sections */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
 
-    .fade-in-section.is-visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-    /* Custom colors for driving school */
-    .quick-link-card {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 0.5rem;
-        padding: 1.5rem 1rem;
-        text-align: center;
-        color: white;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
+        /* Custom colors for driving school */
+        .quick-link-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
 
-    .quick-link-card:hover {
-        background-color: rgba(255, 255, 255, 0.2);
-        transform: translateY(-5px);
-        border-color: rgba(255, 255, 255, 0.4);
-    }
+        .quick-link-card:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
 
-    .quick-link-icon {
-        width: 60px;
-        height: 60px;
-        margin: 0 auto 1rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        background-color: rgba(255, 255, 255, 0.2);
-    }
+        .quick-link-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
 
-    .service-card {
-        background-color: white;
-        border-radius: 0.5rem;
-        padding: 2rem;
-        text-align: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-        border: 1px solid #f1f5f9;
-    }
+        .service-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid #f1f5f9;
+        }
 
-    .service-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    }
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
 
-    .news-card {
-        border-radius: 0.5rem;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-        background-color: white;
-        border: 1px solid #f1f5f9;
-    }
+        .news-card {
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            background-color: white;
+            border: 1px solid #f1f5f9;
+        }
 
-    .news-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    }
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
 
-    .stat-card {
-        background-color: white;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        border: 1px solid #f1f5f9;
-    }
-</style>
+        .stat-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
 
-    <!-- Hero Section with Slideshow -->
-    <section class="relative">
-        <div class="swiper hero-swiper">
-            <div class="swiper-wrapper">
-                <!-- Slide 1 -->
-                <div class="swiper-slide relative">
-                    <div class="absolute inset-0 bg-blue-900 bg-opacity-50 z-10"></div>
-                    <img src="/img/driving-hero-1.jpeg" alt="Pace Driving School" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 z-20 flex items-center justify-center text-center px-4">
-                        <div class="text-white max-w-4xl">
-                            <h2 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4">Welcome to Pace Driving School</h2>
-                            <p class="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 opacity-90">
-                                Your journey to safe and confident driving starts here
-                            </p>
-                            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                                <a href="#courses"
-                                   class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-lg font-semibold text-base md:text-lg transition duration-300 transform hover:scale-105 inline-block text-center">
-                                    View Courses
-                                </a>
-                                <a href="#services"
-                                   class="border-2 border-white text-white hover:bg-white hover:text-blue-700 px-6 py-3 md:px-8 md:py-4 rounded-lg font-semibold text-base md:text-lg transition duration-300 transform hover:scale-105 inline-block text-center">
-                                    Our Services
-                                </a>
+        /* Professional Section Styles */
+        .professional-hero {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        }
+
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            animation: float 20s infinite linear;
+        }
+
+        .shape-1 {
+            width: 80px;
+            height: 80px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            left: 80%;
+            animation-delay: -5s;
+        }
+
+        .shape-3 {
+            width: 60px;
+            height: 60px;
+            top: 80%;
+            left: 10%;
+            animation-delay: -10s;
+        }
+
+        .shape-4 {
+            width: 100px;
+            height: 100px;
+            top: 20%;
+            left: 90%;
+            animation-delay: -15s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(10px, 15px) rotate(90deg);
+            }
+            50% {
+                transform: translate(0, 30px) rotate(180deg);
+            }
+            75% {
+                transform: translate(-10px, 15px) rotate(270deg);
+            }
+            100% {
+                transform: translate(0, 0) rotate(360deg);
+            }
+        }
+
+        .professional-title {
+            position: relative;
+            display: inline-block;
+        }
+
+        .professional-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, #f59e0b, #fbbf24);
+            border-radius: 2px;
+            transform: scaleX(0);
+            transform-origin: left;
+            animation: titleUnderline 2s ease-in-out 1s forwards;
+        }
+
+        @keyframes titleUnderline {
+            to {
+                transform: scaleX(1);
+            }
+        }
+
+        .floating-card {
+            position: absolute;
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+            animation: floatCard 15s infinite ease-in-out;
+        }
+
+        .card-1 {
+            top: 10%;
+            right: 10%;
+            animation-delay: 0s;
+        }
+
+        .card-2 {
+            top: 60%;
+            right: -5%;
+            animation-delay: -5s;
+        }
+
+        .card-3 {
+            bottom: 10%;
+            left: 5%;
+            animation-delay: -10s;
+        }
+
+        @keyframes floatCard {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            25% {
+                transform: translateY(-10px) rotate(2deg);
+            }
+            50% {
+                transform: translateY(0) rotate(0deg);
+            }
+            75% {
+                transform: translateY(10px) rotate(-2deg);
+            }
+        }
+
+        .main-visual {
+            position: relative;
+            z-index: 2;
+            border: 8px solid white;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .scroll-indicator {
+            text-align: center;
+            color: white;
+            font-size: 0.875rem;
+            opacity: 0.7;
+            animation: fadeInOut 2s infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, #3b82f6, #1e40af);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #dbeafe;
+            border-radius: 50%;
+            transform: scale(1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .icon-bg {
+            transform: scale(1.1);
+        }
+
+        .feature-icon i {
+            font-size: 2rem;
+            z-index: 2;
+            position: relative;
+        }
+    </style>
+    <!-- Professional Hero Section -->
+    <section class="professional-hero relative overflow-hidden fade-in-section">
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-900 to-blue-700 z-0"></div>
+
+        <!-- Animated Background Elements -->
+        <div class="absolute inset-0 z-1">
+            <div class="floating-shape shape-1"></div>
+            <div class="floating-shape shape-2"></div>
+            <div class="floating-shape shape-3"></div>
+            <div class="floating-shape shape-4"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <!-- Left Content -->
+                <div class="text-white">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 mb-6">
+                        <span class="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></span>
+                        <span class="text-sm font-medium">Trusted by 5,000+ Students</span>
+                    </div>
+
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                        Master The Road With
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-300 professional-title">
+                            Confidence
+                        </span>
+                    </h1>
+
+                    <p class="text-xl md:text-2xl text-blue-100 mb-8 leading-relaxed">
+                        Professional driving education with a 95% first-time pass rate.
+                        Your journey to safe, confident driving starts here.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="{{ url('courses') }}"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-4 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center">
+                            <span>Start Your Journey</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                        <a href="#why-choose-us"
+                        class="border-2 border-white border-opacity-30 hover:border-opacity-100 text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+                            <i class="fas fa-play-circle mr-2"></i>
+                            <span>Watch Our Story</span>
+                        </a>
+                    </div>
+
+                    <!-- Trust Indicators -->
+                    <div class="flex flex-wrap gap-6 mt-12 pt-8 border-t border-white border-opacity-20">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-green-500 bg-opacity-20 flex items-center justify-center mr-3">
+                                <i class="fas fa-check text-green-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">95% Pass Rate</div>
+                                <div class="text-sm text-blue-200">First Time</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-blue-500 bg-opacity-20 flex items-center justify-center mr-3">
+                                <i class="fas fa-award text-blue-300"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Certified</div>
+                                <div class="text-sm text-blue-200">Instructors</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-purple-500 bg-opacity-20 flex items-center justify-center mr-3">
+                                <i class="fas fa-shield-alt text-purple-300"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold">Insured</div>
+                                <div class="text-sm text-blue-200">Vehicles</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Slide 2 -->
-                <div class="swiper-slide relative">
-                    <div class="absolute inset-0 bg-black bg-opacity-50 z-10"></div>
-                    <img src="/img/driving-hero-2.jpeg" alt="Professional Driving Lessons" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 z-20 flex items-center justify-center text-center px-4">
-                        <div class="text-white max-w-4xl">
-                            <h2 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4">Expert Driving Instructors</h2>
-                            <p class="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 opacity-90">
-                                Learn from certified professionals with years of experience
-                            </p>
-                            <a href="#instructors"
-                               class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-lg font-semibold text-base md:text-lg transition duration-300 transform hover:scale-105 inline-block text-center">
-                                Meet Our Team
-                            </a>
+                <!-- Right Content - Animated Visual -->
+                <div class="relative">
+                    <div class="relative z-10">
+                        <div class="floating-card card-1">
+                            <div class="card-content">
+                                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mb-4">
+                                    <i class="fas fa-car text-yellow-600 text-xl"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800">Beginner Friendly</h3>
+                                <p class="text-sm text-gray-600 mt-2">No experience needed</p>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Slide 3 -->
-                <div class="swiper-slide relative">
-                    <div class="absolute inset-0 bg-black bg-opacity-50 z-10"></div>
-                    <img src="/img/driving-hero-3.jpeg" alt="Driving Test Preparation" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 z-20 flex items-center justify-center text-center px-4">
-                        <div class="text-white max-w-4xl">
-                            <h2 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-4">High Success Rate</h2>
-                            <p class="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 opacity-90">
-                                95% first-time pass rate on driving tests
-                            </p>
-                            <a href="#contact"
-                               class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-lg font-semibold text-base md:text-lg transition duration-300 transform hover:scale-105 inline-block text-center">
-                                Book Lessons
-                            </a>
+                        <div class="floating-card card-2">
+                            <div class="card-content">
+                                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                                    <i class="fas fa-calendar-check text-green-600 text-xl"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800">Flexible Scheduling</h3>
+                                <p class="text-sm text-gray-600 mt-2">Book anytime</p>
+                            </div>
+                        </div>
+
+                        <div class="floating-card card-3">
+                            <div class="card-content">
+                                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                                    <i class="fas fa-graduation-cap text-blue-600 text-xl"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800">Certified Instructors</h3>
+                                <p class="text-sm text-gray-600 mt-2">Expert guidance</p>
+                            </div>
+                        </div>
+
+                        <!-- Main Visual -->
+                        <div class="main-visual rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition duration-700">
+                            <img src="/img/water-hero-1.jpeg" alt="Professional Driving Instruction" class="w-full h-auto">
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-900 to-transparent p-6">
+                                <div class="text-white">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full border-2 border-white mr-3 overflow-hidden">
+                                            <img src="/img/instructor-1.jpeg" alt="Instructor" class="w-full h-full object-cover">
+                                        </div>
+                                        <div>
+                                            <div class="font-bold">John Smith</div>
+                                            <div class="text-sm text-blue-200">Senior Instructor</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="swiper-pagination !bottom-4"></div>
-            <div class="swiper-button-prev !w-10 !h-10 md:!w-12 md:!h-12 !left-2 bg-white bg-opacity-20 rounded-full shadow-lg"></div>
-            <div class="swiper-button-next !w-10 !h-10 md:!w-12 md:!h-12 !right-2 bg-white bg-opacity-20 rounded-full shadow-lg"></div>
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+            <div class="scroll-indicator">
+                <span>Scroll to explore</span>
+                <div class="mt-2 w-6 h-10 border-2 border-white border-opacity-30 rounded-full flex justify-center">
+                    <div class="w-1 h-3 bg-white rounded-full mt-2 animate-bounce"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+     <!-- About Section -->
+    <section id="about" class="py-16 bg-gray-50 fade-in-section">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-blue-700 mb-6">About Pace Driving School</h2>
+                    <p class="text-lg text-gray-700 mb-6 leading-relaxed">
+                        Pace Driving School has been training confident and safe drivers for over a decade.
+                        Our certified instructors are committed to providing the highest quality driving education.
+                    </p>
+                    <p class="text-lg text-gray-700 mb-8 leading-relaxed">
+                        We pride ourselves on our personalized approach, ensuring each student receives
+                        the attention and guidance they need to become skilled, responsible drivers.
+                    </p>
+
+                    <div class="grid grid-cols-2 gap-6 mb-8">
+                        <div class="stat-card p-4">
+                            <div class="text-2xl font-bold text-blue-700 mb-1">Mission</div>
+                            <p class="text-sm text-gray-600">Create confident, safe drivers for life</p>
+                        </div>
+                        <div class="stat-card p-4">
+                            <div class="text-2xl font-bold text-blue-700 mb-1">Approach</div>
+                            <p class="text-sm text-gray-600">Patient, personalized instruction</p>
+                        </div>
+                    </div>
+
+                    <a href="{{ url('about') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg font-semibold transition duration-300 inline-block transform hover:scale-105">
+                        Read More About Us
+                    </a>
+                </div>
+
+                <div class="relative">
+                    <img src="/img/about-driving.jpeg" alt="About Pace Driving School" class="rounded-lg shadow-lg w-full">
+                    <div class="absolute -bottom-6 -left-6 bg-yellow-500 text-white p-6 rounded-lg shadow-lg">
+                        <div class="text-3xl font-bold mb-2">10+ Years</div>
+                        <div class="opacity-90">Of Excellence</div>
+                    </div>
+                </div>
+            </div>
+              <!-- CTA Section -->
+        <div class="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 md:p-12 text-center text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24"></div>
+
+            <div class="relative z-10 max-w-3xl mx-auto">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4">Ready to Start Your Driving Journey?</h2>
+                <p class="text-lg text-blue-100 mb-8">
+                    Join thousands of successful drivers who started their journey with Pace Driving School
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{{ url('book-lessons') }}"
+                       class="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105">
+                        Book Your First Lesson
+                    </a>
+                    <a href="tel:+254700123456"
+                       class="border-2 border-white border-opacity-30 hover:border-opacity-100 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+                        <i class="fas fa-phone mr-2"></i>
+                        Call Us Now
+                    </a>
+                </div>
+            </div>
+        </div>
         </div>
     </section>
 
@@ -267,260 +615,6 @@
                     </div>
                     <div class="quick-link-text">Our Locations</div>
                 </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Quick Stats Section -->
-    <section class="py-8 bg-blue-50 fade-in-section">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                <div class="text-center">
-                    <div class="text-2xl md:text-3xl font-bold text-blue-700 mb-1">5,000+</div>
-                    <div class="text-sm md:text-base text-gray-600">Students Trained</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl md:text-3xl font-bold text-blue-700 mb-1">95%</div>
-                    <div class="text-sm md:text-base text-gray-600">First-Time Pass Rate</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl md:text-3xl font-bold text-blue-700 mb-1">15+</div>
-                    <div class="text-sm md:text-base text-gray-600">Certified Instructors</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl md:text-3xl font-bold text-blue-700 mb-1">10+</div>
-                    <div class="text-sm md:text-base text-gray-600">Years Experience</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Courses Section -->
-    <section id="courses" class="py-16 bg-white fade-in-section">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-blue-700 mb-4">Our Driving Courses</h2>
-                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                    Comprehensive driving programs tailored to your needs and experience level
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-                <!-- Course 1 -->
-                <div class="service-card group">
-                    <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-yellow-100 transition duration-300">
-                        <i class="fas fa-user text-blue-600 text-2xl group-hover:text-yellow-600 transition duration-300"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-blue-700 mb-3">Beginner Course</h3>
-                    <p class="text-gray-600 text-sm">
-                        Perfect for first-time drivers with no previous experience
-                    </p>
-                    <a href="#" class="inline-block mt-4 text-blue-600 hover:text-yellow-600 font-medium text-sm transition duration-300">
-                        Learn More →
-                    </a>
-                </div>
-
-                <!-- Course 2 -->
-                <div class="service-card group">
-                    <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-yellow-100 transition duration-300">
-                        <i class="fas fa-sync-alt text-blue-600 text-2xl group-hover:text-yellow-600 transition duration-300"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-blue-700 mb-3">Refresher Course</h3>
-                    <p class="text-gray-600 text-sm">
-                        Regain confidence and update your driving skills
-                    </p>
-                    <a href="#" class="inline-block mt-4 text-blue-600 hover:text-yellow-600 font-medium text-sm transition duration-300">
-                        Learn More →
-                    </a>
-                </div>
-
-                <!-- Course 3 -->
-                <div class="service-card group">
-                    <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-yellow-100 transition duration-300">
-                        <i class="fas fa-truck text-blue-600 text-2xl group-hover:text-yellow-600 transition duration-300"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-blue-700 mb-3">Commercial License</h3>
-                    <p class="text-gray-600 text-sm">
-                        Training for commercial vehicle licenses and endorsements
-                    </p>
-                    <a href="#" class="inline-block mt-4 text-blue-600 hover:text-yellow-600 font-medium text-sm transition duration-300">
-                        Learn More →
-                    </a>
-                </div>
-
-                <!-- Course 4 -->
-                <div class="service-card group">
-                    <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-yellow-100 transition duration-300">
-                        <i class="fas fa-motorcycle text-blue-600 text-2xl group-hover:text-yellow-600 transition duration-300"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-blue-700 mb-3">Motorcycle Training</h3>
-                    <p class="text-gray-600 text-sm">
-                        Specialized training for motorcycle license and safety
-                    </p>
-                    <a href="#" class="inline-block mt-4 text-blue-600 hover:text-yellow-600 font-medium text-sm transition duration-300">
-                        Learn More →
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Online Services Section -->
-    <section class="py-16 bg-blue-600 text-white fade-in-section">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4">Online Services</h2>
-                <p class="text-lg opacity-90 max-w-3xl mx-auto">
-                    Manage your driving education conveniently from anywhere
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                <div class="text-center p-6">
-                    <div class="w-20 h-20 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-yellow-500 hover:bg-opacity-30 transition duration-300">
-                        <i class="fas fa-calendar-plus text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-3">Book Lessons</h3>
-                    <p class="opacity-90 text-sm mb-4">
-                        Schedule your driving lessons online
-                    </p>
-                    <a href="{{ url('book-lessons') }}" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition duration-300 transform hover:scale-105">
-                        Book Now
-                    </a>
-                </div>
-
-                <div class="text-center p-6">
-                    <div class="w-20 h-20 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-yellow-500 hover:bg-opacity-30 transition duration-300">
-                        <i class="fas fa-file-invoice-dollar text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-3">Make Payment</h3>
-                    <p class="opacity-90 text-sm mb-4">
-                        Pay for courses and lessons securely online
-                    </p>
-                    <a href="#" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition duration-300 transform hover:scale-105">
-                        Pay Now
-                    </a>
-                </div>
-
-                <div class="text-center p-6">
-                    <div class="w-20 h-20 mx-auto mb-4 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-yellow-500 hover:bg-opacity-30 transition duration-300">
-                        <i class="fas fa-headset text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-3">Student Support</h3>
-                    <p class="opacity-90 text-sm mb-4">
-                        Get help with your driving education journey
-                    </p>
-                    <a href="{{url('support')}}" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition duration-300 transform hover:scale-105">
-                        Get Help
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="py-16 bg-gray-50 fade-in-section">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div>
-                    <h2 class="text-3xl md:text-4xl font-bold text-blue-700 mb-6">About Pace Driving School</h2>
-                    <p class="text-lg text-gray-700 mb-6 leading-relaxed">
-                        Pace Driving School has been training confident and safe drivers for over a decade.
-                        Our certified instructors are committed to providing the highest quality driving education.
-                    </p>
-                    <p class="text-lg text-gray-700 mb-8 leading-relaxed">
-                        We pride ourselves on our personalized approach, ensuring each student receives
-                        the attention and guidance they need to become skilled, responsible drivers.
-                    </p>
-
-                    <div class="grid grid-cols-2 gap-6 mb-8">
-                        <div class="stat-card p-4">
-                            <div class="text-2xl font-bold text-blue-700 mb-1">Mission</div>
-                            <p class="text-sm text-gray-600">Create confident, safe drivers for life</p>
-                        </div>
-                        <div class="stat-card p-4">
-                            <div class="text-2xl font-bold text-blue-700 mb-1">Approach</div>
-                            <p class="text-sm text-gray-600">Patient, personalized instruction</p>
-                        </div>
-                    </div>
-
-                    <a href="{{ url('about') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg font-semibold transition duration-300 inline-block transform hover:scale-105">
-                        Read More About Us
-                    </a>
-                </div>
-
-                <div class="relative">
-                    <img src="/img/about-driving.jpeg" alt="About Pace Driving School" class="rounded-lg shadow-lg w-full">
-                    <div class="absolute -bottom-6 -left-6 bg-yellow-500 text-white p-6 rounded-lg shadow-lg">
-                        <div class="text-3xl font-bold mb-2">10+ Years</div>
-                        <div class="opacity-90">Of Excellence</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Instructors Section -->
-    <section id="instructors" class="py-16 bg-white fade-in-section">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-blue-700 mb-4">Meet Our Instructors</h2>
-                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                    Learn from our team of certified, experienced driving instructors
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Instructor 1 -->
-                <div class="news-card group">
-                    <div class="overflow-hidden">
-                        <img src="/img/instructor-1.jpeg" alt="John Smith" class="w-full h-48 object-cover group-hover:scale-105 transition duration-500">
-                    </div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold text-blue-700 mb-2">John Smith</h3>
-                        <p class="text-gray-600 text-sm mb-4">
-                            Senior Instructor with 8 years experience specializing in beginner drivers
-                        </p>
-                        <div class="flex justify-between items-center text-sm text-gray-500">
-                            <span>Certified: 2015</span>
-                            <span>Students: 450+</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Instructor 2 -->
-                <div class="news-card group">
-                    <div class="overflow-hidden">
-                        <img src="/img/instructor-2.jpeg" alt="Sarah Johnson" class="w-full h-48 object-cover group-hover:scale-105 transition duration-500">
-                    </div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold text-blue-700 mb-2">Sarah Johnson</h3>
-                        <p class="text-gray-600 text-sm mb-4">
-                            Expert in defensive driving and commercial license training
-                        </p>
-                        <div class="flex justify-between items-center text-sm text-gray-500">
-                            <span>Certified: 2017</span>
-                            <span>Students: 380+</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Instructor 3 -->
-                <div class="news-card group">
-                    <div class="overflow-hidden">
-                        <img src="/img/instructor-3.jpeg" alt="Mike Davis" class="w-full h-48 object-cover group-hover:scale-105 transition duration-500">
-                    </div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold text-blue-700 mb-2">Mike Davis</h3>
-                        <p class="text-gray-600 text-sm mb-4">
-                            Motorcycle specialist and advanced driving techniques instructor
-                        </p>
-                        <div class="flex justify-between items-center text-sm text-gray-500">
-                            <span>Certified: 2016</span>
-                            <span>Students: 320+</span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
@@ -762,6 +856,41 @@
 
             fadeInSections.forEach(section => {
                 fadeInObserver.observe(section);
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize animations for the professional section
+            const professionalTitle = document.querySelector('.professional-title');
+            const floatingCards = document.querySelectorAll('.floating-card');
+            const featureCards = document.querySelectorAll('.feature-card');
+
+            // Add intersection observer for feature cards
+            const featureObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            featureCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+                featureObserver.observe(card);
+            });
+
+            // Add scroll indicator behavior
+            const scrollIndicator = document.querySelector('.scroll-indicator');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 100) {
+                    scrollIndicator.style.opacity = '0';
+                } else {
+                    scrollIndicator.style.opacity = '0.7';
+                }
             });
         });
     </script>
