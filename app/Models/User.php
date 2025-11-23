@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -21,6 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'phone',
         'bio',
         'avatar',
+        'email_verified_at',
         'is_active',
         'preferences',
         // Organizer fields
@@ -94,7 +96,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // Relationships
 
-
+  public function enrolledCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class)
+                    ->withTimestamps();
+    }
     public function eventsAttending()
     {
         return $this->hasManyThrough(

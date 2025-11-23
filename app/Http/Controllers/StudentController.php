@@ -71,7 +71,7 @@ class StudentController extends Controller
                 'course_id' => 'required|exists:courses,id',
                 'total_fee' => 'required|numeric',
                 'total_class' => 'required|integer|min:1',
-                'type' => '3',
+
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -90,7 +90,10 @@ class StudentController extends Controller
                 'email' => $request->email ?? $request->id_no . '@example.com',
                 'password' => Hash::make($password),
                 'role' => 'student',
+                'email_verified_at' => now(),
             ]);
+            $user->assignRole('student');
+
 
             // Create student linked to user
             $student = Student::create([
@@ -108,6 +111,7 @@ class StudentController extends Controller
                 'ef_no' => $request->ef_no,
                 'course_id' => $request->course_id,
                 'total_fee' => $request->total_fee,
+                'balance' => $request->total_fee,
                 'total_class' => $request->total_class,
                 'type' => $request->type,
                 'status' => 'active',

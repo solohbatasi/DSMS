@@ -33,8 +33,8 @@ use App\Http\Controllers\BillController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ExpenseController;
-use App\Http\Controllers\Admin\MeterReadingController;
-use App\Http\Controllers\Admin\WaterConnectionController;
+use App\Http\Controllers\FeedbackController;
+
 
 use App\Models\Customer;
 
@@ -77,6 +77,16 @@ Route::get('/admin/users/{user}/permissions', [App\Http\Controllers\Admin\UserCo
 Route::post('/admin/users/{user}/permissions', [App\Http\Controllers\Admin\UserController::class, 'updatePermissions'])
     ->name('admin.users.permissions.update');
 
+    // routes/web.php
+// Route::middleware(['auth', 'student'])->prefix('feedback')->group(function () {
+    Route::get('/course-rating', [FeedbackController::class, 'courseRatingForm'])->name('feedback.course-rating');
+    Route::post('/course-rating', [FeedbackController::class, 'storeCourseRating'])->name('feedback.course-rating.store');
+
+    Route::get('/services', [FeedbackController::class, 'servicesFeedbackForm'])->name('feedback.services');
+    Route::post('/services', [FeedbackController::class, 'storeServicesFeedback'])->name('feedback.services.store');
+
+    Route::get('/thank-you', [FeedbackController::class, 'thankYou'])->name('feedback.thank-you');
+// });
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 Route::resource('courses', CourseController::class);
 // web.php

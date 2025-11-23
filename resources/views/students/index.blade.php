@@ -324,7 +324,7 @@
                         @foreach ($courses as $course)
                             <option value="{{ $course->id }}"
                                     data-fee="{{ $course->total_amount }}"
-                                    data-duration="{{ $course->training_duration }}">
+                                    data-duration="{{ $course->total_sessions }}">
                                 {{ $course->course }}
                             </option>
                         @endforeach
@@ -415,7 +415,7 @@
                         @foreach ($courses as $course)
                             <option value="{{ $course->id }}"
                                     data-fee="{{ $course->total_amount }}"
-                                    data-duration="{{ $course->training_duration }}">
+                                    data-duration="{{ $course->total_sessions }}">
                                 {{ $course->course }}
                             </option>
                         @endforeach

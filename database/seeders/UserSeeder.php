@@ -10,85 +10,59 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
-        // Create admin user
-        $admin = User::create([
-            'name' => 'Admin User',
+        // Admin account
+        $admin = User::firstOrCreate([
             'email' => 'admin@mail.com',
+        ], [
+            'name' => 'Admin User',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'role' => 'admin',
         ]);
         $admin->assignRole('admin');
 
-        // Create developer user
-        $developer = User::create([
-            'name' => 'Developer',
+        // Developer account
+        $developer = User::firstOrCreate([
             'email' => 'developer@mail.com',
+        ], [
+            'name' => 'Developer User',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'role' => 'developer',
         ]);
         $developer->assignRole('developer');
 
-        // Create manager user
-        $manager = User::create([
-            'name' => 'Manager',
-            'email' => 'manager@mail.com',
+        // Receptionist
+        $receptionist = User::firstOrCreate([
+            'email' => 'reception@mail.com',
+        ], [
+            'name' => 'Reception Desk',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'role' => 'manager',
+            'role' => 'receptionist',
         ]);
-        $manager->assignRole('manager');
+        $receptionist->assignRole('receptionist');
 
-        // Create CEO user
-        $ceo = User::create([
-            'name' => 'CEO',
-            'email' => 'ceo@mail.com',
+          // Receptionist
+        $instructor = User::firstOrCreate([
+            'email' => 'instructor@mail.com',
+        ], [
+            'name' => 'instructor',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'role' => 'ceo',
+            'role' => 'instructor',
         ]);
-        $ceo->assignRole('ceo');
+        $instructor->assignRole('instructor');
 
-          // Create Registar user
-        $registrar = User::create([
-            'name' => 'Registar',
-            'email' => 'registrar@mail.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-            'role' => 'registrar',
-        ]);
-        $registrar->assignRole('registrar');
-
-
-
-          // Create Report user
-        $report = User::create([
-            'name' => 'Reports',
+        // Reporting officer
+        $report = User::firstOrCreate([
             'email' => 'report@mail.com',
+        ], [
+            'name' => 'Report Officer',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'role' => 'report',
         ]);
         $report->assignRole('report');
-
-            // Create Chief user
-        $chief = User::create([
-            'name' => 'Chief',
-            'email' => 'chief@mail.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-            'role' => 'chief',
-        ]);
-        $chief->assignRole('chief');
-
-        $ict = User::create([
-            'name' => 'ICT',
-            'email' => 'ict@mail.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-            'role' => 'ict',
-        ]);
-        $ict->assignRole('ict');
     }
 }

@@ -11,275 +11,133 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        // ✅ Reset cached roles and permissions
+        // Reset cached permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // ✅ Define permissions
+        // -------------------------------------------------------
+        // 1. ALL SYSTEM PERMISSIONS
+        // -------------------------------------------------------
         $permissions = [
-            // User management
-            'add users',
-            'view users',
-            'edit users',
-            'delete users',
-            'manage roles',
 
-            // Students management
-            'add students',
-            'view students',
-            'edit students',
-            'delete students',
+            // Users
+            'add users', 'view users', 'edit users', 'delete users', 'manage roles',
 
-            // Permissions management
-            'view permissions',
-            'edit permissions',
+            // Students
+            'add students', 'view students', 'edit students', 'delete students',
 
-            // Payments management
-            'add payments',
-            'view payments',
-            'edit payments',
-            'delete payments',
+            // Payments
+            'add payments', 'view payments', 'edit payments', 'delete payments',
 
-            // expenses management
-            'add expenses',
-            'view expenses',
-            'edit expenses',
-            'delete expenses',
+            // Expenses
+            'add expenses', 'view expenses', 'edit expenses', 'delete expenses',
 
-            // Results management
-            'add results',
-            'view results',
-            'edit results',
-            'delete results',
+            // Results
+            'add results', 'view results', 'edit results', 'delete results',
 
-            // Courses management
-            'add courses',
-            'view courses',
-            'edit courses',
-            'delete courses',
+            // Courses
+            'add courses', 'view courses', 'edit courses', 'delete courses',
 
-            // applications management
-            'add applications',
-            'view applications',
-            'edit applications',
-            'delete applications',
+            // Applications
+            'add applications', 'view applications', 'edit applications', 'delete applications',
 
-            // reports management
-            'add reports',
-            'view reports',
-            'edit reports',
-            'delete reports',
+             // Permissions
+            'add permissions', 'view permissions', 'edit permissions', 'delete permissions',
+
+            // Reports
+            'add reports', 'view reports', 'edit reports', 'delete reports',
 
             // System
             'access admin panel',
             'manage system',
         ];
 
-        // ✅ Create permissions safely (avoiding duplicates)
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+        foreach ($permissions as $name) {
+            Permission::firstOrCreate(['name' => $name]);
         }
 
-        // ✅ Create roles safely
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $ictRole = Role::firstOrCreate(['name' => 'ict']);
-        $developerRole = Role::firstOrCreate(['name' => 'developer']);
-        $managerRole = Role::firstOrCreate(['name' => 'manager']);
-        $ceoRole = Role::firstOrCreate(['name' => 'ceo']);
-        $chiefRole = Role::firstOrCreate(['name' => 'chief']);
-        $billerRole = Role::firstOrCreate(['name' => 'biller']);
-        $registrarRole = Role::firstOrCreate(['name' => 'registrar']);
-        $reportRole = Role::firstOrCreate(['name' => 'report']);
+        // -------------------------------------------------------
+        // 2. ROLES
+        // -------------------------------------------------------
+        $admin         = Role::firstOrCreate(['name' => 'admin']);
+        $developer     = Role::firstOrCreate(['name' => 'developer']);
+        $instructor    = Role::firstOrCreate(['name' => 'instructor']);
+        $student       = Role::firstOrCreate(['name' => 'student']);
+        $receptionist  = Role::firstOrCreate(['name' => 'receptionist']);
+        $reportRole    = Role::firstOrCreate(['name' => 'report']);
 
-        // ✅ Assign permissions per role
-        $developerRole->syncPermissions(Permission::all());
+        // -------------------------------------------------------
+        // 3. PERMISSIONS PER ROLE
+        // -------------------------------------------------------
 
-        $adminRole->syncPermissions([
-            // User management
-            'add users',
-            'view users',
-            'edit users',
-            'delete users',
-            'manage roles',
+        // Developer → ALL permissions
+        $developer->syncPermissions(Permission::all());
 
-            // Students management
-            'add students',
-            'view students',
-            'edit students',
-            'delete students',
+        // Admin → almost all system management permissions
+        $admin->syncPermissions([
+            'add users', 'view users', 'edit users', 'delete users', 'manage roles',
 
-            // Permissions management
-            'view permissions',
-            'edit permissions',
+            'add students', 'view students', 'edit students', 'delete students',
 
-            // Payments management
-            'add payments',
-            'view payments',
-            'edit payments',
-            'delete payments',
+            'add payments', 'view payments', 'edit payments', 'delete payments',
 
-            // expenses management
-            'add expenses',
-            'view expenses',
-            'edit expenses',
-            'delete expenses',
+            'add expenses', 'view expenses', 'edit expenses', 'delete expenses',
 
-            // Students management
-            'add students',
-            'view students',
-            'edit students',
-            'delete students',
+            'add results', 'view results', 'edit results', 'delete results',
 
-            // Results management
-            'add results',
+            'add courses', 'view courses', 'edit courses', 'delete courses',
+
+            'add applications', 'view applications', 'edit applications', 'delete applications',
+
+            'add permissions', 'view permissions', 'edit permissions', 'delete permissions',
+
+            'add reports', 'view reports', 'edit reports', 'delete reports',
+
+            'access admin panel',
+            'manage system',
+        ]);
+
+        // Instructor → manage students, results, courses
+        $instructor->syncPermissions([
+            'view students', 'edit students',
+            'add results', 'view results', 'edit results',
+            'view courses',
+        ]);
+
+        // Student → can view own info (minimal)
+        $student->syncPermissions([
+            'view courses',
             'view results',
-            'edit results',
-            'delete results',
+            'view applications',
+        ]);
 
-            // Courses management
-            'add courses',
+        // Receptionist → applications, payments, students
+        $receptionist->syncPermissions([
+            'add students', 'view students',
+
+            'add payments', 'view payments',
+
+            'add applications', 'view applications',
+
             'view courses',
-            'edit courses',
-            'delete courses',
-
-            // applications management
-            'add applications',
-            'view applications',
-            'edit applications',
-            'delete applications',
-
-            // reports management
-            'add reports',
-            'view reports',
-            'edit reports',
-            'delete reports',
         ]);
 
-        $ictRole->syncPermissions([
-
-        ]);
-
-        $managerRole->syncPermissions([
-            // User management
-            'add users',
-            'view users',
-
-             // Students management
-            'add students',
-            'view students',
-
-
-            // Payments management
-            'add payments',
-            'view payments',
-
-            // Courses management
-            'add courses',
-            'view courses',
-
-
-            // applications management
-            'add applications',
-            'view applications',
-
-            // reports management
-            'add reports',
-            'view reports',
-
-        ]);
-
-        $ceoRole->syncPermissions([
-            // User management
-            'add users',
-            'view users',
-
-            // Students management
-            'add students',
-            'view students',
-
-
-
-            // Payments management
-            'add payments',
-            'view payments',
-
-            // Courses management
-            'add courses',
-            'view courses',
-
-
-            // applications management
-            'add applications',
-            'view applications',
-
-            // reports management
-            'add reports',
-            'view reports',
-
-        ]);
-
-        $chiefRole->syncPermissions([
-            // User management
-            'add users',
-            'view users',
-
-
-             // Students management
-            'add students',
-            'view students',
-
-            // Courses management
-            'add courses',
-            'view courses',
-
-
-            // applications management
-            'add applications',
-            'view applications',
-
-            // reports management
-            'add reports',
-            'view reports',
-
-        ]);
-
-
-        $registrarRole->syncPermissions([
-
-            // Students management
-            'add students',
-            'view students',
-            'edit students',
-
-
-
-            // applications management
-            'add applications',
-            'view applications',
-
-        ]);
-
+        // Report user → only reports
         $reportRole->syncPermissions([
-
-            // reports management
-            'add reports',
-            'view reports',
-            'edit reports',
-            'delete reports',
-
+            'add reports', 'view reports', 'edit reports', 'delete reports',
         ]);
 
-        // ✅ Optional: Automatically assign admin role to the first admin user
-        $adminUser = User::where('email', 'admin@mail.com')->first();
-        if ($adminUser && !$adminUser->hasRole('admin')) {
+        // -------------------------------------------------------
+        // 4. AUTO-ASSIGN ROLES TO DEFAULT USERS
+        // -------------------------------------------------------
+
+        if ($adminUser = User::where('email', 'admin@mail.com')->first()) {
             $adminUser->assignRole('admin');
         }
 
-        $developerUser = User::where('email', 'developer@mail.com')->first();
-        if ($developerUser && !$developerUser->hasRole('developer')) {
+        if ($developerUser = User::where('email', 'developer@mail.com')->first()) {
             $developerUser->assignRole('developer');
         }
 
-        // ✅ Refresh Spatie cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }
