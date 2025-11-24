@@ -16,6 +16,7 @@ use App\Models\Payment;
 use App\Models\Meter;
 use App\Models\WaterConnectionApplication;
 use App\Models\Student_ef_list;
+use App\Models\Student;
 use App\Models\Booking;
 use App\Models\VotePurchase;
 use Illuminate\Support\Facades\DB;
@@ -58,17 +59,21 @@ class DashboardController extends Controller
                 $data = array_merge($data, $this->getAdminData());
                 return view('dashboard.admin', $data);
 
-            case 'organizer':
-                $data = array_merge($data, $this->getOrganizerData($user));
-                return view('dashboard.organizer', $data);
+            case 'student':
+                $data = array_merge($data, $this->getStudentData($user));
+                return view('dashboard.student', $data);
 
-            case 'vendor':
-                $data = array_merge($data, $this->getVendorData($user));
-                return view('dashboard.vendor', $data);
+            case 'instructor':
+                $data = array_merge($data, $this->getInstructorData($user));
+                return view('dashboard.instructor', $data);
+
+            case 'receptionist':
+                $data = array_merge($data, $this->getReceptionistData($user));
+                return view('dashboard.receptionist', $data);
 
             default: // attendee or fallback
-                $data = array_merge($data, $this->getAdminData($user));
-                return view('dashboard.admin', $data);
+                $data = array_merge($data, $this->getGuestData($user));
+                return view('dashboard.guest', $data);
         }
     }
 
@@ -229,10 +234,69 @@ class DashboardController extends Controller
         ];
     }
 
+    private function getStudentData($user)
+    {
+        // Get student record
+        $student = \App\Models\Student::where('user_id', $user->id)->first();
 
+        if (!$student) {
+            return [
+                'student' => null,
+                'ef_lists' => collect(),
+                'total_balance' => 0,
+                'total_paid' => 0,
+                'recent_payments' => collect(),
+                'active_courses' => collect()
+            ];
+        }
 
+        // Get student's EF lists with course information
+        $ef_lists = \App\Models\Student_ef_list::with(['course'])
+            ->where('student_id', $student->id)
+            ->get();
 
+        // Calculate financial summary
+        $total_balance = $ef_lists->sum('balance');
+        $total_paid = $ef_lists->sum('paid_amount');
+        $total_fee = $ef_lists->sum('total_fee');
 
+        // Get recent payments
+        $recent_payments = \App\Models\Payment::with(['efList.course'])
+            ->whereHas('efList', function($query) use ($student) {
+                $query->where('student_id', $student->id);
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Get active courses (EF lists with active status)
+        $active_courses = $ef_lists->where('status', 'active');
+
+        // Calculate progress for each course
+        $courses_with_progress = $ef_lists->map(function($ef_list) {
+            $progress = $ef_list->total_fee > 0 ?
+                (($ef_list->paid_amount / $ef_list->total_fee) * 100) : 0;
+
+            return [
+                'ef_list' => $ef_list,
+                'progress' => min($progress, 100),
+                'remaining_balance' => $ef_list->balance,
+                'payment_status' => $progress >= 100 ? 'Paid' : ($progress > 0 ? 'Partial' : 'Pending')
+            ];
+        });
+
+        return [
+            'student' => $student,
+            'ef_lists' => $ef_lists,
+            'courses_with_progress' => $courses_with_progress,
+            'total_balance' => $total_balance,
+            'total_paid' => $total_paid,
+            'total_fee' => $total_fee,
+            'recent_payments' => $recent_payments,
+            'active_courses' => $active_courses,
+            'payment_progress' => $total_fee > 0 ? ($total_paid / $total_fee) * 100 : 0
+        ];
+    }
 
     public function notifications()
     {
@@ -248,6 +312,7 @@ class DashboardController extends Controller
             'title' => 'My Notifications - EventSphere'
         ]);
     }
+
     public function markNotificationAsRead($id)
     {
         $user = Auth::user();
@@ -260,6 +325,7 @@ class DashboardController extends Controller
             $notification->markAsRead();
         }
     }
+
     public function markAllNotificationsAsRead()
     {
         $user = Auth::user();
@@ -270,4 +336,5 @@ class DashboardController extends Controller
 
         return back()->with('success', 'All notifications marked as read.');
     }
+
 }

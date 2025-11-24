@@ -138,17 +138,28 @@ public function update(Request $request, User $user)
         ]);
 
         try {
-            // Sync direct permissions
-            $user->syncPermissions($request->permissions ?? []);
+            // Get the user's primary role
+            $role = $user->roles->first();
+
+            if (!$role) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This user has no role assigned.'
+                ], 400);
+            }
+
+            // Sync permissions on the role instead of the user
+            $role->syncPermissions($request->permissions ?? []);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Permissions updated successfully'
+                'message' => 'Role permissions updated successfully'
             ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update permissions: ' . $e->getMessage()
+                'message' => 'Failed to update role permissions: ' . $e->getMessage()
             ], 500);
         }
     }
