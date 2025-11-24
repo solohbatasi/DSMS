@@ -49,6 +49,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // System
             'access admin panel',
             'manage system',
+
+            //tickets
+            'manage tickets', 'view tickets', 'add tickets', 'print tickets'
         ];
 
         foreach ($permissions as $name) {
@@ -94,13 +97,14 @@ class RolesAndPermissionsSeeder extends Seeder
 
             'access admin panel',
             'manage system',
+            'print tickets',
         ]);
 
         // Instructor → manage students, results, courses
         $instructor->syncPermissions([
             'view students', 'edit students',
             'add results', 'view results', 'edit results',
-            'view courses',
+            'view courses','print tickets'
         ]);
 
         // Student → can view own info (minimal)
@@ -108,6 +112,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view courses',
             'view results',
             'view applications',
+            'manage tickets',
         ]);
 
         // Receptionist → applications, payments, students
@@ -118,7 +123,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
             'add applications', 'view applications',
 
-            'view courses',
+            'view courses','print tickets',
         ]);
 
         // Report user → only reports

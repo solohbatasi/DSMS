@@ -34,6 +34,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\TicketDownloadController;
 
 
 use App\Models\Customer;
@@ -77,7 +78,14 @@ Route::get('/admin/users/{user}/permissions', [App\Http\Controllers\Admin\UserCo
 Route::post('/admin/users/{user}/permissions', [App\Http\Controllers\Admin\UserController::class, 'updatePermissions'])
     ->name('admin.users.permissions.update');
 
-    // routes/web.php
+    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+Route::post('/tickets/download', [TicketController::class, 'download'])->name('tickets.download');
+Route::get('/tickets/history', [TicketController::class, 'history'])->name('tickets.history');
+
+Route::get('/student/tickets', [App\Http\Controllers\DashboardController::class, 'ticketDownload'])->name('student.tickets');
+Route::post('/student/tickets/download', [App\Http\Controllers\DashboardController::class, 'downloadTicket'])->name('student.tickets.download');
+Route::post('/student/tickets/{ticket}/redownload', [App\Http\Controllers\DashboardController::class, 'redownloadTicket'])->name('student.tickets.redownload');
+Route::get('/student/tickets/{ticket}/preview', [App\Http\Controllers\DashboardController::class, 'previewTicket'])->name('student.tickets.preview');  // routes/web.php
 // Route::middleware(['auth', 'student'])->prefix('feedback')->group(function () {
     Route::get('/course-rating', [FeedbackController::class, 'courseRatingForm'])->name('feedback.course-rating');
     Route::post('/course-rating', [FeedbackController::class, 'storeCourseRating'])->name('feedback.course-rating.store');

@@ -273,7 +273,7 @@
             <i class="fas fa-times text-xl"></i>
         </button>
 
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Student Enrollment</h2>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Learner Enrollment</h2>
 
         <form id="enrollmentForm">
 
@@ -309,7 +309,7 @@
 
             <!-- EF NUMBER -->
             <div class="mb-4">
-                <label class="text-sm font-medium">EF Number</label>
+                <label class="text-sm font-medium">ADM / Reg /EF Number</label>
                 <input type="text" name="ef_no" class="w-full border rounded p-2" required>
             </div>
 
@@ -324,7 +324,7 @@
                         @foreach ($courses as $course)
                             <option value="{{ $course->id }}"
                                     data-fee="{{ $course->total_amount }}"
-                                    data-duration="{{ $course->total_sessions }}">
+                                    data-duration="{{ $course->practical_sessions }}">
                                 {{ $course->course }}
                             </option>
                         @endforeach
@@ -340,7 +340,7 @@
 
             <!-- TOTAL CLASSES (Auto from DB but editable) -->
             <div class="mb-4">
-                <label class="text-sm font-medium">Number of Classes</label>
+                <label class="text-sm font-medium">Number of Practical Classes</label>
                 <input type="number" name="total_class" id="totalClass"
                     class="w-full border rounded p-2" required>
             </div>

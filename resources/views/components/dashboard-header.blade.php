@@ -1,3 +1,9 @@
+@php
+    use Illuminate\Support\Str;
+    use Illuminate\Support\Facades\Storage;
+    use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Carbon;
+@endphp
 @props([
     'title' => 'Page Title',
     'subtitle' => '',
@@ -36,6 +42,8 @@
                         <span x-text="button.name"></span>
                     </a>
                 </template>
+
+
             </div>
 
             <!-- ACTION BUTTON (ALWAYS VISIBLE, ALL SCREEN SIZES) -->
@@ -104,10 +112,11 @@
                 </a>
             </template>
 
+
+
         </div>
     </div>
 </div>
-
 
 <script>
 function dashboardMenu() {
@@ -125,6 +134,9 @@ function dashboardMenu() {
             @endcan
             @can('view expenses')
             { name: 'Expenditures', href: '{{ route("expenses.index") }}', type: 'primary', icon: 'fas fa-users' },
+            @endcan
+            @can('manage tickets')
+            { name: 'Tickets', href: 'student.tickets', type: 'primary', icon: 'fas fa-ticket-alt' },
             @endcan
             @can('view reports')
             { name: 'Reports', href: '#', type: 'secondary', icon: 'fas fa-chart-line' },

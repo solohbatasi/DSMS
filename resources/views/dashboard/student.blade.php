@@ -67,7 +67,7 @@
                 </div>
             </div>
 
-            <!-- Financial Overview Cards -->
+            <!-- Financial & Attendance Overview Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <!-- Total Fees -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
@@ -113,32 +113,35 @@
                     </div>
                 </div>
 
-                <!-- Balance Due -->
+                <!-- Practical Progress -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
                     <div class="p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="h-12 w-12 rounded-lg bg-amber-50 flex items-center justify-center">
-                                    <svg class="h-6 w-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <div class="h-12 w-12 rounded-lg bg-orange-50 flex items-center justify-center">
+                                    <svg class="h-6 w-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     </svg>
                                 </div>
                             </div>
                             <div class="ml-4 flex-1">
-                                <dt class="text-sm font-medium text-gray-500 truncate">Balance Due</dt>
-                                <dd class="text-2xl font-semibold text-gray-900">KES {{ number_format($total_balance, 2) }}</dd>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Practical Sessions</dt>
+                                <dd class="text-2xl font-semibold text-gray-900">
+                                    {{ $attendance_summary['total_practical_attended'] }}/{{ $attendance_summary['total_practical_attended'] + $attendance_summary['total_practical_remaining'] }}
+                                </dd>
                             </div>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-5 py-3">
                         <div class="text-sm">
-                            <span class="font-medium text-amber-600">{{ number_format(100 - $payment_progress, 1) }}%</span>
-                            <span class="text-gray-500 ml-1">remaining</span>
+                            <span class="font-medium text-orange-600">{{ number_format($attendance_summary['practical_progress'], 1) }}%</span>
+                            <span class="text-gray-500 ml-1">completed</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Active Courses -->
+                <!-- Theoretical Progress -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
                     <div class="p-5">
                         <div class="flex items-center">
@@ -150,9 +153,17 @@
                                 </div>
                             </div>
                             <div class="ml-4 flex-1">
-                                <dt class="text-sm font-medium text-gray-500 truncate">Active Courses</dt>
-                                <dd class="text-2xl font-semibold text-gray-900">{{ $active_courses->count() }}</dd>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Theoretical Sessions</dt>
+                                <dd class="text-2xl font-semibold text-gray-900">
+                                    {{ $attendance_summary['total_theoretical_attended'] }}/{{ $attendance_summary['total_theoretical_attended'] + $attendance_summary['total_theoretical_remaining'] }}
+                                </dd>
                             </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-5 py-3">
+                        <div class="text-sm">
+                            <span class="font-medium text-purple-600">{{ number_format($attendance_summary['theoretical_progress'], 1) }}%</span>
+                            <span class="text-gray-500 ml-1">completed</span>
                         </div>
                     </div>
                 </div>
@@ -165,7 +176,7 @@
                     <!-- My Courses Section -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-                            <h3 class="text-lg font-semibold text-gray-900">My Courses & Payment Progress</h3>
+                            <h3 class="text-lg font-semibold text-gray-900">My Courses & Progress</h3>
                         </div>
                         <div class="p-6">
                             @if($courses_with_progress->count() > 0)
@@ -193,7 +204,7 @@
                                                         Status:
                                                         <span class="ml-1 font-medium
                                                             {{ $ef_list->status === 'active' ? 'text-green-600' :
-                                                               ($ef_list->status === 'verified' ? 'text-blue-600' : 'text-yellow-600') }}">
+                                                            ($ef_list->status === 'verified' ? 'text-blue-600' : 'text-yellow-600') }}">
                                                             {{ ucfirst($ef_list->status) }}
                                                         </span>
                                                     </span>
@@ -207,20 +218,47 @@
                                             </div>
                                         </div>
 
-                                        <!-- Progress Bar -->
-                                        <div class="mb-3">
-                                            <div class="flex justify-between text-sm text-gray-600 mb-2">
-                                                <span>Payment Progress</span>
-                                                <span>{{ number_format($course_progress['progress'], 1) }}%</span>
+                                        <!-- Progress Bars for Payment and Attendance -->
+                                        <div class="space-y-4 mb-4">
+                                            <!-- Payment Progress -->
+                                            <div>
+                                                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                                    <span>Payment Progress</span>
+                                                    <span>{{ number_format($course_progress['progress'], 1) }}%</span>
+                                                </div>
+                                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                                    <div class="bg-green-600 h-2.5 rounded-full transition-all duration-500"
+                                                        style="width: {{ $course_progress['progress'] }}%"></div>
+                                                </div>
                                             </div>
-                                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                                <div class="bg-green-600 h-2.5 rounded-full transition-all duration-500"
-                                                     style="width: {{ $course_progress['progress'] }}%"></div>
+
+                                            <!-- Practical Progress -->
+                                            <div>
+                                                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                                    <span>Practical Sessions</span>
+                                                    <span>{{ $course_progress['practical_attended'] }}/{{ $course_progress['practical_attended'] + $course_progress['practical_remaining'] }}</span>
+                                                </div>
+                                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                                    <div class="bg-orange-500 h-2.5 rounded-full transition-all duration-500"
+                                                        style="width: {{ $course_progress['practical_progress'] }}%"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Theoretical Progress -->
+                                            <div>
+                                                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                                    <span>Theoretical Sessions</span>
+                                                    <span>{{ $course_progress['theoretical_attended'] }}/{{ $course_progress['theoretical_attended'] + $course_progress['theoretical_remaining'] }}</span>
+                                                </div>
+                                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                                    <div class="bg-purple-500 h-2.5 rounded-full transition-all duration-500"
+                                                        style="width: {{ $course_progress['theoretical_progress'] }}%"></div>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <!-- Financial Breakdown -->
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                        <!-- Enhanced Financial Breakdown -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                                             <div class="text-center p-3 bg-green-50 rounded-lg">
                                                 <div class="text-green-700 font-semibold">KES {{ number_format($ef_list->paid_amount, 2) }}</div>
                                                 <div class="text-green-600 text-xs">Paid Amount</div>
@@ -229,9 +267,13 @@
                                                 <div class="text-amber-700 font-semibold">KES {{ number_format($ef_list->balance, 2) }}</div>
                                                 <div class="text-amber-600 text-xs">Balance Due</div>
                                             </div>
-                                            <div class="text-center p-3 bg-blue-50 rounded-lg">
-                                                <div class="text-blue-700 font-semibold">{{ $course_progress['payment_status'] }}</div>
-                                                <div class="text-blue-600 text-xs">Payment Status</div>
+                                            <div class="text-center p-3 bg-orange-50 rounded-lg">
+                                                <div class="text-orange-700 font-semibold">{{ $course_progress['practical_attended'] }}/{{ $course_progress['practical_attended'] + $course_progress['practical_remaining'] }}</div>
+                                                <div class="text-orange-600 text-xs">Practical</div>
+                                            </div>
+                                            <div class="text-center p-3 bg-purple-50 rounded-lg">
+                                                <div class="text-purple-700 font-semibold">{{ $course_progress['theoretical_attended'] }}/{{ $course_progress['theoretical_attended'] + $course_progress['theoretical_remaining'] }}</div>
+                                                <div class="text-purple-600 text-xs">Theoretical</div>
                                             </div>
                                         </div>
 
@@ -249,7 +291,7 @@
                                                     <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                                     </svg>
-                                                    Sessions: {{ $course->total_sessions ?? ($course->practical_sessions + $course->theoretical_sessions) }}
+                                                    Total Sessions: {{ $course->total_sessions ?? ($course->practical_sessions + $course->theoretical_sessions) }}
                                                 </div>
                                             </div>
                                         </div>
@@ -349,8 +391,8 @@
                                             </p>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                                                 {{ $payment->payment_status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                   ($payment->payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                   'bg-red-100 text-red-800') }}">
+                                                ($payment->payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800') }}">
                                                 {{ ucfirst($payment->payment_status) }}
                                             </span>
                                         </div>
@@ -382,7 +424,13 @@
                         </div>
                         <div class="p-6">
                             <div class="grid grid-cols-1 gap-3">
-                                <button class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                                <a href="{{ route('student.tickets') }}" class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    Download Ticket
+                                </a>
+                                <button class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                                     </svg>
