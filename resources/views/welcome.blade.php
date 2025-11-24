@@ -324,7 +324,7 @@
                     <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
                         Master The Road With
                         <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-300 professional-title">
-                            Confidence
+                            Expert Control
                         </span>
                     </h1>
 
