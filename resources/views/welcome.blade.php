@@ -485,8 +485,8 @@
             </div>
               <!-- CTA Section -->
         <div class="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 md:p-12 text-center text-white relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
-            <div class="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24"></div>
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: contain;background-repeat: no-repeat;background-position: center;"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: contain;background-repeat: no-repeat;background-position: center;"></div>
 
             <div class="relative z-10 max-w-3xl mx-auto">
                 <h2 class="text-2xl md:text-3xl font-bold mb-4">Ready to Start Your Driving Journey?</h2>

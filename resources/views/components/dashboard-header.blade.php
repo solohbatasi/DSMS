@@ -135,9 +135,9 @@ function dashboardMenu() {
             @can('view expenses')
             { name: 'Expenditures', href: '{{ route("expenses.index") }}', type: 'primary', icon: 'fas fa-users' },
             @endcan
-            @can('manage tickets')
-            { name: 'Tickets', href: 'student.tickets', type: 'primary', icon: 'fas fa-ticket-alt' },
-            @endcan
+
+            { name: 'Tickets', href: '{{ route("student.tickets") }}', type: 'primary', icon: 'fas fa-ticket-alt' },
+
             @can('view reports')
             { name: 'Reports', href: '#', type: 'secondary', icon: 'fas fa-chart-line' },
             @endcan

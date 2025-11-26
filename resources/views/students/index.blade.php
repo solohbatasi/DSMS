@@ -88,6 +88,7 @@
 
 
         <!-- Quick Actions -->
+        @can('add students')
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
 
@@ -129,7 +130,7 @@
 
             </div>
         </div>
-
+        @endcan
 
         <!--  Section -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">

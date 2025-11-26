@@ -242,104 +242,104 @@ class DashboardController extends Controller
         ];
     }
 
-   private function getStudentData($user)
-{
-    // Get student record
-    $student = \App\Models\Student::where('user_id', $user->id)->first();
+    private function getStudentData($user)
+    {
+        // Get student record
+        $student = \App\Models\Student::where('user_id', $user->id)->first();
 
-    if (!$student) {
+        if (!$student) {
+            return [
+                'student' => null,
+                'ef_lists' => collect(),
+                'total_balance' => 0,
+                'total_paid' => 0,
+                'recent_payments' => collect(),
+                'active_courses' => collect(),
+                'attendance_summary' => []
+            ];
+        }
+
+        // Get student's EF lists with course information
+        $ef_lists = \App\Models\Student_ef_list::with(['course'])
+            ->where('student_id', $student->id)
+            ->get();
+
+        // Calculate financial summary
+        $total_balance = $ef_lists->sum('balance');
+        $total_paid = $ef_lists->sum('paid_amount');
+        $total_fee = $ef_lists->sum('total_fee');
+
+        // Calculate attendance summary
+        $total_practical_attended = $ef_lists->sum('attended_practical');
+        $total_practical_remaining = $ef_lists->sum('remaining_practical');
+        $total_theoretical_attended = $ef_lists->sum('attended_theoretical');
+        $total_theoretical_remaining = $ef_lists->sum('remaining_theoretical');
+
+        $total_practical_sessions = $total_practical_attended + $total_practical_remaining;
+        $total_theoretical_sessions = $total_theoretical_attended + $total_theoretical_remaining;
+
+        $practical_progress = $total_practical_sessions > 0 ?
+            ($total_practical_attended / $total_practical_sessions) * 100 : 0;
+        $theoretical_progress = $total_theoretical_sessions > 0 ?
+            ($total_theoretical_attended / $total_theoretical_sessions) * 100 : 0;
+
+        // Get recent payments
+        $recent_payments = \App\Models\Payment::with(['efList.course'])
+            ->whereHas('efList', function($query) use ($student) {
+                $query->where('student_id', $student->id);
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Get active courses (EF lists with active status)
+        $active_courses = $ef_lists->where('status', 'active');
+
+        // Calculate progress for each course
+        $courses_with_progress = $ef_lists->map(function($ef_list) {
+            $payment_progress = $ef_list->total_fee > 0 ?
+                (($ef_list->paid_amount / $ef_list->total_fee) * 100) : 0;
+
+            $practical_progress = ($ef_list->attended_practical + $ef_list->remaining_practical) > 0 ?
+                ($ef_list->attended_practical / ($ef_list->attended_practical + $ef_list->remaining_practical)) * 100 : 0;
+
+            $theoretical_progress = ($ef_list->attended_theoretical + $ef_list->remaining_theoretical) > 0 ?
+                ($ef_list->attended_theoretical / ($ef_list->attended_theoretical + $ef_list->remaining_theoretical)) * 100 : 0;
+
+            return [
+                'ef_list' => $ef_list,
+                'progress' => min($payment_progress, 100),
+                'remaining_balance' => $ef_list->balance,
+                'payment_status' => $payment_progress >= 100 ? 'Paid' : ($payment_progress > 0 ? 'Partial' : 'Pending'),
+                'practical_progress' => $practical_progress,
+                'theoretical_progress' => $theoretical_progress,
+                'practical_attended' => $ef_list->attended_practical,
+                'practical_remaining' => $ef_list->remaining_practical,
+                'theoretical_attended' => $ef_list->attended_theoretical,
+                'theoretical_remaining' => $ef_list->remaining_theoretical
+            ];
+        });
+
         return [
-            'student' => null,
-            'ef_lists' => collect(),
-            'total_balance' => 0,
-            'total_paid' => 0,
-            'recent_payments' => collect(),
-            'active_courses' => collect(),
-            'attendance_summary' => []
+            'student' => $student,
+            'ef_lists' => $ef_lists,
+            'courses_with_progress' => $courses_with_progress,
+            'total_balance' => $total_balance,
+            'total_paid' => $total_paid,
+            'total_fee' => $total_fee,
+            'recent_payments' => $recent_payments,
+            'active_courses' => $active_courses,
+            'payment_progress' => $total_fee > 0 ? ($total_paid / $total_fee) * 100 : 0,
+            'attendance_summary' => [
+                'total_practical_attended' => $total_practical_attended,
+                'total_practical_remaining' => $total_practical_remaining,
+                'total_theoretical_attended' => $total_theoretical_attended,
+                'total_theoretical_remaining' => $total_theoretical_remaining,
+                'practical_progress' => $practical_progress,
+                'theoretical_progress' => $theoretical_progress
+            ]
         ];
     }
-
-    // Get student's EF lists with course information
-    $ef_lists = \App\Models\Student_ef_list::with(['course'])
-        ->where('student_id', $student->id)
-        ->get();
-
-    // Calculate financial summary
-    $total_balance = $ef_lists->sum('balance');
-    $total_paid = $ef_lists->sum('paid_amount');
-    $total_fee = $ef_lists->sum('total_fee');
-
-    // Calculate attendance summary
-    $total_practical_attended = $ef_lists->sum('attended_practical');
-    $total_practical_remaining = $ef_lists->sum('remaining_practical');
-    $total_theoretical_attended = $ef_lists->sum('attended_theoretical');
-    $total_theoretical_remaining = $ef_lists->sum('remaining_theoretical');
-
-    $total_practical_sessions = $total_practical_attended + $total_practical_remaining;
-    $total_theoretical_sessions = $total_theoretical_attended + $total_theoretical_remaining;
-
-    $practical_progress = $total_practical_sessions > 0 ?
-        ($total_practical_attended / $total_practical_sessions) * 100 : 0;
-    $theoretical_progress = $total_theoretical_sessions > 0 ?
-        ($total_theoretical_attended / $total_theoretical_sessions) * 100 : 0;
-
-    // Get recent payments
-    $recent_payments = \App\Models\Payment::with(['efList.course'])
-        ->whereHas('efList', function($query) use ($student) {
-            $query->where('student_id', $student->id);
-        })
-        ->orderBy('created_at', 'desc')
-        ->take(5)
-        ->get();
-
-    // Get active courses (EF lists with active status)
-    $active_courses = $ef_lists->where('status', 'active');
-
-    // Calculate progress for each course
-    $courses_with_progress = $ef_lists->map(function($ef_list) {
-        $payment_progress = $ef_list->total_fee > 0 ?
-            (($ef_list->paid_amount / $ef_list->total_fee) * 100) : 0;
-
-        $practical_progress = ($ef_list->attended_practical + $ef_list->remaining_practical) > 0 ?
-            ($ef_list->attended_practical / ($ef_list->attended_practical + $ef_list->remaining_practical)) * 100 : 0;
-
-        $theoretical_progress = ($ef_list->attended_theoretical + $ef_list->remaining_theoretical) > 0 ?
-            ($ef_list->attended_theoretical / ($ef_list->attended_theoretical + $ef_list->remaining_theoretical)) * 100 : 0;
-
-        return [
-            'ef_list' => $ef_list,
-            'progress' => min($payment_progress, 100),
-            'remaining_balance' => $ef_list->balance,
-            'payment_status' => $payment_progress >= 100 ? 'Paid' : ($payment_progress > 0 ? 'Partial' : 'Pending'),
-            'practical_progress' => $practical_progress,
-            'theoretical_progress' => $theoretical_progress,
-            'practical_attended' => $ef_list->attended_practical,
-            'practical_remaining' => $ef_list->remaining_practical,
-            'theoretical_attended' => $ef_list->attended_theoretical,
-            'theoretical_remaining' => $ef_list->remaining_theoretical
-        ];
-    });
-
-    return [
-        'student' => $student,
-        'ef_lists' => $ef_lists,
-        'courses_with_progress' => $courses_with_progress,
-        'total_balance' => $total_balance,
-        'total_paid' => $total_paid,
-        'total_fee' => $total_fee,
-        'recent_payments' => $recent_payments,
-        'active_courses' => $active_courses,
-        'payment_progress' => $total_fee > 0 ? ($total_paid / $total_fee) * 100 : 0,
-        'attendance_summary' => [
-            'total_practical_attended' => $total_practical_attended,
-            'total_practical_remaining' => $total_practical_remaining,
-            'total_theoretical_attended' => $total_theoretical_attended,
-            'total_theoretical_remaining' => $total_theoretical_remaining,
-            'practical_progress' => $practical_progress,
-            'theoretical_progress' => $theoretical_progress
-        ]
-    ];
-}
     public function ticketDownload()
     {
         $user = Auth::user();
@@ -601,11 +601,8 @@ class DashboardController extends Controller
             'qr_code_base64' => $qr_code,
             'session_type' => $ticket->session_type
         ]);
-        }
+    }
 
-    /**
-     * Generate QR code as base64 string (ultra-simple version)
-     */
     private function generateQRCode(string $data): string
     {
         try {
@@ -624,6 +621,64 @@ class DashboardController extends Controller
         }
     }
 
+    private function getInstructorData($user)
+    {
+        // Get instructor's assigned courses
+        $assigned_courses = \App\Models\Course::where('status', 1)
+            ->withCount(['studentEfLists as total_students' => function($query) {
+                $query->where('status', 'active');
+            }])
+            ->get();
+
+        // Get today's ticket downloads for instructor's courses
+        $today_tickets = \App\Models\TicketDownload::with(['student', 'efList.course'])
+            ->whereDate('download_time', today())
+            ->orderBy('download_time', 'desc')
+            ->get();
+
+        // Get total students across all assigned courses
+        $total_students = $assigned_courses->sum('total_students');
+
+        // Calculate today's session statistics
+        $today_practical = $today_tickets->where('session_type', 'practical')->count();
+        $today_theoretical = $today_tickets->where('session_type', 'theoretical')->count();
+        $total_today_sessions = $today_practical + $today_theoretical;
+
+        // Get attendance statistics for the week
+        $week_start = now()->startOfWeek();
+        $week_end = now()->endOfWeek();
+
+        $weekly_tickets = \App\Models\TicketDownload::with(['efList.course'])
+
+            ->whereBetween('download_time', [$week_start, $week_end])
+            ->get();
+
+        $weekly_practical = $weekly_tickets->where('session_type', 'practical')->count();
+        $weekly_theoretical = $weekly_tickets->where('session_type', 'theoretical')->count();
+
+        // Get upcoming sessions (next 7 days)
+        $upcoming_sessions = \App\Models\TicketDownload::with(['student', 'efList.course'])
+
+            ->whereDate('download_time', '>=', today())
+            ->whereDate('download_time', '<=', today()->addDays(7))
+            ->orderBy('download_time')
+            ->get()
+            ->groupBy(function($ticket) {
+                return $ticket->download_time->format('Y-m-d');
+            });
+
+        return [
+            'assigned_courses' => $assigned_courses,
+            'today_tickets' => $today_tickets,
+            'total_students' => $total_students,
+            'today_practical' => $today_practical,
+            'today_theoretical' => $today_theoretical,
+            'total_today_sessions' => $total_today_sessions,
+            'weekly_practical' => $weekly_practical,
+            'weekly_theoretical' => $weekly_theoretical,
+            'upcoming_sessions' => $upcoming_sessions,
+        ];
+    }
     public function notifications()
     {
         $user = Auth::user();

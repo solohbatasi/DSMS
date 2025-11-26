@@ -65,11 +65,15 @@ class Course extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function instructor()
+    {
+        return $this->belongsTo(User::class, 'instructor_id');
+    }
     public function studentEfLists(): HasMany
     {
         return $this->hasMany(Student_ef_list::class, 'course_id');
     }
- /**
+    /**
      * Get practical sessions percentage
      *
      * @return float

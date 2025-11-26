@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\MeterController;
 use App\Http\Controllers\BillController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\InstructorController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FeedbackController;
@@ -49,6 +50,17 @@ Route::put('/payments/{id}', [PaymentController::class, 'update'])->name('paymen
 Route::delete('/payments/{id}', [PaymentController::class, 'destroy'])->name('payments.destroy');
 Route::get('/payments/search', [PaymentController::class, 'search'])->name('payments.search');
 Route::get('/payments/search-students', [PaymentController::class, 'searchStudents'])->name('payments.search-students');
+
+Route::get('/student/tickets', [App\Http\Controllers\DashboardController::class, 'ticketDownload'])->name('student.tickets');
+Route::post('/student/tickets/download', [App\Http\Controllers\DashboardController::class, 'downloadTicket'])->name('student.tickets.download');
+Route::post('/student/tickets/{ticket}/redownload', [App\Http\Controllers\DashboardController::class, 'redownloadTicket'])->name('student.tickets.redownload');
+Route::get('/student/tickets/{ticket}/preview', [App\Http\Controllers\DashboardController::class, 'previewTicket'])->name('student.tickets.preview');  // routes/web.php
+
+// Instructor Routes
+Route::prefix('instructor')->group(function () {
+    Route::get('/qr-verify', [App\Http\Controllers\InstructorController::class, 'showQRVerify'])->name('instructor.qr-verify');
+    Route::post('/verify-ticket', [App\Http\Controllers\InstructorController::class, 'verifyTicket'])->name('instructor.verify-ticket');
+});
 
 Route::prefix('students')->group(function () {
      Route::get('/search', [StudentController::class, 'search'])
@@ -82,10 +94,6 @@ Route::post('/admin/users/{user}/permissions', [App\Http\Controllers\Admin\UserC
 Route::post('/tickets/download', [TicketController::class, 'download'])->name('tickets.download');
 Route::get('/tickets/history', [TicketController::class, 'history'])->name('tickets.history');
 
-Route::get('/student/tickets', [App\Http\Controllers\DashboardController::class, 'ticketDownload'])->name('student.tickets');
-Route::post('/student/tickets/download', [App\Http\Controllers\DashboardController::class, 'downloadTicket'])->name('student.tickets.download');
-Route::post('/student/tickets/{ticket}/redownload', [App\Http\Controllers\DashboardController::class, 'redownloadTicket'])->name('student.tickets.redownload');
-Route::get('/student/tickets/{ticket}/preview', [App\Http\Controllers\DashboardController::class, 'previewTicket'])->name('student.tickets.preview');  // routes/web.php
 // Route::middleware(['auth', 'student'])->prefix('feedback')->group(function () {
     Route::get('/course-rating', [FeedbackController::class, 'courseRatingForm'])->name('feedback.course-rating');
     Route::post('/course-rating', [FeedbackController::class, 'storeCourseRating'])->name('feedback.course-rating.store');
