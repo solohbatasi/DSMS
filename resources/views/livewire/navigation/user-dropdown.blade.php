@@ -38,15 +38,6 @@
                 Profile
             </a>
 
-
-            <a
-                href="{{ route('dashboard') }}"
-                class="block px-4 py-2 text-sm text-white-700 hover:bg-gray-100"
-                @click="open = false">
-                Dashboard
-            </a>
-
-
             <!-- Divider -->
             <div class="border-t border-gray-100 my-1"></div>
 
