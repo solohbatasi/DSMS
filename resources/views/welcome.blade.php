@@ -470,7 +470,7 @@
                         </div>
                     </div>
 
-                    <a href="{{ url('about') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg font-semibold transition duration-300 inline-block transform hover:scale-105">
+                    <a href="#" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg font-semibold transition duration-300 inline-block transform hover:scale-105">
                         Read More About Us
                     </a>
                 </div>
@@ -485,8 +485,8 @@
             </div>
               <!-- CTA Section -->
             <div class="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 md:p-12 text-center text-white relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: contain;background-repeat: no-repeat;background-position: center;"></div>
-                <div class="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: contain;background-repeat: no-repeat;background-position: center;"></div>
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: cover;background-repeat: no-repeat;background-position: center;"></div>
+                <div class="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: cover;background-repeat: no-repeat;background-position: center;"></div>
 
                 <div class="relative z-10 max-w-3xl mx-auto">
                     <h2 class="text-2xl md:text-3xl font-bold mb-4">Ready to Start Your Driving Journey?</h2>
@@ -521,7 +521,7 @@
 
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-6">
                 <!-- Driving Courses -->
-                <a href="{{ url('courses') }}" class="quick-link-card group">
+                <a href="{{ route('pages.courses') }}" class="quick-link-card group">
                     <div class="quick-link-icon">
                         <i class="fas fa-car text-yellow-400"></i>
                     </div>
@@ -529,7 +529,7 @@
                 </a>
 
                 <!-- Book Lessons -->
-                <a href="{{ url('book-lessons') }}" class="quick-link-card group">
+                <a href="{{ route('book-lessons') }}" class="quick-link-card group">
                     <div class="quick-link-icon">
                         <i class="fas fa-calendar-check text-yellow-400"></i>
                     </div>
@@ -634,9 +634,9 @@
                 <div class="news-card">
                     <div class="p-6">
                         <div class="text-sm text-blue-600 font-semibold mb-2">November 15, 2024</div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-3">"Confident Driver Now!"</h3>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Expert Driver Now!</h3>
                         <p class="text-gray-600 text-sm mb-4">
-                            "I was so nervous about learning to drive, but my instructor was incredibly patient and supportive. Passed my test on the first try!"
+                            I was so nervous about learning to drive, but my instructor was incredibly patient and supportive. Passed my test on the first try!
                         </p>
                         <div class="flex items-center">
                             <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
@@ -654,9 +654,9 @@
                 <div class="news-card">
                     <div class="p-6">
                         <div class="text-sm text-blue-600 font-semibold mb-2">October 28, 2024</div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-3">"Excellent Refresher Course"</h3>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Excellent Refresher Course</h3>
                         <p class="text-gray-600 text-sm mb-4">
-                            "After not driving for 10 years, I needed to regain my confidence. The refresher course was perfect - patient instruction and practical lessons."
+                            After not driving for 10 years, I needed to regain my confidence. The refresher course was perfect - patient instruction and practical lessons.
                         </p>
                         <div class="flex items-center">
                             <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
@@ -674,9 +674,9 @@
                 <div class="news-card">
                     <div class="p-6">
                         <div class="text-sm text-blue-600 font-semibold mb-2">October 12, 2024</div>
-                        <h3 class="text-xl font-semibold text-gray-900 mb-3">"Commercial License Success"</h3>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Commercial License Success</h3>
                         <p class="text-gray-600 text-sm mb-4">
-                            "The commercial license program prepared me thoroughly for my CDL test. The instructors were knowledgeable and professional."
+                            The commercial license program prepared me thoroughly for my CDL test. The instructors were knowledgeable and professional.
                         </p>
                         <div class="flex items-center">
                             <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">

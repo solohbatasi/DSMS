@@ -37,6 +37,8 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\TicketDownloadController;
 use App\Http\Controllers\ContactMessageController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\LessonApplicationController;
 
 
 use App\Models\Customer;
@@ -44,7 +46,17 @@ use App\Models\Customer;
 
 // Public contact form routes
 Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');
+// Public application routes
+Route::get('/book-lessons', [LessonApplicationController::class, 'create'])->name('book-lessons');
+Route::post('/book-lessons', [LessonApplicationController::class, 'store'])->name('applications.store');
+Route::get('/application-success/{applicationNumber}', [LessonApplicationController::class, 'success'])->name('application.success');
 
+// Admin application management
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('/applications', [LessonApplicationController::class, 'index'])->name('admin.applications.index');
+    Route::get('/applications/{application}', [LessonApplicationController::class, 'show'])->name('admin.applications.show');
+    Route::put('/applications/{application}/status', [LessonApplicationController::class, 'updateStatus'])->name('admin.applications.update-status');
+});
 // Admin contact message management routes
 Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/contact-messages', [ContactMessageController::class, 'index'])->name('admin.contact-messages.index');
@@ -139,6 +151,7 @@ Route::get('/tickets/history', [TicketController::class, 'history'])->name('tick
     Route::get('/thank-you', [FeedbackController::class, 'thankYou'])->name('feedback.thank-you');
 // });
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
+Route::get('/driving-courses', [PageController::class, 'coursesIndex'])->name('pages.courses');
 Route::resource('courses', CourseController::class);
 // web.php
 Route::get('/bills/{bill}/info', [BillController::class, 'info']);

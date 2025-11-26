@@ -939,7 +939,436 @@ use Illuminate\Support\Facades\Route;
         transform: translateY(0);
     }
 </style>
+<style>
+/* Professional Portal Button Styles */
+.portal-container {
+    position: relative;
+}
 
+.portal-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 16px;
+    padding: 12px 20px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    min-width: 180px;
+}
+
+.portal-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.portal-btn:active {
+    transform: translateY(0);
+}
+
+.portal-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+}
+
+.portal-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.portal-icon i {
+    font-size: 1.1rem;
+}
+
+.portal-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.portal-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.portal-subtitle {
+    font-size: 0.7rem;
+    opacity: 0.9;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.portal-arrow {
+    opacity: 0;
+    transform: translateX(-5px);
+    transition: all 0.3s ease;
+}
+
+.portal-btn:hover .portal-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.portal-hover-effect {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.portal-btn:hover .portal-hover-effect {
+    left: 100%;
+}
+
+/* Mobile Portal Button */
+.mobile-portal-section {
+    margin: 20px 0;
+    padding: 0 16px;
+}
+
+.mobile-portal-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 16px;
+    padding: 16px 20px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.mobile-portal-btn:active {
+    transform: scale(0.98);
+}
+
+.mobile-portal-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.mobile-portal-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.mobile-portal-icon i {
+    font-size: 1.2rem;
+}
+
+.mobile-portal-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.mobile-portal-label {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.mobile-portal-subtitle {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.mobile-portal-arrow {
+    opacity: 0.7;
+}
+
+.mobile-portal-arrow i {
+    font-size: 0.9rem;
+}
+
+/* Mobile User Section */
+.mobile-user-section {
+    margin: 20px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+}
+
+.mobile-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-user-avatar {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.mobile-user-avatar i {
+    font-size: 1.2rem;
+}
+
+.mobile-user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.mobile-user-name {
+    font-weight: 600;
+    color: white;
+    font-size: 0.95rem;
+}
+
+.mobile-user-role {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    color: white;
+    text-transform: capitalize;
+}
+
+.mobile-user-links {
+    padding: 8px 0;
+}
+
+.mobile-user-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.mobile-user-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.mobile-user-link i {
+    width: 20px;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.mobile-logout-btn {
+    color: #f87171 !important;
+}
+
+.mobile-logout-btn:hover {
+    background: rgba(248, 113, 113, 0.1) !important;
+    color: #f87171 !important;
+}
+
+/* Enhanced Mobile Menu Styles */
+.mobile-menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    max-width: 400px;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    z-index: 1000;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+}
+
+.mobile-menu.open {
+    right: 0;
+}
+
+.mobile-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mobile-menu-close {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.mobile-menu-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.mobile-nav-links {
+    padding: 20px 0;
+}
+
+.mobile-nav-link {
+    display: block;
+    padding: 16px 24px;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.mobile-nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-left-color: #f59e0b;
+}
+
+/* Mobile Dropdown Enhancements */
+.mobile-nav-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-dropdown-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    color: rgba(255, 255, 255, 0.9);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.mobile-dropdown-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.mobile-dropdown-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.mobile-dropdown-content.open {
+    max-height: 300px;
+}
+
+.mobile-dropdown-content a {
+    display: block;
+    padding: 12px 24px 12px 48px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.mobile-dropdown-content a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-left-color: #f59e0b;
+}
+
+/* Backdrop for mobile menu */
+.mobile-menu-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.mobile-menu-backdrop.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .portal-btn {
+        min-width: auto;
+        padding: 10px 16px;
+    }
+
+    .portal-text {
+        display: none;
+    }
+
+    .portal-arrow {
+        display: none;
+    }
+
+    .portal-btn-content {
+        gap: 0;
+        justify-content: center;
+    }
+
+    .portal-icon {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mobile-menu {
+        max-width: 100%;
+    }
+}
+</style>
 </head>
 
 <body x-data="{
@@ -969,133 +1398,157 @@ use Illuminate\Support\Facades\Route;
         </div>
     </div>
 
-    <!-- Main Navigation -->
-    <nav class="nav-main-bar">
-        <div class="nav-container">
-            <div class="nav-inner">
-                <!-- Logo -->
-               <div class="nav-brand">
-                    <div class="nav-logo">
-                        <a href="{{ route('home') }}">
-                        <img src="{{ asset('img/Logo.png') }}" alt="Pace Driving School Logo">
-                        </a>
-                    </div>
-                    <div class="text-white">
-                        <h1 class="text-xl font-bold">Pace Driving School</h1>
-                        <p class="text-sm opacity-90">Teaching You to Take Control</p>
-                    </div>
-                </div>
-
-                <!-- Desktop Navigation -->
-                <div class="nav-links">
-                    <a href="{{ route('home') }}" class="nav-link">Home</a>
-
-                    <div class="dropdown">
-                        <button class="dropdown-btn">
-                            About Us
-                            <i class="fas fa-chevron-down ml-1" style="font-size: 0.75rem;"></i>
-                        </button>
-                        <div class="dropdown-content">
-                            <a href="#">Our Story</a>
-                            <!-- <a href="{{ url('instructors') }}">Our Instructors</a>
-                            <a href="{{ url('mission') }}">Mission & Vision</a>
-                            <a href="{{ url('success') }}">Success Stories</a> -->
-                        </div>
-                    </div>
-
-                    <div class="dropdown">
-                        <button class="dropdown-btn">
-                            Courses
-                            <i class="fas fa-chevron-down ml-1" style="font-size: 0.75rem;"></i>
-                        </button>
-                        <div class="dropdown-content">
-                            <a href="{{ url('beginner-course') }}">Beginner Course</a>
-                            <a href="{{ url('refresher-course') }}">Refresher Course</a>
-                            <a href="{{ url('commercial-license') }}">Commercial License</a>
-                            <a href="{{ url('motorcycle-training') }}">Motorcycle Training</a>
-                        </div>
-                    </div>
-
-                    <!-- <a href="{{ url('book-lessons') }}" class="nav-link">Book Lessons</a>
-                    <a href="{{ url('testimonials') }}" class="nav-link">Testimonials</a>
-                    <a href="{{ url('contact') }}" class="nav-link">Contact</a> -->
-                </div>
-
-                <!-- Desktop Auth -->
-                <div class="nav-auth">
-                    @auth
-                        <livewire:navigation.user-dropdown />
-                    @else
-                        <button @click="loginOpen = true" class="btn-primary">Student Portal</button>
-                    @endauth
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <button @click="mobileMenuOpen = true" class="mobile-menu-btn">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" :class="{ 'open': mobileMenuOpen }">
-        <div class="mobile-menu-header">
+<!-- Main Navigation -->
+<nav class="nav-main-bar">
+    <div class="nav-container">
+        <div class="nav-inner">
+            <!-- Logo -->
             <div class="nav-brand">
                 <div class="nav-logo">
                     <a href="{{ route('home') }}">
-                        <img src="{{ asset('img/Logo.png') }}" alt="Pace Driving School Logo" class="h-10">
+                        <img src="{{ asset('img/Logo.png') }}" alt="Pace Driving School Logo">
                     </a>
                 </div>
                 <div class="text-white">
-                    <h1 class="text-lg font-bold">Pace Driving</h1>
+                    <h1 class="text-xl font-bold">Pace Driving School</h1>
+                    <p class="text-sm opacity-90">Teaching You to Take Control</p>
                 </div>
             </div>
-            <button @click="mobileMenuOpen = false" class="mobile-menu-close">
-                <i class="fas fa-times"></i>
+
+            <!-- Desktop Navigation -->
+            <div class="nav-links">
+                <a href="{{ route('home') }}" class="nav-link">Home</a>
+
+                <div class="dropdown">
+                    <button class="dropdown-btn">
+                        About Us
+                        <i class="fas fa-chevron-down ml-1" style="font-size: 0.75rem;"></i>
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="#">Our Story</a>
+                        <!-- <a href="{{ url('instructors') }}">Our Instructors</a>
+                        <a href="{{ url('mission') }}">Mission & Vision</a>
+                        <a href="{{ url('success') }}">Success Stories</a> -->
+                    </div>
+                </div>
+                <a href="{{ route('pages.courses') }}" class="nav-link">Courses</a>
+            </div>
+
+            <!-- Desktop Auth -->
+            <div class="nav-auth">
+                @auth
+                    <livewire:navigation.user-dropdown />
+                @else
+                    <!-- Professional Portal Button -->
+                    <div class="portal-container">
+                        <button @click="loginOpen = true" class="portal-btn">
+                            <div class="portal-btn-content">
+
+                                <div class="portal-text">
+                                    <span class="portal-label">Access Account</span>
+                                </div>
+                                <div class="portal-arrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </div>
+                            <div class="portal-hover-effect"></div>
+                        </button>
+                    </div>
+                @endauth
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button @click="mobileMenuOpen = true" class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
             </button>
         </div>
+    </div>
+</nav>
 
-        <div class="mobile-nav-links">
-            <a href="{{ route('home') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Home</a>
-
-            <div class="mobile-nav-item">
-                <button class="mobile-dropdown-btn" @click="mobileDropdowns.about = !mobileDropdowns.about">
-                    About Us
-                    <i class="fas fa-chevron-down transition-transform" :class="{ 'rotate-180': mobileDropdowns.about }"></i>
-                </button>
-                <div class="mobile-dropdown-content" :class="{ 'open': mobileDropdowns.about }">
-                    <a href="#" @click="mobileMenuOpen = false">Our Story</a>
-                    <!-- <a href="{{ url('instructors') }}" @click="mobileMenuOpen = false">Our Instructors</a>
-                    <a href="{{ url('mission') }}" @click="mobileMenuOpen = false">Mission & Vision</a>
-                    <a href="{{ url('success') }}" @click="mobileMenuOpen = false">Success Stories</a> -->
-                </div>
+<!-- Mobile Menu -->
+<div class="mobile-menu" :class="{ 'open': mobileMenuOpen }">
+    <div class="mobile-menu-header">
+        <div class="nav-brand">
+            <div class="nav-logo">
+                <a href="{{ route('home') }}">
+                    <img src="{{ asset('img/Logo.png') }}" alt="Pace Driving School Logo" class="h-10">
+                </a>
             </div>
-
-            <div class="mobile-nav-item">
-                <button class="mobile-dropdown-btn" @click="mobileDropdowns.courses = !mobileDropdowns.courses">
-                    Courses
-                    <i class="fas fa-chevron-down transition-transform" :class="{ 'rotate-180': mobileDropdowns.courses }"></i>
-                </button>
-                <div class="mobile-dropdown-content" :class="{ 'open': mobileDropdowns.courses }">
-                    <a href="{{ url('beginner-course') }}" @click="mobileMenuOpen = false">Beginner Course</a>
-                    <a href="{{ url('refresher-course') }}" @click="mobileMenuOpen = false">Refresher Course</a>
-                    <a href="{{ url('commercial-license') }}" @click="mobileMenuOpen = false">Commercial License</a>
-                    <a href="{{url('motorcycle-training') }}" @click="mobileMenuOpen = false">Motorcycle Training</a>
-                </div>
+            <div class="text-white">
+                <h1 class="text-lg font-bold">Pace Driving</h1>
             </div>
+        </div>
+        <button @click="mobileMenuOpen = false" class="mobile-menu-close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
 
-            <!-- <a href="{{ url('book-lessons') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Book Lessons</a>
-            <a href="{{ url('testimonials') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Testimonials</a>
-            <a href="{{ url('contact') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Contact</a> -->
+    <div class="mobile-nav-links">
+        <a href="{{ route('home') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Home</a>
+
+        <div class="mobile-nav-item">
+            <button class="mobile-dropdown-btn" @click="mobileDropdowns.about = !mobileDropdowns.about">
+                About Us
+                <i class="fas fa-chevron-down transition-transform" :class="{ 'rotate-180': mobileDropdowns.about }"></i>
+            </button>
+            <div class="mobile-dropdown-content" :class="{ 'open': mobileDropdowns.about }">
+                <a href="#" @click="mobileMenuOpen = false">Our Story</a>
+            </div>
         </div>
 
-        @guest
-        <div class="mobile-auth">
-            <button @click="loginOpen = true; mobileMenuOpen = false" class="btn-primary w-full">Student Portal</button>
-        </div>
+        <a href="{{ route('pages.courses') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Courses</a>
+
+        <!-- Mobile Auth Section -->
+        @auth
+            <!-- Mobile User Info -->
+            <div class="mobile-user-section">
+                <div class="mobile-user-info">
+                    <div class="mobile-user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="mobile-user-details">
+                        <span class="mobile-user-name">{{ Auth::user()->name }}</span>
+                        <span class="mobile-user-role">{{ Auth::user()->role ?? 'Student' }}</span>
+                    </div>
+                </div>
+                <div class="mobile-user-links">
+                    <a href="{{ route('dashboard') }}" class="mobile-user-link" @click="mobileMenuOpen = false">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="{{ route('profile') }}" class="mobile-user-link" @click="mobileMenuOpen = false">
+                        <i class="fas fa-user-cog"></i>
+                        Profile Settings
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" class="w-full">
+                        @csrf
+                        <button type="submit" class="mobile-user-link mobile-logout-btn w-full text-left">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @else
+            <!-- Mobile Portal Button -->
+            <div class="mobile-portal-section">
+                <button @click="loginOpen = true; mobileMenuOpen = false" class="mobile-portal-btn">
+                    <div class="mobile-portal-content">
+                        <div class="mobile-portal-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="mobile-portal-text">
+                            <span class="mobile-portal-label">Access Account</span>
+                        </div>
+                        <div class="mobile-portal-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </button>
+            </div>
         @endguest
     </div>
+</div>
 
     <!-- Sign Up Modal -->
     <div x-show="signupOpen" x-cloak class="modal-overlay">
@@ -1293,10 +1746,10 @@ use Illuminate\Support\Facades\Route;
                     <h4>Quick Links</h4>
                     <ul class="footer-links">
                         <li><a href="{{ route('home') }}">Home</a></li>
-                        <li><a href="{{ route('about') }}">About Us</a></li>
-                        <li><a href="{{ url('courses') }}">Courses</a></li>
-                        <li><a href="{{ url('book-lessons') }}">Book Lessons</a></li>
-                        <li><a href="{{ url('testimonials') }}">Testimonials</a></li>
+                        <li><a href="{{ route('home') }}">About Us</a></li>
+                        <li><a href="{{ route('pages.courses') }}">Courses</a></li>
+                        <li><a href="{{ route('book-lessons') }}">Book Lessons</a></li>
+                        <li><a href="{{ route('home') }}">Testimonials</a></li>
                     </ul>
                 </div>
 
@@ -1304,11 +1757,11 @@ use Illuminate\Support\Facades\Route;
                 <div>
                     <h4>Our Courses</h4>
                     <ul class="footer-links">
-                        <li><a href="{{url('beginner-course') }}">Beginner Course</a></li>
-                        <li><a href="{{ url('refresher-course') }}">Refresher Course</a></li>
-                        <li><a href="{{ url('commercial-license') }}">Commercial License</a></li>
-                        <li><a href="{{ url('motorcycle-training') }}">Motorcycle Training</a></li>
-                        <li><a href="{{ url('theory-test') }}">Theory Test Prep</a></li>
+                        <li><a href="{{route('pages.courses') }}">Beginner Course</a></li>
+                        <li><a href="{{route('pages.courses') }}">Refresher Course</a></li>
+                        <li><a href="{{route('pages.courses') }}">Commercial License</a></li>
+                        <li><a href="{{route('pages.courses') }}">Motorcycle Training</a></li>
+                        <li><a href="{{route('pages.courses') }}">Theory Test Prep</a></li>
                     </ul>
                 </div>
 
