@@ -18,36 +18,81 @@
                         <svg class="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <span class="text-sm font-medium text-indigo-800">Scan QR codes from student tickets</span>
+                        <span class="text-sm font-medium text-indigo-800">Allow camera access when prompted</span>
                     </div>
                 </div>
             </div>
         </div>
+
+        @if(session('success'))
+            <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-green-800 font-medium">{{ session('success') }}</span>
+                </div>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-red-800 font-medium">{{ session('error') }}</span>
+                </div>
+            </div>
+        @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- QR Scanner Section -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Scan QR Code</h3>
 
+                <!-- Camera Permission Alert -->
+                <div id="camera-permission-alert" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-sm text-yellow-800" id="permission-message"></span>
+                    </div>
+                </div>
+
                 <!-- QR Scanner Container -->
-                <div id="qr-scanner" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4">
-                    <div id="reader" class="w-full h-64"></div>
-                    <p class="text-sm text-gray-500 mt-4">Position QR code within the frame to scan</p>
+                <div id="qr-scanner" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mb-4">
+                    <div id="reader" class="w-full mx-auto" style="max-width: 300px;"></div>
+                    <div id="scanner-status" class="mt-4">
+                        <p class="text-sm text-gray-500">Position QR code within the frame to scan</p>
+                    </div>
+                </div>
+
+                <!-- Scanner Controls -->
+                <div class="flex justify-center space-x-4 mb-4">
+                    <button id="start-scanner" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-200">
+                        Start Scanner
+                    </button>
+                    <button id="stop-scanner" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200 hidden">
+                        Stop Scanner
+                    </button>
                 </div>
 
                 <!-- Manual Input Fallback -->
                 <div class="border-t border-gray-200 pt-4">
-                    <h4 class="text-sm font-medium text-gray-900 mb-2">Manual Ticket ID Input</h4>
-                    <form id="manual-verify-form">
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">Manual Ticket Verification</h4>
+                    <form method="POST" action="{{ route('instructor.verify-ticket-manual') }}" class="space-y-3">
                         @csrf
-                        <div class="flex space-x-2">
+                        <div>
+                            <label for="ticket_id" class="block text-sm font-medium text-gray-700 mb-1">Ticket ID</label>
                             <input type="text" id="ticket_id" name="ticket_id"
                                    placeholder="Enter Ticket ID"
-                                   class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                Verify
-                            </button>
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-200">
+                            Verify Ticket
+                        </button>
                     </form>
                 </div>
             </div>
@@ -56,7 +101,7 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Verification Results</h3>
 
-                <div id="verification-result" class="space-y-4">
+                <div id="verification-result">
                     <div class="text-center py-8">
                         <div class="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +116,26 @@
                 <div class="border-t border-gray-200 pt-4 mt-6">
                     <h4 class="text-sm font-medium text-gray-900 mb-3">Recent Verifications</h4>
                     <div id="recent-verifications" class="space-y-2 max-h-48 overflow-y-auto">
-                        <!-- Recent verifications will be populated here -->
+                        @foreach($recentVerifications ?? [] as $verification)
+                        <div class="flex items-center justify-between p-2 rounded-lg {{ $verification['valid'] ? 'bg-green-50' : 'bg-red-50' }}">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center {{ $verification['valid'] ? 'bg-green-100' : 'bg-red-100' }}">
+                                    <svg class="w-3 h-3 {{ $verification['valid'] ? 'text-green-600' : 'text-red-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($verification['valid'])
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        @else
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        @endif
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium">{{ $verification['student_name'] ?? 'Unknown' }}</span>
+                            </div>
+                            <span class="text-xs text-gray-500">{{ $verification['time'] }}</span>
+                        </div>
+                        @endforeach
+                        @empty($recentVerifications)
+                        <p class="text-sm text-gray-500 text-center py-4">No recent verifications</p>
+                        @endempty
                     </div>
                 </div>
             </div>
@@ -86,53 +150,104 @@
 class QRVerifier {
     constructor() {
         this.html5QrcodeScanner = null;
-        this.initializeScanner();
+        this.isScanning = false;
         this.setupEventListeners();
-        this.loadRecentVerifications();
-    }
-
-    initializeScanner() {
-        this.html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader",
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_QR_CODE]
-            },
-            false
-        );
-
-        this.html5QrcodeScanner.render(this.onScanSuccess.bind(this), this.onScanFailure.bind(this));
-    }
-
-    onScanSuccess(decodedText, decodedResult) {
-        this.verifyTicket(decodedText);
-    }
-
-    onScanFailure(error) {
-        // Scan failures are handled silently
     }
 
     setupEventListeners() {
-        document.getElementById('manual-verify-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const ticketId = document.getElementById('ticket_id').value.trim();
-            if (ticketId) {
-                this.verifyTicket(ticketId);
-            }
+        document.getElementById('start-scanner').addEventListener('click', () => {
+            this.startScanner();
         });
+
+        document.getElementById('stop-scanner').addEventListener('click', () => {
+            this.stopScanner();
+        });
+    }
+
+    async startScanner() {
+        try {
+            // Show loading state
+            this.updateScannerStatus('Initializing camera...', 'text-blue-600');
+
+            // Check if scanner already exists
+            if (this.html5QrcodeScanner) {
+                await this.html5QrcodeScanner.clear();
+            }
+
+            // Create new scanner
+            this.html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader",
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_QR_CODE]
+                },
+                false
+            );
+
+            // Start scanning
+            await this.html5QrcodeScanner.render(
+                (decodedText, decodedResult) => {
+                    this.onScanSuccess(decodedText, decodedResult);
+                },
+                (errorMessage) => {
+                    // Ignore scan failures unless it's a permission error
+                    if (errorMessage.includes('Permission')) {
+                        this.showCameraError('Camera permission denied. Please allow camera access and try again.');
+                    }
+                }
+            );
+
+            this.isScanning = true;
+            this.updateScannerStatus('Scanner active - Point camera at QR code', 'text-green-600');
+            this.toggleScannerButtons(true);
+
+        } catch (error) {
+            console.error('Scanner error:', error);
+            this.handleScannerError(error);
+        }
+    }
+
+    async stopScanner() {
+        if (this.html5QrcodeScanner && this.isScanning) {
+            try {
+                await this.html5QrcodeScanner.clear();
+                this.isScanning = false;
+                this.updateScannerStatus('Scanner stopped', 'text-gray-600');
+                this.toggleScannerButtons(false);
+                document.getElementById('reader').innerHTML = '';
+            } catch (error) {
+                console.error('Error stopping scanner:', error);
+            }
+        }
+    }
+
+    onScanSuccess(decodedText, decodedResult) {
+        // Stop scanner temporarily
+        this.stopScanner();
+
+        // Show processing message
+        this.updateScannerStatus('Processing ticket...', 'text-blue-600');
+
+        // Verify the ticket
+        this.verifyTicket(decodedText);
+
+        // Restart scanner after a delay
+        setTimeout(() => {
+            this.startScanner();
+        }, 3000);
     }
 
     async verifyTicket(ticketData) {
         try {
-            // Show loading state
             this.showLoading();
 
             const response = await fetch('{{ route("instructor.verify-ticket") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ ticket_data: ticketData })
             });
@@ -146,7 +261,8 @@ class QRVerifier {
                 this.showError(result.message || 'Verification failed');
             }
         } catch (error) {
-            this.showError('Network error. Please try again.');
+            console.error('Verification error:', error);
+            this.showError('Network error. Please check your connection and try again.');
         }
     }
 
@@ -196,8 +312,16 @@ class QRVerifier {
                     <span class="font-medium">${result.student_name}</span>
                 </div>
                 <div class="flex justify-between">
+                    <span class="text-gray-600">Student ID:</span>
+                    <span class="font-medium">${result.student_id}</span>
+                </div>
+                <div class="flex justify-between">
                     <span class="text-gray-600">Course:</span>
                     <span class="font-medium">${result.course_name}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">EF No:</span>
+                    <span class="font-medium">${result.ef_no}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Session Type:</span>
@@ -249,8 +373,47 @@ class QRVerifier {
         `;
     }
 
+    showCameraError(message) {
+        const alertDiv = document.getElementById('camera-permission-alert');
+        const messageDiv = document.getElementById('permission-message');
+        messageDiv.textContent = message;
+        alertDiv.classList.remove('hidden');
+        this.updateScannerStatus('Camera access required', 'text-red-600');
+    }
+
+    handleScannerError(error) {
+        console.error('Scanner initialization error:', error);
+
+        if (error.name === 'NotAllowedError') {
+            this.showCameraError('Camera permission denied. Please allow camera access in your browser settings.');
+        } else if (error.name === 'NotFoundError') {
+            this.showCameraError('No camera found. Please check if your device has a camera.');
+        } else if (error.name === 'NotSupportedError') {
+            this.showCameraError('Camera not supported in this browser. Try using Chrome or Firefox.');
+        } else {
+            this.showCameraError('Failed to initialize camera. Please try again.');
+        }
+    }
+
+    updateScannerStatus(message, textColor = 'text-gray-600') {
+        const statusDiv = document.getElementById('scanner-status');
+        statusDiv.innerHTML = `<p class="text-sm ${textColor}">${message}</p>`;
+    }
+
+    toggleScannerButtons(scanning) {
+        document.getElementById('start-scanner').classList.toggle('hidden', scanning);
+        document.getElementById('stop-scanner').classList.toggle('hidden', !scanning);
+    }
+
     addToRecentVerifications(result) {
         const recentDiv = document.getElementById('recent-verifications');
+
+        // Remove "no verifications" message if it exists
+        const noVerificationsMsg = recentDiv.querySelector('p');
+        if (noVerificationsMsg) {
+            noVerificationsMsg.remove();
+        }
+
         const verificationItem = document.createElement('div');
         verificationItem.className = `flex items-center justify-between p-2 rounded-lg ${result.valid ? 'bg-green-50' : 'bg-red-50'}`;
 
@@ -276,17 +439,34 @@ class QRVerifier {
             recentDiv.removeChild(recentDiv.lastChild);
         }
     }
-
-    loadRecentVerifications() {
-        // This could be enhanced to load from server
-        const recentDiv = document.getElementById('recent-verifications');
-        recentDiv.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">No recent verifications</p>';
-    }
 }
 
 // Initialize QR Verifier when page loads
 document.addEventListener('DOMContentLoaded', function() {
     new QRVerifier();
+
+    // Auto-start scanner on page load (optional)
+    // setTimeout(() => {
+    //     document.getElementById('start-scanner').click();
+    // }, 1000);
 });
 </script>
+
+<style>
+#reader {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#reader video {
+    border-radius: 8px;
+    max-width: 100%;
+}
+
+#reader__dashboard_section_swaplink {
+    display: none !important;
+}
+</style>
 @endsection

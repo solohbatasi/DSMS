@@ -57,11 +57,36 @@ Route::post('/student/tickets/{ticket}/redownload', [App\Http\Controllers\Dashbo
 Route::get('/student/tickets/{ticket}/preview', [App\Http\Controllers\DashboardController::class, 'previewTicket'])->name('student.tickets.preview');  // routes/web.php
 
 // Instructor Routes
+// Instructor Routes
 Route::prefix('instructor')->group(function () {
     Route::get('/qr-verify', [App\Http\Controllers\InstructorController::class, 'showQRVerify'])->name('instructor.qr-verify');
     Route::post('/verify-ticket', [App\Http\Controllers\InstructorController::class, 'verifyTicket'])->name('instructor.verify-ticket');
+    Route::post('/verify-ticket-manual', [App\Http\Controllers\InstructorController::class, 'verifyTicketManual'])->name('instructor.verify-ticket-manual');
 });
+// Receptionist Routes
+Route::prefix('receptionist')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [App\Http\Controllers\ReceptionistController::class, 'index'])->name('receptionist.dashboard');
 
+    // EF List Management
+    Route::get('/ef-lists', [App\Http\Controllers\ReceptionistController::class, 'efLists'])->name('receptionist.ef-lists');
+    Route::get('/ef-lists/create', [App\Http\Controllers\ReceptionistController::class, 'createEFList'])->name('receptionist.ef-lists.create');
+    Route::post('/ef-lists', [App\Http\Controllers\ReceptionistController::class, 'storeEFList'])->name('receptionist.ef-lists.store');
+    Route::post('/verify-ef-list', [App\Http\Controllers\ReceptionistController::class, 'verifyEFList'])->name('receptionist.verify-ef-list');
+
+    // Student Management
+    Route::get('/students', [App\Http\Controllers\ReceptionistController::class, 'students'])->name('receptionist.students');
+    Route::get('/students/create', [App\Http\Controllers\ReceptionistController::class, 'createStudent'])->name('receptionist.students.create');
+    Route::post('/students', [App\Http\Controllers\ReceptionistController::class, 'storeStudent'])->name('receptionist.students.store');
+
+    // Payment Management
+    Route::get('/payments', [App\Http\Controllers\ReceptionistController::class, 'payments'])->name('receptionist.payments');
+    Route::get('/payments/create', [App\Http\Controllers\ReceptionistController::class, 'createPayment'])->name('receptionist.payments.create');
+    Route::post('/payments', [App\Http\Controllers\ReceptionistController::class, 'storePayment'])->name('receptionist.payments.store');
+
+    // Reports
+    Route::get('/reports', [App\Http\Controllers\ReceptionistController::class, 'reports'])->name('receptionist.reports');
+});
 Route::prefix('students')->group(function () {
      Route::get('/search', [StudentController::class, 'search'])
         ->name('students.search');

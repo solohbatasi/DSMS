@@ -13,7 +13,10 @@ class InstructorController extends Controller
 {
     public function showQRVerify()
     {
-        return view('instructor.qr-verify');
+        // Get recent verifications from session
+        $recentVerifications = session('recent_verifications', []);
+
+        return view('instructor.qr-verify', compact('recentVerifications'));
     }
 
     public function verifyTicket(Request $request)
@@ -42,26 +45,16 @@ class InstructorController extends Controller
             if (!$ticket) {
                 return response()->json([
                     'valid' => false,
-                    'message' => 'Ticket not found',
+                    'message' => 'Ticket not found. Please check the ticket ID and try again.',
                     'ticket_id' => $ticketId
                 ], 404);
-            }
-
-            // Check if instructor teaches this course
-            $user = Auth::user();
-            if ($ticket->efList->course->instructor_id != $user->id) {
-                return response()->json([
-                    'valid' => false,
-                    'message' => 'You are not authorized to verify tickets for this course',
-                    'ticket_id' => $ticketId
-                ], 403);
             }
 
             // Check if ticket is for today
             if (!$ticket->download_time->isToday()) {
                 return response()->json([
                     'valid' => false,
-                    'message' => 'This ticket is not valid for today',
+                    'message' => 'This ticket is not valid for today. Ticket was downloaded on ' . $ticket->download_time->format('M d, Y'),
                     'ticket_id' => $ticketId,
                     'student_name' => $ticket->student->name,
                     'course_name' => $ticket->efList->course->course,
@@ -69,7 +62,14 @@ class InstructorController extends Controller
                 ], 400);
             }
 
-            // Ticket is valid
+            // Ticket is valid - store in recent verifications
+            $this->storeRecentVerification([
+                'valid' => true,
+                'ticket_id' => $ticket->id,
+                'student_name' => $ticket->student->name,
+                'time' => now()->format('H:i')
+            ]);
+
             return response()->json([
                 'valid' => true,
                 'ticket_id' => $ticket->id,
@@ -82,10 +82,64 @@ class InstructorController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('QR Verification Error: ' . $e->getMessage());
+
             return response()->json([
                 'valid' => false,
-                'message' => 'Error verifying ticket: ' . $e->getMessage()
+                'message' => 'An error occurred while verifying the ticket. Please try again.'
             ], 500);
         }
+    }
+
+    public function verifyTicketManual(Request $request)
+    {
+        $request->validate([
+            'ticket_id' => 'required|string|max:255'
+        ]);
+
+        try {
+            $ticketId = $request->ticket_id;
+
+            // Find the ticket
+            $ticket = TicketDownload::with(['student', 'efList.course'])
+                ->where('id', $ticketId)
+                ->first();
+
+            if (!$ticket) {
+                return back()->with('error', 'Ticket not found. Please check the ticket ID and try again.');
+            }
+
+            // Check if ticket is for today
+            if (!$ticket->download_time->isToday()) {
+                return back()->with('error', 'This ticket is not valid for today. Ticket was downloaded on ' . $ticket->download_time->format('M d, Y'));
+            }
+
+            // Store successful verification
+            $this->storeRecentVerification([
+                'valid' => true,
+                'ticket_id' => $ticket->id,
+                'student_name' => $ticket->student->name,
+                'time' => now()->format('H:i')
+            ]);
+
+            return back()->with('success', "Ticket verified successfully! Student: {$ticket->student->name}, Course: {$ticket->efList->course->course}");
+
+        } catch (\Exception $e) {
+            \Log::error('Manual Ticket Verification Error: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while verifying the ticket. Please try again.');
+        }
+    }
+
+    private function storeRecentVerification($verification)
+    {
+        $recentVerifications = session('recent_verifications', []);
+
+        // Add new verification to beginning of array
+        array_unshift($recentVerifications, $verification);
+
+        // Keep only last 5 verifications
+        $recentVerifications = array_slice($recentVerifications, 0, 5);
+
+        session(['recent_verifications' => $recentVerifications]);
     }
 }

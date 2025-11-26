@@ -27,7 +27,7 @@ use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
 use Endroid\QrCode\Writer\PngWriter;
 // Simple QR Code imports
 use Endroid\QrCode\QrCode;
-
+use Illuminate\Support\Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -677,6 +677,217 @@ class DashboardController extends Controller
             'weekly_practical' => $weekly_practical,
             'weekly_theoretical' => $weekly_theoretical,
             'upcoming_sessions' => $upcoming_sessions,
+        ];
+    }
+
+    private function getReceptionistData($user)
+    {
+        // Get total students count
+        $total_students = \App\Models\Student::count();
+
+        // Get new students registered today
+        $new_students_today = \App\Models\Student::whereDate('created_at', today())->count();
+
+        // Get total active courses
+        $total_courses = \App\Models\Course::where('status', 1)->count();
+
+        // Get total active EF lists
+        $total_active_ef_lists = \App\Models\Student_ef_list::where('status', 'active')->count();
+
+        // Get new EF lists created today
+        $new_ef_lists_today = \App\Models\Student_ef_list::whereDate('created_at', today())->count();
+
+        // Get pending verifications (EF lists with pending status)
+        $pending_verifications = \App\Models\Student_ef_list::where('status', 'pending')->count();
+
+        // Get pending EF lists with student and course details
+        $pending_ef_lists = \App\Models\Student_ef_list::with(['student', 'course'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Get payments for today
+        $payments_today = \App\Models\Payment::whereDate('payment_date', today())
+            ->where('payment_status', 'completed')
+            ->sum('amount');
+
+        // Get recent students (last 5 registrations)
+        $recent_students = \App\Models\Student::orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Get recent payments (last 5 payments)
+        $recent_payments = \App\Models\Payment::with(['efList.student', 'efList.course'])
+            ->where('payment_status', 'completed')
+            ->orderBy('payment_date', 'desc')
+            ->take(5)
+            ->get();
+
+        // Get expiring EF lists (those with balance and created more than 7 days ago)
+        $expiring_ef_lists = \App\Models\Student_ef_list::with(['student', 'course'])
+            ->where('balance', '>', 0)
+            ->where('created_at', '<=', now()->subDays(7))
+            ->where('status', 'active')
+            ->orderBy('created_at', 'asc')
+            ->take(5)
+            ->get();
+
+        // Monthly Enrollment Analytics
+        $monthly_enrollments = \App\Models\Student_ef_list::selectRaw('
+                YEAR(created_at) as year,
+                MONTH(created_at) as month,
+                COUNT(*) as enrollment_count,
+                SUM(total_fee) as total_revenue
+            ')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get();
+
+        // Format monthly data for chart
+        $enrollment_chart_data = $monthly_enrollments->map(function($item) {
+            $monthName = \Carbon\Carbon::createFromDate($item->year, $item->month, 1)->format('M Y');
+            return [
+                'month' => $monthName,
+                'enrollments' => $item->enrollment_count,
+                'revenue' => $item->total_revenue
+            ];
+        })->reverse()->values();
+
+        // Calculate enrollment growth rate
+        $current_month_enrollments = $monthly_enrollments->first()->enrollment_count ?? 0;
+        $previous_month_enrollments = $monthly_enrollments->skip(1)->first()->enrollment_count ?? 0;
+
+        $enrollment_growth_rate = 0;
+        if ($previous_month_enrollments > 0) {
+            $enrollment_growth_rate = (($current_month_enrollments - $previous_month_enrollments) / $previous_month_enrollments) * 100;
+        }
+
+        // Course-wise enrollment distribution
+        $course_enrollments = \App\Models\Student_ef_list::select('course_id')
+            ->selectRaw('COUNT(*) as enrollment_count')
+            ->with('course')
+            ->where('created_at', '>=', now()->subMonths(3))
+            ->groupBy('course_id')
+            ->orderBy('enrollment_count', 'desc')
+            ->take(5)
+            ->get();
+
+        // Weekly enrollment trend (last 8 weeks)
+        $weekly_enrollments = \App\Models\Student_ef_list::selectRaw('
+                YEAR(created_at) as year,
+                WEEK(created_at) as week,
+                COUNT(*) as enrollment_count
+            ')
+            ->where('created_at', '>=', now()->subWeeks(8))
+            ->groupBy('year', 'week')
+            ->orderBy('year', 'desc')
+            ->orderBy('week', 'desc')
+            ->get();
+
+        $weekly_chart_data = $weekly_enrollments->map(function($item) {
+            $weekStart = \Carbon\Carbon::now()->setISODate($item->year, $item->week)->startOfWeek();
+            return [
+                'week' => 'W' . $item->week . ' ' . $weekStart->format('M d'),
+                'enrollments' => $item->enrollment_count
+            ];
+        })->reverse()->values();
+  // Monthly Enrollment Analytics for Chart
+    $monthly_enrollments = \App\Models\Student_ef_list::selectRaw('
+            YEAR(created_at) as year,
+            MONTH(created_at) as month,
+            COUNT(*) as enrollment_count,
+            SUM(total_fee) as total_revenue
+        ')
+        ->where('created_at', '>=', now()->subMonths(6))
+        ->groupBy('year', 'month')
+        ->orderBy('year', 'asc')
+        ->orderBy('month', 'asc')
+        ->get();
+
+    // Format data for line chart
+    $chart_months = [];
+    $chart_enrollments = [];
+    $chart_revenue = [];
+
+    foreach ($monthly_enrollments as $item) {
+        $monthName = \Carbon\Carbon::createFromDate($item->year, $item->month, 1)->format('M Y');
+        $chart_months[] = $monthName;
+        $chart_enrollments[] = $item->enrollment_count;
+        $chart_revenue[] = $item->total_revenue;
+    }
+
+    // Weekly enrollment data for bar chart
+    $weekly_enrollments = \App\Models\Student_ef_list::selectRaw('
+            YEAR(created_at) as year,
+            WEEK(created_at) as week,
+            COUNT(*) as enrollment_count
+        ')
+        ->where('created_at', '>=', now()->subWeeks(8))
+        ->groupBy('year', 'week')
+        ->orderBy('year', 'asc')
+        ->orderBy('week', 'asc')
+        ->get();
+
+    $chart_weeks = [];
+    $chart_weekly_enrollments = [];
+
+    foreach ($weekly_enrollments as $item) {
+        $weekStart = \Carbon\Carbon::now()->setISODate($item->year, $item->week)->startOfWeek();
+        $chart_weeks[] = 'W' . $item->week . ' ' . $weekStart->format('M d');
+        $chart_weekly_enrollments[] = $item->enrollment_count;
+    }
+
+    // Course enrollment data for doughnut chart
+    $course_enrollments = \App\Models\Student_ef_list::select('course_id')
+        ->selectRaw('COUNT(*) as enrollment_count')
+        ->with('course')
+        ->where('created_at', '>=', now()->subMonths(3))
+        ->groupBy('course_id')
+        ->orderBy('enrollment_count', 'desc')
+        ->take(6)
+        ->get();
+
+    $chart_course_labels = [];
+    $chart_course_data = [];
+    $chart_course_colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+
+    foreach ($course_enrollments as $index => $course_enrollment) {
+        $chart_course_labels[] = $course_enrollment->course->course ?? 'Unknown';
+        $chart_course_data[] = $course_enrollment->enrollment_count;
+    }
+
+        return [
+            'total_students' => $total_students,
+            'new_students_today' => $new_students_today,
+            'total_courses' => $total_courses,
+            'total_active_ef_lists' => $total_active_ef_lists,
+            'new_ef_lists_today' => $new_ef_lists_today,
+            'pending_verifications' => $pending_verifications,
+            'pending_ef_lists' => $pending_ef_lists,
+            'payments_today' => $payments_today,
+            'recent_students' => $recent_students,
+            'recent_payments' => $recent_payments,
+            'expiring_ef_lists' => $expiring_ef_lists,
+
+            // New analytics data
+            'monthly_enrollments' => $monthly_enrollments,
+            'enrollment_chart_data' => $enrollment_chart_data,
+            'enrollment_growth_rate' => $enrollment_growth_rate,
+            'course_enrollments' => $course_enrollments,
+            'weekly_chart_data' => $weekly_chart_data,
+            'current_month_enrollments' => $current_month_enrollments,
+             // Chart data
+            'chart_months' => $chart_months,
+            'chart_enrollments' => $chart_enrollments,
+            'chart_revenue' => $chart_revenue,
+            'chart_weeks' => $chart_weeks,
+            'chart_weekly_enrollments' => $chart_weekly_enrollments,
+            'chart_course_labels' => $chart_course_labels,
+            'chart_course_data' => $chart_course_data,
+            'chart_course_colors' => $chart_course_colors,
         ];
     }
     public function notifications()

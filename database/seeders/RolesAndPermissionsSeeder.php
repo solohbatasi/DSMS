@@ -102,7 +102,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Instructor → manage students, results, courses
         $instructor->syncPermissions([
-            'view students', 'edit students',
+
             'add results', 'view results', 'edit results',
             'view courses','print tickets'
         ]);

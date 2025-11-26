@@ -484,28 +484,28 @@
                 </div>
             </div>
               <!-- CTA Section -->
-        <div class="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 md:p-12 text-center text-white relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: contain;background-repeat: no-repeat;background-position: center;"></div>
-            <div class="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: contain;background-repeat: no-repeat;background-position: center;"></div>
+            <div class="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 md:p-12 text-center text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: contain;background-repeat: no-repeat;background-position: center;"></div>
+                <div class="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24" style="background-image: url('{{ asset('img/photooo.jpg') }}');background-size: contain;background-repeat: no-repeat;background-position: center;"></div>
 
-            <div class="relative z-10 max-w-3xl mx-auto">
-                <h2 class="text-2xl md:text-3xl font-bold mb-4">Ready to Start Your Driving Journey?</h2>
-                <p class="text-lg text-blue-100 mb-8">
-                    Join thousands of successful drivers who started their journey with Pace Driving School
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{{ url('book-lessons') }}"
-                       class="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105">
-                        Book Your First Lesson
-                    </a>
-                    <a href="tel:+254700123456"
-                       class="border-2 border-white border-opacity-30 hover:border-opacity-100 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
-                        <i class="fas fa-phone mr-2"></i>
-                        Call Us Now
-                    </a>
+                <div class="relative z-10 max-w-3xl mx-auto">
+                    <h2 class="text-2xl md:text-3xl font-bold mb-4">Ready to Start Your Driving Journey?</h2>
+                    <p class="text-lg text-blue-100 mb-8">
+                        Join thousands of successful drivers who started their journey with Pace Driving School
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="{{ url('book-lessons') }}"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105">
+                            Book Your First Lesson
+                        </a>
+                        <a href="tel:+254700123456"
+                        class="border-2 border-white border-opacity-30 hover:border-opacity-100 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+                            <i class="fas fa-phone mr-2"></i>
+                            Call Us Now
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
         </div>
     </section>
 
@@ -721,7 +721,7 @@
                             </div>
                             <div>
                                 <h4 class="font-semibold text-gray-900 mb-1">Our Address</h4>
-                                <p class="text-gray-600">Pace Driving School Headquarters<br>Nairobi, Kenya</p>
+                                <p class="text-gray-600">Nairobi, Kenya</p>
                             </div>
                         </div>
 
@@ -732,8 +732,7 @@
                             <div>
                                 <h4 class="font-semibold text-gray-900 mb-1">Phone Numbers</h4>
                                 <p class="text-gray-600">
-                                    +254 700 123 456<br>
-                                    +254 711 987 654
+                                    +254 728 725 559
                                 </p>
                             </div>
                         </div>
@@ -779,11 +778,6 @@
                                 <input type="email" id="email" name="email" required
                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                             </div>
-                        </div>
-                        <div>
-                            <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
-                            <input type="text" id="subject" name="subject" required
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                         </div>
                         <div>
                             <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message *</label>
