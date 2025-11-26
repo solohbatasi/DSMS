@@ -50,52 +50,103 @@ class MigrateStudentsToUsersSeeder extends Seeder
         $this->showSummary($results);
     }
 
-    private function migrateStudent(Student $student, array &$results)
-    {
-        DB::transaction(function () use ($student, &$results) {
-            // Check if student already has a user (double-check)
-            if ($student->user_id) {
-                throw new \Exception("Student already has user account");
-            }
+  private function migrateStudent(Student $student, array &$results)
+{
+    DB::transaction(function () use ($student, &$results) {
+        // Check if student already has a user (double-check)
+        if ($student->user_id) {
+            throw new \Exception("Student already has user account");
+        }
 
-            // Generate unique email
-            $baseEmail = $this->generateEmail($student);
-            $email = $this->getUniqueEmail($baseEmail);
+        // Generate unique email
+        $baseEmail = $this->generateEmail($student);
+        $email = $this->getUniqueEmail($baseEmail);
 
-            // Create user
-            $user = User::create([
-                'name' => $student->name,
-                'email' => $email,
-                'password' => Hash::make('password'),
-                'phone' => $student->contact,
-                'role' => 'student',
-                'is_active' => true,
-                'email_verified_at' => now(),
-                'created_at' => $student->created_at,
-                'updated_at' => now(),
-            ]);
+        // Clean and truncate phone number to fit in varchar(20)
+        $phone = $this->cleanPhoneNumber($student->contact);
 
-            // Update student
-            $student->update([
-                'user_id' => $user->id,
-                'email' => $email,
-            ]);
+        // Create user
+        $user = User::create([
+            'name' => $student->name,
+            'email' => $email,
+            'password' => Hash::make('password'),
+            'phone' => $phone, // Use cleaned phone number
+            'role' => 'student',
+            'is_active' => true,
+            'email_verified_at' => now(),
+            'created_at' => $student->created_at,
+            'updated_at' => now(),
+        ]);
 
-            try {
-                $user->assignRole('student');
-            } catch (\Exception $e) {
-                // If student role doesn't exist in Spatie, just log it
-                $this->command->warn("Spatie role 'student' not found for {$student->name}");
-            }
+        // Update student
+        $student->update([
+            'user_id' => $user->id,
+            'email' => $email,
+        ]);
 
-            $results['created']++;
+        try {
+            $user->assignRole('student');
+        } catch (\Exception $e) {
+            // If student role doesn't exist in Spatie, just log it
+            $this->command->warn("Spatie role 'student' not found for {$student->name}");
+        }
 
-            // Log success (optional)
-            if ($this->command->getOutput()->isVerbose()) {
-                $this->command->info(" ✅ {$student->name} -> {$email}");
-            }
-        });
+        $results['created']++;
+
+        // Log success (optional)
+        if ($this->command->getOutput()->isVerbose()) {
+            $this->command->info(" ✅ {$student->name} -> {$email}");
+        }
+    });
+}
+
+private function cleanPhoneNumber(?string $phone): ?string
+{
+    if (empty($phone)) {
+        return null;
     }
+
+    // Remove spaces, slashes, and other non-numeric characters except +
+    $cleaned = preg_replace('/[^\d+]/', '', $phone);
+
+    // Take only the first phone number if multiple exist
+    // This handles cases like "07088661000708876395" after cleaning
+    if (strlen($cleaned) > 20) {
+        // If it's still too long, take the first 20 characters
+        $cleaned = substr($cleaned, 0, 20);
+    }
+
+    // Alternative: Extract first phone number from the original string
+    // This is better for numbers separated by slashes or commas
+    $firstPhone = $this->extractFirstPhoneNumber($phone);
+
+    return $firstPhone;
+}
+
+private function extractFirstPhoneNumber(string $phone): string
+{
+    // Split by common separators: comma, slash, space, "and", "or"
+    $parts = preg_split('/[, \/]+|and|or/i', $phone);
+
+    foreach ($parts as $part) {
+        $part = trim($part);
+        // Check if this part looks like a phone number (contains digits)
+        if (preg_match('/\d/', $part)) {
+            // Clean the phone number - keep only digits and +
+            $cleanPart = preg_replace('/[^\d+]/', '', $part);
+
+            // Validate it's a reasonable phone number length (8-15 digits typically)
+            $digitCount = preg_match_all('/\d/', $cleanPart);
+            if ($digitCount >= 8 && $digitCount <= 15 && strlen($cleanPart) <= 20) {
+                return $cleanPart;
+            }
+        }
+    }
+
+    // Fallback: take first 20 characters of cleaned original
+    $fallback = preg_replace('/[^\d+]/', '', $phone);
+    return substr($fallback, 0, 20);
+}
 
     private function generateEmail(Student $student): string
     {

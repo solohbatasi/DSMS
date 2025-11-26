@@ -334,7 +334,7 @@
                     </p>
 
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <a href="{{ url('courses') }}"
+                        <a href="{{ route('pages.courses') }}"
                         class="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-4 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center">
                             <span>Start Your Journey</span>
                             <i class="fas fa-arrow-right ml-2"></i>

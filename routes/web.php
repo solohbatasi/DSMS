@@ -50,20 +50,18 @@ Route::post('/contact', [ContactMessageController::class, 'store'])->name('conta
 Route::get('/book-lessons', [LessonApplicationController::class, 'create'])->name('book-lessons');
 Route::post('/book-lessons', [LessonApplicationController::class, 'store'])->name('applications.store');
 Route::get('/application-success/{applicationNumber}', [LessonApplicationController::class, 'success'])->name('application.success');
+Route::get('/driving-courses', [PageController::class, 'coursesIndex'])->name('pages.courses');
 
 // Admin application management
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth'])(function () {
     Route::get('/applications', [LessonApplicationController::class, 'index'])->name('admin.applications.index');
     Route::get('/applications/{application}', [LessonApplicationController::class, 'show'])->name('admin.applications.show');
     Route::put('/applications/{application}/status', [LessonApplicationController::class, 'updateStatus'])->name('admin.applications.update-status');
-});
-// Admin contact message management routes
-Route::prefix('admin')->middleware(['auth'])->group(function () {
+
     Route::get('/contact-messages', [ContactMessageController::class, 'index'])->name('admin.contact-messages.index');
     Route::get('/contact-messages/{contactMessage}', [ContactMessageController::class, 'show'])->name('admin.contact-messages.show');
     Route::post('/contact-messages/{contactMessage}/replied', [ContactMessageController::class, 'markAsReplied'])->name('admin.contact-messages.replied');
     Route::delete('/contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('admin.contact-messages.destroy');
-});
 // payments.php routes
 Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
 Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
@@ -141,7 +139,6 @@ Route::post('/admin/users/{user}/permissions', [App\Http\Controllers\Admin\UserC
 Route::post('/tickets/download', [TicketController::class, 'download'])->name('tickets.download');
 Route::get('/tickets/history', [TicketController::class, 'history'])->name('tickets.history');
 
-// Route::middleware(['auth', 'student'])->prefix('feedback')->group(function () {
     Route::get('/course-rating', [FeedbackController::class, 'courseRatingForm'])->name('feedback.course-rating');
     Route::post('/course-rating', [FeedbackController::class, 'storeCourseRating'])->name('feedback.course-rating.store');
 
@@ -149,21 +146,11 @@ Route::get('/tickets/history', [TicketController::class, 'history'])->name('tick
     Route::post('/services', [FeedbackController::class, 'storeServicesFeedback'])->name('feedback.services.store');
 
     Route::get('/thank-you', [FeedbackController::class, 'thankYou'])->name('feedback.thank-you');
-// });
-Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
-Route::get('/driving-courses', [PageController::class, 'coursesIndex'])->name('pages.courses');
-Route::resource('courses', CourseController::class);
-// web.php
-Route::get('/bills/{bill}/info', [BillController::class, 'info']);
-Route::get('/bills/info/customer/{customer}', [BillController::class, 'infoByCustomer']);
-Route::get('/bills/info/meter/{meter}', [BillController::class, 'infoByMeter']);
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/bills', [BillController::class, 'index'])->name('bills.index');
-    Route::post('/bills', [BillController::class, 'store'])->name('bills.store');
-    Route::get('/bills/{bill}', [BillController::class, 'show'])->name('bills.show');
-    Route::put('/bills/{bill}', [BillController::class, 'update'])->name('bills.edit');
-    Route::delete('/bills/{bill}', [BillController::class, 'destroy'])->name('bills.destroy');
+Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
+Route::resource('courses', CourseController::class);
+
+
 });
 
 /*
