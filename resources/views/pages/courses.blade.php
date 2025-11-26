@@ -389,7 +389,7 @@
                 Call for Consultation
             </a>
         </div>
-        <p class="text-blue-200 mt-8 text-lg">
+        <p class="text-yellow-500 mt-8 text-lg">
              <strong>Quick Enrollment:</strong> +254 728 725 559
         </p>
     </div>

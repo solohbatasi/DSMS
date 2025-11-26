@@ -330,7 +330,7 @@
 
                     <p class="text-xl md:text-2xl text-blue-100 mb-8 leading-relaxed">
                         Professional driving education with a 95% first-time pass rate.
-                        Your journey to safe, confident driving starts here.
+                        Your journey to safe, expert driving starts here.
                     </p>
 
                     <div class="flex flex-col sm:flex-row gap-4">
@@ -451,7 +451,7 @@
                 <div>
                     <h2 class="text-3xl md:text-4xl font-bold text-blue-700 mb-6">About Pace Driving School</h2>
                     <p class="text-lg text-gray-700 mb-6 leading-relaxed">
-                        Pace Driving School has been training confident and safe drivers for over a decade.
+                        Pace Driving School has been training expert and safe drivers for over a decade.
                         Our certified instructors are committed to providing the highest quality driving education.
                     </p>
                     <p class="text-lg text-gray-700 mb-8 leading-relaxed">
@@ -462,7 +462,7 @@
                     <div class="grid grid-cols-2 gap-6 mb-8">
                         <div class="stat-card p-4">
                             <div class="text-2xl font-bold text-blue-700 mb-1">Mission</div>
-                            <p class="text-sm text-gray-600">Create confident, safe drivers for life</p>
+                            <p class="text-sm text-gray-600">Create expert, safe drivers for life</p>
                         </div>
                         <div class="stat-card p-4">
                             <div class="text-2xl font-bold text-blue-700 mb-1">Approach</div>
@@ -490,7 +490,7 @@
 
                 <div class="relative z-10 max-w-3xl mx-auto">
                     <h2 class="text-2xl md:text-3xl font-bold mb-4">Ready to Start Your Driving Journey?</h2>
-                    <p class="text-lg text-blue-100 mb-8">
+                    <p class="text-lg text-yellow-500 mb-8">
                         Join thousands of successful drivers who started their journey with Pace Driving School
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
