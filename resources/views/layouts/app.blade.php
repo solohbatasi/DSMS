@@ -965,17 +965,7 @@ use Illuminate\Support\Facades\Route;
             </div>
 
             <!-- Social Links -->
-            <div class="mobile-social">
-                <a href="#" aria-label="Facebook">
-                    <i class="fab fa-facebook-f"></i>
-                </a>
-                <a href="#" aria-label="Twitter">
-                    <i class="fab fa-twitter"></i>
-                </a>
-                <a href="#" aria-label="Instagram">
-                    <i class="fab fa-instagram"></i>
-                </a>
-            </div>
+
         </div>
     </div>
 
@@ -1006,10 +996,10 @@ use Illuminate\Support\Facades\Route;
                             <i class="fas fa-chevron-down ml-1" style="font-size: 0.75rem;"></i>
                         </button>
                         <div class="dropdown-content">
-                            <a href="{{ route('about') }}">Our Story</a>
-                            <a href="{{ url('instructors') }}">Our Instructors</a>
+                            <a href="#">Our Story</a>
+                            <!-- <a href="{{ url('instructors') }}">Our Instructors</a>
                             <a href="{{ url('mission') }}">Mission & Vision</a>
-                            <a href="{{ url('success') }}">Success Stories</a>
+                            <a href="{{ url('success') }}">Success Stories</a> -->
                         </div>
                     </div>
 
@@ -1026,9 +1016,9 @@ use Illuminate\Support\Facades\Route;
                         </div>
                     </div>
 
-                    <a href="{{ url('book-lessons') }}" class="nav-link">Book Lessons</a>
+                    <!-- <a href="{{ url('book-lessons') }}" class="nav-link">Book Lessons</a>
                     <a href="{{ url('testimonials') }}" class="nav-link">Testimonials</a>
-                    <a href="{{ url('contact') }}" class="nav-link">Contact</a>
+                    <a href="{{ url('contact') }}" class="nav-link">Contact</a> -->
                 </div>
 
                 <!-- Desktop Auth -->
@@ -1075,10 +1065,10 @@ use Illuminate\Support\Facades\Route;
                     <i class="fas fa-chevron-down transition-transform" :class="{ 'rotate-180': mobileDropdowns.about }"></i>
                 </button>
                 <div class="mobile-dropdown-content" :class="{ 'open': mobileDropdowns.about }">
-                    <a href="{{ url('about') }}" @click="mobileMenuOpen = false">Our Story</a>
-                    <a href="{{ url('instructors') }}" @click="mobileMenuOpen = false">Our Instructors</a>
+                    <a href="#" @click="mobileMenuOpen = false">Our Story</a>
+                    <!-- <a href="{{ url('instructors') }}" @click="mobileMenuOpen = false">Our Instructors</a>
                     <a href="{{ url('mission') }}" @click="mobileMenuOpen = false">Mission & Vision</a>
-                    <a href="{{ url('success') }}" @click="mobileMenuOpen = false">Success Stories</a>
+                    <a href="{{ url('success') }}" @click="mobileMenuOpen = false">Success Stories</a> -->
                 </div>
             </div>
 
@@ -1095,9 +1085,9 @@ use Illuminate\Support\Facades\Route;
                 </div>
             </div>
 
-            <a href="{{ url('book-lessons') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Book Lessons</a>
+            <!-- <a href="{{ url('book-lessons') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Book Lessons</a>
             <a href="{{ url('testimonials') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Testimonials</a>
-            <a href="{{ url('contact') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Contact</a>
+            <a href="{{ url('contact') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Contact</a> -->
         </div>
 
         @guest
