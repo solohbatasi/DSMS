@@ -954,9 +954,9 @@ use Illuminate\Support\Facades\Route;
         <div class="top-nav-compact">
             <!-- Contact Information -->
             <div class="mobile-contact">
-                <a href="tel:+254700000000">
+                <a href="tel:+254728725559">
                     <i class="fas fa-phone-alt"></i>
-                    <span class="desktop-only">+254 700 00 0000</span>
+                    <span class="desktop-only">+254 728 725 559</span>
                 </a>
                 <a href="mailto:info@pacedrivingschool.co.ke">
                     <i class="fas fa-envelope"></i>
@@ -1328,11 +1328,11 @@ use Illuminate\Support\Facades\Route;
                     <ul class="footer-links">
                         <li class="flex items-start">
                             <i class="fas fa-map-marker-alt mt-1 mr-3 text-yellow-400"></i>
-                            <span>Pace Driving School Headquarters<br>Nairobi, Kenya</span>
+                            <span>Eastleigh Nairobi, Kenya</span>
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-phone-alt mr-3 text-yellow-400"></i>
-                            <span>+254 700 00 0000</span>
+                            <span>+254 728 725 559</span>
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-envelope mr-3 text-yellow-400"></i>
@@ -1348,7 +1348,7 @@ use Illuminate\Support\Facades\Route;
 
             <!-- Bottom Bar -->
             <div class="footer-bottom">
-                <p>&copy; 2024 <strong>Pace Driving School</strong>. All rights reserved. | Drive Safe, Drive Confident</p>
+                <p>&copy; 2024 <strong>bAtasi</strong>. All rights reserved. | Drive Safe, Drive Expertly</p>
             </div>
         </div>
     </footer>

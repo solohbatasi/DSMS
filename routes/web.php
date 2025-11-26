@@ -36,12 +36,22 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\TicketDownloadController;
+use App\Http\Controllers\ContactMessageController;
 
 
 use App\Models\Customer;
 
 
+// Public contact form routes
+Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');
 
+// Admin contact message management routes
+Route::prefix('admin')->middleware(['auth'])->group(function () {
+    Route::get('/contact-messages', [ContactMessageController::class, 'index'])->name('admin.contact-messages.index');
+    Route::get('/contact-messages/{contactMessage}', [ContactMessageController::class, 'show'])->name('admin.contact-messages.show');
+    Route::post('/contact-messages/{contactMessage}/replied', [ContactMessageController::class, 'markAsReplied'])->name('admin.contact-messages.replied');
+    Route::delete('/contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('admin.contact-messages.destroy');
+});
 // payments.php routes
 Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
 Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
