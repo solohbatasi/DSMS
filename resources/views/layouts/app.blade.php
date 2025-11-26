@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 @php
 use Illuminate\Support\Facades\Route;
-@endphp
 
+use Illuminate\Support\Facades\Auth;
+@endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
@@ -1498,7 +1499,7 @@ use Illuminate\Support\Facades\Route;
 
         <a href="{{ route('pages.courses') }}" class="mobile-nav-link" @click="mobileMenuOpen = false">Courses</a>
 
-        <!-- Mobile Auth Section -->
+         <!-- Mobile Auth Section -->
         @auth
             <!-- Mobile User Info -->
             <div class="mobile-user-section">
@@ -1507,8 +1508,8 @@ use Illuminate\Support\Facades\Route;
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="mobile-user-details">
-                        <span class="mobile-user-name">{{ Auth::user()->name }}</span>
-                        <span class="mobile-user-role">{{ Auth::user()->role ?? 'Student' }}</span>
+                        <span class="mobile-user-name">{{ auth()->user()->name }}</span>
+                        <span class="mobile-user-role">{{ auth()->user()->role ?? 'Student' }}</span>
                     </div>
                 </div>
                 <div class="mobile-user-links">
@@ -1516,7 +1517,7 @@ use Illuminate\Support\Facades\Route;
                         <i class="fas fa-tachometer-alt"></i>
                         Dashboard
                     </a>
-                    <a href="{{ route('profile') }}" class="mobile-user-link" @click="mobileMenuOpen = false">
+                    <a href="#" class="mobile-user-link" @click="mobileMenuOpen = false">
                         <i class="fas fa-user-cog"></i>
                         Profile Settings
                     </a>
@@ -1547,8 +1548,8 @@ use Illuminate\Support\Facades\Route;
                 </button>
             </div>
         @endguest
+            </div>
     </div>
-</div>
 
     <!-- Sign Up Modal -->
     <div x-show="signupOpen" x-cloak class="modal-overlay">

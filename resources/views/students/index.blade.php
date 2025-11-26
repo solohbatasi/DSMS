@@ -220,7 +220,7 @@
                             $balance = $ef->total_fee - $totalPaid;
                         @endphp
                         <tr class="border-b">
-                            <td class="px-4 py-2">{{ $ef->student->name }}</td>
+                            <td class="px-4 py-2">{{ $ef->student->name ?? ' '}}</td>
                             <td class="px-4 py-2">{{ $ef->course->course }}</td>
                             <td class="px-4 py-2">{{ $ef->ef_no }}</td>
                             <td class="px-4 py-2">
