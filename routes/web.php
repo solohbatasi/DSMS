@@ -44,12 +44,107 @@ use App\Http\Controllers\LessonApplicationController;
 use App\Models\Customer;
 
 
-// Public contact form routes
+/*
+|--------------------------------------------------------------------------
+| EMAIL VERIFICATION (JETSTREAM / FORTIFY)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect()->intended('/dashboard');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('status', 'verification-link-sent');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN ROUTES (ROLE-BASED)
+|--------------------------------------------------------------------------
+*/
+
+
+
+/*
+|--------------------------------------------------------------------------
+| M-PESA Payment Routes
+|--------------------------------------------------------------------------
+*/
+
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
 Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');
-// Public application routes
+
 Route::get('/book-lessons', [LessonApplicationController::class, 'create'])->name('book-lessons');
 Route::post('/book-lessons', [LessonApplicationController::class, 'store'])->name('applications.store');
 Route::get('/application-success/{applicationNumber}', [LessonApplicationController::class, 'success'])->name('application.success');
+
+Route::get('/driving-courses', [PageController::class, 'coursesIndex'])->name('pages.courses');
+
+
+
+/*
+|--------------------------------------------------------------------------
+| PUBLIC API ROUTES
+|--------------------------------------------------------------------------
+*/
+
+
+
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATED USER ROUTES
+|--------------------------------------------------------------------------
+*/
+
+
+Route::middleware(['auth'])->group(function () {
+
+    // Profile Routes
+    Route::prefix('profile')->name('profile.')->group(function () {
+        // Main profile page
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::get('/edit', [ProfileController::class, 'edit'])->name('edit'); // Alternative URL
+
+        // Update profile info
+        Route::patch('/update', [ProfileController::class, 'update'])->name('update');
+
+        // Password management
+        Route::get('/security', [ProfileController::class, 'security'])->name('security');
+        Route::post('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+        // Preferences
+        Route::get('/preferences', [ProfileController::class, 'preferences'])->name('preferences');
+        Route::patch('/preferences', [ProfileController::class, 'updatePreferences'])->name('preferences.update');
+
+        // Activity
+        Route::get('/activity', [ProfileController::class, 'activity'])->name('activity');
+
+        // Account deletion
+        Route::delete('/delete', [ProfileController::class, 'destroy'])->name('destroy');
+    });
+
+    // Dashboard (if needed)
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+});
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 // Admin application management
 Route::middleware(['auth'])->prefix('admin')->group(function () {
@@ -149,355 +244,11 @@ Route::get('/tickets/history', [TicketController::class, 'history'])->name('tick
     Route::post('/services', [FeedbackController::class, 'storeServicesFeedback'])->name('feedback.services.store');
 
     Route::get('/thank-you', [FeedbackController::class, 'thankYou'])->name('feedback.thank-you');
-// });
+
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
-Route::get('/driving-courses', [PageController::class, 'coursesIndex'])->name('pages.courses');
 Route::resource('courses', CourseController::class);
-// web.php
-Route::get('/bills/{bill}/info', [BillController::class, 'info']);
-Route::get('/bills/info/customer/{customer}', [BillController::class, 'infoByCustomer']);
-Route::get('/bills/info/meter/{meter}', [BillController::class, 'infoByMeter']);
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/bills', [BillController::class, 'index'])->name('bills.index');
-    Route::post('/bills', [BillController::class, 'store'])->name('bills.store');
-    Route::get('/bills/{bill}', [BillController::class, 'show'])->name('bills.show');
-    Route::put('/bills/{bill}', [BillController::class, 'update'])->name('bills.edit');
-    Route::delete('/bills/{bill}', [BillController::class, 'destroy'])->name('bills.destroy');
-});
 
-/*
-|--------------------------------------------------------------------------
-| EMAIL VERIFICATION (JETSTREAM / FORTIFY)
-|--------------------------------------------------------------------------
-*/
-
-
-
-
-
-Route::get('/email/verify', function () {
-    return view('auth.verify-email');
-})->middleware('auth')->name('verification.notice');
-
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-    return redirect()->intended('/dashboard');
-})->middleware(['auth', 'signed'])->name('verification.verify');
-
-Route::post('/email/verification-notification', function (Request $request) {
-    $request->user()->sendEmailVerificationNotification();
-    return back()->with('status', 'verification-link-sent');
-})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
-
-/*
-|--------------------------------------------------------------------------
-| NYAWASCO ROUTES
-|--------------------------------------------------------------------------
-*/
-
-// Water Connection Routes
-Route::get('/services/water-connection', function () {
-    return view('services.water-connection');
-})->name('water-connection');
-
-// Show the form
-Route::get('/water-connection/apply', [WaterConnectionController::class, 'create'])
-    ->name('water-connection.apply');
-
-// Handle form submission
-Route::post('/water-connection/apply', [WaterConnectionController::class, 'store'])
-    ->name('water-connection.submit');
-
-Route::get('/services/sewer-connection', function () {
-    return view('services.sewer-connection');
-})->name('sewer-connection');
-
-Route::get('/services/bill-payment', function () {
-    return view('services.bill-payment');
-})->name('bill-payment');
-
-Route::get('/complaints/create', function () {
-    return view('complaints.create');
-})->name('complaints.create');
-
-Route::get('/report-corruption', function () {
-    return view('report-corruption');
-})->name('corruption-report');
-
-Route::get('/tenders', function () {
-    return view('tenders.index');
-})->name('tenders');
-
-Route::get('/careers', function () {
-    return view('careers.index');
-})->name('careers');
-
-Route::get('/reports', function () {
-    return view('reports.index');
-})->name('reports');
-
-Route::get('/downloads', function () {
-    return view('downloads.index');
-})->name('downloads');
-
-Route::get('/news', function () {
-    return view('news.index');
-})->name('news');
-
-Route::get('/news/{slug}', function ($slug) {
-    return view('news.show', compact('slug'));
-})->name('news.show');
-
-Route::get('/documentary', function () {
-    return view('documentary');
-})->name('documentary');
-
-// Service Routes
-Route::get('/services', function () {
-    return view('services.index');
-})->name('services');
-
-Route::get('/services/water-supply', function () {
-    return view('services.water-supply');
-})->name('water-supply');
-
-Route::get('/services/sewerage', function () {
-    return view('services.sewerage');
-})->name('sewerage');
-
-Route::get('/services/new-connections', function () {
-    return view('services.new-connections');
-})->name('new-connections');
-
-Route::get('/services/payments', function () {
-    return view('services.payments');
-})->name('payments');
-
-Route::get('/support', function () {
-    return view('support');
-})->name('support');
-
-// About Routes
-Route::get('/about', function () {
-    return view('about.index');
-})->name('about');
-
-Route::get('/about/management', function () {
-    return view('about.management');
-})->name('management');
-
-// Projects Routes
-Route::get('/projects', function () {
-    return view('projects.index');
-})->name('projects');
-
-// Contact Form Submission
-Route::post('/contact/submit', function (Request $request) {
-    // For now, just redirect back with success message
-    // You can implement email sending or database storage later
-    return back()->with('success', 'Your message has been sent successfully!');
-})->name('contact.submit');
-
-
-
-
-
-/*
-|--------------------------------------------------------------------------
-| ADMIN ROUTES (ROLE-BASED)
-|--------------------------------------------------------------------------
-*/
-
-
-// Public water connection application routes
-Route::get('/water-connection/apply', [WaterConnectionController::class, 'create'])->name('water-connection.apply');
-Route::post('/water-connection/submit', [WaterConnectionController::class, 'store'])->name('water-connection.submit');
-
-// Admin routes group
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
-
-    // Water applications routes
-    Route::get('/water-applications', [WaterConnectionController::class, 'index'])->name('water-applications.index');
-    Route::get('/water-applications/{application}', [WaterConnectionController::class, 'show'])->name('water-applications.show');
-    Route::post('/water-applications/{application}/approve', [WaterConnectionController::class, 'approve'])->name('water-applications.approve');
-    Route::post('/water-applications/{application}/decline', [WaterConnectionController::class, 'decline'])->name('water-applications.decline');
-
-    // Customers routes
-    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
-});
-
-Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Dashboard
-    Route::get('dashboard', [UserController::class, 'index'])->name('dashboard');
-
-    // Customer Management Routes
-    Route::prefix('customers')->name('customers.')->group(function () {
-        Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::get('/create', [CustomerController::class, 'create'])->name('create');
-        Route::post('/', [CustomerController::class, 'store'])->name('store');
-        Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
-        Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('edit');
-        Route::put('/{customer}', [CustomerController::class, 'update'])->name('update');
-        Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
-
-        // Meter Readings
-        Route::get('/{customer}/readings', [CustomerController::class, 'meterReadings'])->name('meter-readings');
-        Route::get('/{customer}/readings/create', [CustomerController::class, 'createReading'])->name('readings.create');
-        Route::post('/{customer}/readings', [CustomerController::class, 'storeReading'])->name('readings.store');
-
-        // Billing
-        Route::post('/{customer}/readings/{reading}/generate-bill', [CustomerController::class, 'generateBill'])->name('generate-bill');
-        Route::get('/{customer}/bills', [CustomerController::class, 'bills'])->name('bills');
-
-         Route::get('/customers/{customer}/address', function (Customer $customer) {
-            return response()->json([
-                'address' => $customer->physical_address
-            ]);
-        })->name('customers.address');
-    });
-
-
-
-
-    // Meter Readings Management
-    Route::prefix('meter-readings')->name('meter-readings.')->group(function () {
-        Route::get('/', [MeterReadingController::class, 'index'])->name('index');
-        Route::get('/create', [MeterReadingController::class, 'create'])->name('create');
-        Route::post('/', [MeterReadingController::class, 'store'])->name('store');
-    });
-
-    // Meters Management (Simple overview)
-    Route::prefix('meters')->name('meters.')->group(function () {
-        Route::get('/', [MeterController::class, 'index'])->name('index');
-        Route::get('/{customer}', [MeterController::class, 'show'])->name('show');
-    });
-
-    // Meter Management Routes
-    Route::prefix('meters')->name('meters.')->group(function () {
-        Route::get('/', [MeterController::class, 'index'])->name('index');
-        Route::get('/available', [MeterController::class, 'available'])->name('available');
-        Route::get('/assigned', [MeterController::class, 'assigned'])->name('assigned');
-        Route::get('/by-location', [MeterController::class, 'byLocation'])->name('by-location');
-
-        Route::post('/', [MeterController::class, 'store'])->name('store');
-        Route::get('/{meter}', [MeterController::class, 'show'])->name('show');
-        Route::get('/{meter}/edit', [MeterController::class, 'edit'])->name('edit');
-        Route::put('/{meter}', [MeterController::class, 'update'])->name('update');
-        Route::post('/{meter}/assign', [MeterController::class, 'assignToCustomer'])->name('assign');
-        Route::post('/{meter}/unassign', [MeterController::class, 'unassign'])->name('unassign');
-    });
-
-
-
-
-});
-
-
-
-/*
-|--------------------------------------------------------------------------
-| M-PESA Payment Routes
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('auth')->group(function () {
-    Route::post('/pay/mpesa/initiate', [MpesaPaymentController::class, 'initiatePayment'])->name('mpesa.initiate');
-    Route::post('/pay/mpesa/check-status', [MpesaPaymentController::class, 'checkPaymentStatus'])->name('mpesa.checkStatus');
-});
-
-// M-PESA callback (no auth required)
-Route::post('/payments/callback', [MpesaPaymentController::class, 'handleCallback'])->name('mpesa.callback');
-
-/*
-|--------------------------------------------------------------------------
-| PUBLIC ROUTES
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/', [HomeController::class, 'index'])->name('home');
-
-Route::get('/events', [EventController::class, 'index'])->name('events.index');
-Route::get('/events/category/{category}', [EventController::class, 'byCategory'])->name('events.byCategory');
-Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
-Route::get('/events/{event}/tickets', [EventController::class, 'tickets'])->name('events.tickets');
-
-Route::get('/voting', [VotingController::class, 'index'])->name('voting.index');
-Route::get('/voting/{contest}', [VotingController::class, 'show'])->name('voting.show');
-Route::get('/voting/category/{category}', [VotingController::class, 'byCategory'])->name('voting.byCategory');
-
-// Conditional Organizer Modal Logic (Frontend handles redirection if not authenticated)
-Route::get('/organizers', [OrganizerController::class, 'index'])->name('organizers.index');
-Route::get('/organizers/{organizer}', [OrganizerController::class, 'show'])->name('organizers.show');
-
-Route::get('/search', [SearchController::class, 'index'])->name('search.index');
-
-// Static Pages (Updated for NYAWASCO)
-Route::view('/pricing', 'static.pricing', ['title' => 'Pricing - NYAWASCO'])->name('pricing');
-Route::view('/contact', 'static.contact', ['title' => 'Contact Us - NYAWASCO'])->name('contact');
-Route::view('/privacy', 'static.privacy', ['title' => 'Privacy Policy - NYAWASCO'])->name('privacy');
-Route::view('/terms', 'static.terms', ['title' => 'Terms of Service - NYAWASCO'])->name('terms');
-Route::view('/help', 'static.help', ['title' => 'Help Center - NYAWASCO'])->name('help');
-
-Route::get('/events/{event}/tickets', [TicketController::class, 'show'])->name('tickets.purchase.show');
-Route::post('/events/{event}/tickets/purchase', [TicketController::class, 'purchase'])->name('tickets.purchase');
-
-/*
-|--------------------------------------------------------------------------
-| PUBLIC API ROUTES
-|--------------------------------------------------------------------------
-*/
-
-Route::post('/pesapal/stkpush', [PesapalController::class, 'stkPush'])->name('pesapal.stkpush');
-Route::post('/pesapal/callback', [PesapalController::class, 'callback'])->name('pesapal.callback');
-Route::get('/pesapal/register-ipn', [PesapalController::class, 'registerIpn']);
-Route::get('/pesapal/callback', [PesapalController::class, 'callbackReturn'])->name('pesapal.callback.return');
-Route::post('/pesapal/ipn', [PesapalController::class, 'ipn'])->name('pesapal.ipn');
-
-Route::prefix('api')->group(function () {
-    Route::get('/live-activities', [LiveActivityController::class, 'index'])->name('api.live-activities');
-    Route::get('/search', [SearchApiController::class, 'search'])->name('api.search');
-    Route::get('/events/featured', [EventController::class, 'featured'])->name('api.events.featured');
-    Route::get('/voting/featured', [VotingController::class, 'featured'])->name('api.voting.featured');
-});
-
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATED USER ROUTES
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Profile
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Tickets & Bookings
-    Route::get('/my-tickets', [TicketController::class, 'myTickets'])->name('tickets.my-tickets');
-    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
-    Route::get('/tickets/{ticketPurchase}', [TicketController::class, 'showTicket'])->name('tickets.show');
-    Route::get('/tickets/{ticketPurchase}/download', [TicketController::class, 'download'])->name('tickets.download');
-    Route::get('/tickets/{ticketPurchase}/view', [TicketController::class, 'view'])->name('tickets.view');
-
-    // Bookings
-    Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
-    Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
-    Route::post('/events/{event}/book', [BookingController::class, 'store'])->name('bookings.store');
-    Route::delete('/bookings/{booking}', [BookingController::class, 'cancel'])->name('bookings.cancel');
-
-    // Voting
-    Route::post('/voting/{contest}/vote', [VotingController::class, 'vote'])->name('voting.vote');
-    Route::get('/my-votes', [VotingController::class, 'myVotes'])->name('voting.myVotes');
-
-    // Organizer Routes
-    Route::prefix('organizer')->group(function () {
-        Route::get('/dashboard', [OrganizerController::class, 'dashboard'])->name('organizer.dashboard');
-        Route::get('/ticket-sales', [OrganizerController::class, 'ticketSales'])->name('organizer.ticket-sales');
-        Route::get('/bookings', [OrganizerController::class, 'bookings'])->name('organizer.bookings');
-    });
 });
 
 /*
@@ -578,45 +329,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         Route::get('/{role}/permissions', [RoleController::class, 'getPermissions'])->name('permissions');
     });
 
-    Route::get('/attendees', [AttendeeController::class, 'index'])->name('attendees.index');
-    Route::get('/attendees/{id}', [AttendeeController::class, 'show'])->name('attendees.show');
-    Route::get('/attendees/{userId}/ticket-purchases', [AttendeeController::class, 'ticketPurchases'])->name('attendees.ticket-purchases');
-    Route::get('/admin/attendees/data', [AttendeeController::class, 'getAttendeesData'])->name('attendees.data');
-    Route::get('/admin/attendees/stats', [AttendeeController::class, 'getAttendeesStats'])->name('attendees.stats');
 
-    // Vendor Management
-    Route::prefix('vendors')->name('vendors.')->group(function () {
-        // List all vendors
-        Route::get('/', [VendorController::class, 'index'])->name('index');
 
-        Route::get('/data', [VendorController::class, 'getVendorsData'])->name('data');
-        Route::get('/stats', [VendorController::class, 'getVendorsStats'])->name('stats');
-        Route::get('/{id}/details', [VendorController::class, 'getVendorDetails'])->name('details');
 
-        // Optional: dashboard route for vendor admin overview
-        Route::get('/dashboard', [VendorController::class, 'dashboard'])->name('dashboard');
-    });
 
-    // Other admin management views
-    Route::prefix('management')->name('management.')->group(function () {
-        Route::view('/events', 'admin.events')->name('events');
-        Route::view('/voting', 'admin.voting')->name('voting');
-        Route::view('/tickets', 'admin.tickets')->name('tickets');
-        Route::view('/analytics', 'admin.analytics')->name('analytics');
-    });
 });
 
-/*
-|--------------------------------------------------------------------------
-| VENDOR ROUTES (ROLE-BASED)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth', 'verified', 'role:vendor'])->prefix('vendor')->name('vendor.')->group(function () {
-    Route::get('/dashboard', [VendorController::class, 'index'])->name('dashboard');
-    Route::view('/services', 'vendor.services')->name('services');
-    Route::view('/bookings', 'vendor.bookings')->name('bookings');
-});
 
 /*
 |--------------------------------------------------------------------------

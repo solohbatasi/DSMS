@@ -95,7 +95,10 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     // Relationships
-
+     public function student()
+    {
+        return $this->hasOne(Student::class);
+    }
   public function enrolledCourses(): BelongsToMany
     {
         return $this->belongsToMany(Student::class)
@@ -221,4 +224,5 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return $totalFields > 0 ? round(($filledFields / $totalFields) * 100) : 0;
     }
+
 }

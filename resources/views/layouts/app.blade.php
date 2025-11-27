@@ -1517,7 +1517,7 @@ use Illuminate\Support\Facades\Auth;
                         <i class="fas fa-tachometer-alt"></i>
                         Dashboard
                     </a>
-                    <a href="#" class="mobile-user-link" @click="mobileMenuOpen = false">
+                    <a href="{{ route('profile.edit') }}" class="mobile-user-link" @click="mobileMenuOpen = false">
                         <i class="fas fa-user-cog"></i>
                         Profile Settings
                     </a>
@@ -1613,7 +1613,7 @@ use Illuminate\Support\Facades\Auth;
                         <label class="flex items-center">
                             <input type="checkbox" name="terms" required class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                             <span class="ml-2 text-sm text-gray-600">
-                                I agree to the <a href="{{ route('terms') }}" class="text-blue-600 hover:text-blue-800">Terms of Service</a> and <a href="{{ route('privacy') }}" class="text-blue-600 hover:text-blue-800">Privacy Policy</a>
+                                I agree to the <a href="#" class="text-blue-600 hover:text-blue-800">Terms of Service</a> and <a href="#" class="text-blue-600 hover:text-blue-800">Privacy Policy</a>
                             </span>
                         </label>
                     </div>

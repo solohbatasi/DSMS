@@ -4,174 +4,225 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use App\Models\User;
+use App\Models\Student;
 
 class ProfileController extends Controller
 {
+    /**
+     * Constructor with middleware
+     */
+
+
+    /**
+     * Display the user's profile.
+     */
     public function edit()
     {
-        $user = User::find(Auth::id());
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-        if (! $user) {
-            $user = Auth::user();
+        // Load student relationship if user is a student
+        if ($user->role === 'student') {
+            $user->load('student');
         }
 
-        return view('profile.edit', [
+        $viewData = [
             'user' => $user,
-            'title' => 'Edit Profile - EventSphere'
-        ]);
+            'title' => 'Edit Profile - EventSphere',
+            'isStudent' => $user->role === 'student',
+            'student' => $user->student ?? null
+        ];
+
+        return view('profile.edit', $viewData);
     }
 
-
+    /**
+     * Update the user's profile information.
+     */
     public function update(Request $request)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-            'phone' => 'nullable|string|max:20',
-            'bio' => 'nullable|string|max:1000',
-            'avatar' => 'nullable|image|max:2048',
-            'current_password' => 'nullable|required_with:new_password|current_password',
-            'new_password' => 'nullable|min:8|confirmed',
-        ]);
+        try {
+            // Validate base user data
+            $userRules = [
+                'name' => 'required|string|max:255',
+                'email' => [
+                    'required',
+                    'string',
+                    'email',
+                    'max:255',
+                    Rule::unique('users')->ignore($user->id),
+                ],
+                'phone' => 'nullable|string|max:20',
+                'bio' => 'nullable|string|max:1000',
+                'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ];
 
-        // Handle avatar upload
-        if ($request->hasFile('avatar')) {
-            // Delete old avatar if exists
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
+            // Add student validation rules if user is a student
+            if ($user->role === 'student') {
+                $userRules['id_no'] = 'required|string|max:255';
+                $userRules['contact'] = 'nullable|string|max:255';
+                $userRules['address'] = 'nullable|string|max:255';
             }
 
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $validated['avatar'] = $path;
+            $validatedData = $request->validate($userRules);
+
+            // Handle avatar upload
+            if ($request->hasFile('avatar')) {
+                $validatedData['avatar'] = $this->handleAvatarUpload($request->file('avatar'), $user->avatar);
+            }
+
+            // Update user
+            $user->update($validatedData);
+
+            // Update student data if user is a student
+            if ($user->role === 'student' && $user->student) {
+                $this->updateStudentData($request, $user->student);
+            }
+
+            return redirect()
+                ->route('profile.edit')
+                ->with('success', 'Profile updated successfully!');
+
+        } catch (ValidationException $e) {
+            return redirect()
+                ->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Profile update error: ' . $e->getMessage());
+            return redirect()
+                ->back()
+                ->with('error', 'An error occurred while updating your profile. Please try again.');
         }
-
-        // Update password if provided
-        if ($request->filled('new_password')) {
-            $validated['password'] = Hash::make($validated['new_password']);
-        }
-        // Remove password fields if not changing password
-        if (!$request->filled('current_password')) {
-            unset($validated['current_password'], $validated['new_password'], $validated['new_password_confirmation']);
-        }
-
-        // Persist validated user attributes using fill() + save() to ensure the method exists
-        $user->fill($validated);
-        $user->save();
-
-        // Update or create profile
-        $this->updateProfile($request, $user);
-        $this->updateProfile($request, $user);
-
-        return back()->with('success', 'Profile updated successfully!');
     }
 
-    private function updateProfile(Request $request, $user)
+    /**
+     * Handle avatar upload and storage.
+     */
+    private function handleAvatarUpload($avatarFile, $currentAvatar = null)
     {
-        $profileData = $request->validate([
-            'company_name' => 'nullable|string|max:255',
-            'website' => 'nullable|url|max:255',
-            'address' => 'nullable|string|max:500',
-            'city' => 'nullable|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'postal_code' => 'nullable|string|max:20',
-            'tax_id' => 'nullable|string|max:100',
-        ]);
-
-        // Handle social links
-        $socialLinks = [];
-        $socialPlatforms = ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube'];
-
-        foreach ($socialPlatforms as $platform) {
-            if ($request->filled("social_links.{$platform}")) {
-                $socialLinks[$platform] = $request->input("social_links.{$platform}");
-            }
+        // Delete old avatar if exists
+        if ($currentAvatar && Storage::disk('public')->exists($currentAvatar)) {
+            Storage::disk('public')->delete($currentAvatar);
         }
 
-        $profileData['social_links'] = !empty($socialLinks) ? $socialLinks : null;
-
-        if ($user->profile) {
-            $user->profile->update($profileData);
-        } else {
-            $user->profile()->create($profileData);
-        }
+        // Store new avatar
+        return $avatarFile->store('avatars', 'public');
     }
 
+    /**
+     * Update student-specific data.
+     */
+    private function updateStudentData(Request $request, Student $student)
+    {
+        $student->update([
+            'id_no' => $request->id_no,
+            'contact' => $request->contact,
+            'address' => $request->address,
+        ]);
+    }
+
+    /**
+     * Update the user's password.
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        return back()->with('success', 'Password updated successfully!');
+    }
+
+    /**
+     * Delete the user's account.
+     */
     public function destroy(Request $request)
     {
         $request->validate([
             'password' => ['required', 'current_password'],
         ]);
 
+        /** @var \App\Models\User $user */
         $user = $request->user();
 
-        // Soft delete user (if using soft deletes)
-        // Or permanently delete based on your requirements
+        // Soft delete user
         $user->update(['is_active' => false]);
 
-        // Alternative: Permanently delete
-        // auth()->logout();
-        // $user->delete();
+        Auth::logout();
 
-        return redirect()->route('home')->with('success', 'Your account has been deactivated.');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()
+            ->route('home')
+            ->with('success', 'Your account has been deactivated successfully.');
     }
 
+    /**
+     * Display preferences page.
+     */
     public function preferences()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
-        $preferences = $user->preferences ?? [
-            'email_notifications' => true,
-            'sms_notifications' => false,
-            'newsletter' => true,
-            'event_recommendations' => true,
-            'voting_updates' => true,
-        ];
 
         return view('profile.preferences', [
             'user' => $user,
-            'preferences' => $preferences,
+            'preferences' => $user->preferences ?? [
+                'email_notifications' => true,
+                'sms_notifications' => false,
+                'newsletter' => true,
+                'event_recommendations' => true,
+                'voting_updates' => true,
+            ],
             'title' => 'Notification Preferences - EventSphere'
         ]);
     }
 
+    /**
+     * Update user preferences.
+     */
     public function updatePreferences(Request $request)
     {
-        /** @var \App\Models\User $user */
-
         $validated = $request->validate([
-            'email_notifications' => 'boolean',
-            'sms_notifications' => 'boolean',
-            'newsletter' => 'boolean',
-            'event_recommendations' => 'boolean',
-            'voting_updates' => 'boolean',
+            'email_notifications' => 'sometimes|boolean',
+            'sms_notifications' => 'sometimes|boolean',
+            'newsletter' => 'sometimes|boolean',
+            'event_recommendations' => 'sometimes|boolean',
+            'voting_updates' => 'sometimes|boolean',
         ]);
 
-        // Ensure we have an Eloquent User instance (so ->update() exists)
-        $user = User::find(Auth::id());
-        if (! $user) {
-            return back()->withErrors(['user' => 'Authenticated user not found.']);
-        }
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-        $user->update([
-            'preferences' => array_merge($user->preferences ?? [], $validated)
-        ]);
+        $currentPreferences = $user->preferences ?? [];
+        $updatedPreferences = array_merge($currentPreferences, $validated);
+
+        $user->update(['preferences' => $updatedPreferences]);
 
         return back()->with('success', 'Preferences updated successfully!');
     }
 
+    /**
+     * Display security settings page.
+     */
     public function security()
     {
         return view('profile.security', [
@@ -179,40 +230,18 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function updateSecurity(Request $request)
+    /**
+     * Display user activity page.
+     */
+    public function activity()
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $validated = $request->validate([
-            'current_password' => 'required|current_password',
-            'new_password' => 'required|min:8|confirmed',
-        ]);
-
-        $user->update([
-            'password' => Hash::make($validated['new_password'])
-        ]);
-
-        return back()->with('success', 'Password updated successfully!');
-    }
-
-    public function activity()
-    {
-          /** @var \App\Models\User $user */
-
-        $user = Auth::user();
-
+        // Note: You'll need to adjust these based on your actual relationships
         $activities = [
-            'ticket_purchases' => $user->ticketPurchases()
-                ->with('event')
-                ->latest()
-                ->take(10)
-                ->get(),
-            'votes' => $user->votes()
-                ->with(['contest', 'nominee'])
-                ->latest()
-                ->take(10)
-                ->get(),
+            'ticket_purchases' => [],
+            'votes' => [],
         ];
 
         return view('profile.activity', [
