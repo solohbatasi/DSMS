@@ -1727,7 +1727,7 @@ use Illuminate\Support\Facades\Auth;
                         </div>
                     </div>
                     <p class="text-gray-300 text-sm leading-relaxed mb-4">
-                        Your trusted partner in driving education for over 10 years. We're committed to creating confident, safe drivers through professional instruction and personalized training.
+                        Your trusted partner in driving education for over 10 years. We're committed to creating expert, safe drivers through professional instruction and personalized training.
                     </p>
                     <div class="flex space-x-4">
                         <a href="#" class="text-gray-300 hover:text-yellow-400 transition-colors">

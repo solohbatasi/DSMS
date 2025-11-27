@@ -498,7 +498,7 @@
                         class="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105">
                             Book Your First Lesson
                         </a>
-                        <a href="tel:+254700123456"
+                        <a href="tel:+254728725559"
                         class="border-2 border-white border-opacity-30 hover:border-opacity-100 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
                             <i class="fas fa-phone mr-2"></i>
                             Call Us Now
