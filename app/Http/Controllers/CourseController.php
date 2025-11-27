@@ -134,7 +134,7 @@ class CourseController extends Controller
                 'theoretical_sessions' => 'required|integer|min:0',
                 'total_amount' => 'required|numeric|min:0',
                 'status' => 'required|in:0,1',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4096'
             ]);
 
             // Validate session totals match duration
