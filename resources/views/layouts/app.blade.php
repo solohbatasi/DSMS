@@ -1784,7 +1784,9 @@ use Illuminate\Support\Facades\Auth;
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-clock mr-3 text-yellow-400"></i>
-                            <span>Mon - Sun: 7:00 AM - 7:00 PM</span>
+                            <span>  Monday - Friday: 7:00 AM - 7:00 PM<br>
+                                    Saturday: Friday: 7:00 AM - 7:00 PM <br>
+                                    Sunday: (Upon Request)</span>
                         </li>
                     </ul>
                 </div>

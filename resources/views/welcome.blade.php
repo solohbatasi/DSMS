@@ -755,7 +755,7 @@
                                 <h4 class="font-semibold text-gray-900 mb-1">Working Hours</h4>
                                 <p class="text-gray-600">
                                     Monday - Friday: 7:00 AM - 7:00 PM<br>
-                                    Saturday: Friday: 7:00 AM - 7:00 PM
+                                    Saturday: Friday: 7:00 AM - 7:00 PM <br>
                                     Sunday: (Upon Request)
                                 </p>
                             </div>
