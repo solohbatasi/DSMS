@@ -1772,7 +1772,7 @@ use Illuminate\Support\Facades\Auth;
                     <ul class="footer-links">
                         <li class="flex items-start">
                             <i class="fas fa-map-marker-alt mt-1 mr-3 text-yellow-400"></i>
-                            <span>Eastleigh Nairobi, Kenya</span>
+                            <span>Nairobi, Kenya</span>
                         </li>
                         <li class="flex items-center">
                             <i class="fas fa-phone-alt mr-3 text-yellow-400"></i>

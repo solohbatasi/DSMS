@@ -755,7 +755,7 @@
                                 <h4 class="font-semibold text-gray-900 mb-1">Working Hours</h4>
                                 <p class="text-gray-600">
                                     Monday - Friday: 7:00 AM - 7:00 PM<br>
-                                    Saturday - Sunday: 8:00 AM - 5:00 PM
+                                    Saturday - Sunday: (Upon Request)
                                 </p>
                             </div>
                         </div>
@@ -828,7 +828,7 @@
                 </div>
                 <div class="flex items-center">
                     <i class="fas fa-phone-alt mr-2"></i>
-                    <span>+254 700 123 456 (Last Minute Lessons Available)</span>
+                    <span>+254 728 725 559 (Last Minute Lessons Available)</span>
                 </div>
             </div>
         </div>
