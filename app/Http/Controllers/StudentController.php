@@ -31,7 +31,7 @@ class StudentController extends Controller
             'course',
             'payments'
         ])
-        ->select('*')
+        ->latest()
         ->paginate(10);
 
         return view('students.index', [
