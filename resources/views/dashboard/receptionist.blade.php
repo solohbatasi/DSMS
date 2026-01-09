@@ -45,6 +45,35 @@
 
         <!-- Overview Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-xl shadow-sm border border-blue-400 overflow-hidden transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer">
+                <a href="https://lim110.truehost.cloud:2096/webmaillogout.cgi" target="_blank" class="block">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="h-12 w-12 rounded-lg bg-white/20 flex items-center justify-center">
+                                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <dt class="text-sm font-medium text-white/90 truncate">Email Access</dt>
+                                <dd class="text-2xl font-semibold text-white">Webmail</dd>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-800/40 px-5 py-3">
+                        <div class="text-sm">
+                            <span class="font-medium text-white hover:text-white/90 transition-colors duration-200 flex items-center">
+                                Open Webmail Portal
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>
             <!-- New Students Today -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
                 <div class="p-5">
@@ -119,30 +148,7 @@
                 </div>
             </div>
 
-            <!-- Active Courses -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="h-12 w-12 rounded-lg bg-purple-50 flex items-center justify-center">
-                                <svg class="h-6 w-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ml-4 flex-1">
-                            <dt class="text-sm font-medium text-gray-500 truncate">Active Courses</dt>
-                            <dd class="text-2xl font-semibold text-gray-900">{{ $total_courses }}</dd>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-5 py-3">
-                    <div class="text-sm text-gray-600">
-                        <span class="font-medium text-purple-600">{{ $total_active_ef_lists }}</span>
-                        <span class="ml-1">active enrollments</span>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
         <!-- Main Content Grid -->
