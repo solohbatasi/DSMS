@@ -22,4 +22,8 @@ class Student extends Model
     {
         return $this->hasMany(Student_ef_list::class, 'student_id');
     }
+    public function ticketDownloads()
+    {
+        return $this->hasMany(TicketDownload::class);
+    }
 }

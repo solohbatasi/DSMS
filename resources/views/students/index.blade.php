@@ -235,11 +235,16 @@
 
                             <td class="px-4 py-2 flex gap-2">
                                 <!-- Edit -->
-                                 @can('edit students')
+                                @can('edit students')
                                 <button onclick="openEditModal({{ $ef->id }})"
                                     class="text-blue-600 hover:text-blue-800">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
+
+                                <a href="{{ route('admin.students.tickets', ['student' => $ef->student->id]) }}"
+                                    class="text-green-600 hover:text-green-800">
+                                    <i class="fas fa-ticket-alt"></i> Tickets
+                                </a>
                                 @endcan
                                 @can('delete students')
                                 <button onclick="openDeleteModal({{ $ef->id }})"
@@ -691,7 +696,7 @@ function renderStudents(students, canEdit, canDelete) {
                 <td class="px-4 py-2">
                     <div class="flex flex-col space-y-1">
                         <span>Total: ${s.total_fee}</span>
-                         ${canViewPayment ? `
+                        ${canViewPayment ? `
                         <span class="text-green-600">Paid: ${s.total_paid}</span>
                         <span class="text-red-600">Balance: ${s.balance}</span>
                         ` : ''}
@@ -702,6 +707,12 @@ function renderStudents(students, canEdit, canDelete) {
                         <button onclick="openEditModal(${s.id})" class="text-blue-600 hover:text-blue-800">
                             <i class="fas fa-edit"></i> Edit
                         </button>` : ''}
+
+                    ${canEdit ? `
+                        <a href="/admin/students/${s.id}/tickets" class="text-green-600 hover:text-green-800">
+                            <i class="fas fa-ticket-alt"></i> Tickets
+                        </a>` : ''}
+
                     ${canDelete ? `
                         <button onclick="openDeleteModal(${s.id})" class="text-red-600 hover:text-red-800">
                             <i class="fas fa-trash"></i> Delete

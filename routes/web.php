@@ -39,6 +39,8 @@ use App\Http\Controllers\TicketDownloadController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\LessonApplicationController;
+use App\Http\Controllers\AdminTicketController;
+
 
 
 use App\Models\Customer;
@@ -173,6 +175,10 @@ Route::post('/student/tickets/download', [App\Http\Controllers\DashboardControll
 Route::post('/student/tickets/{ticket}/redownload', [App\Http\Controllers\DashboardController::class, 'redownloadTicket'])->name('student.tickets.redownload');
 Route::get('/student/tickets/{ticket}/preview', [App\Http\Controllers\DashboardController::class, 'previewTicket'])->name('student.tickets.preview');  // routes/web.php
 
+Route::get('/admin/students/{student}/tickets', [App\Http\Controllers\AdminTicketController::class, 'manageTickets'])->name('admin.students.tickets');
+Route::post('/admin/students/{student}/tickets/download', [App\Http\Controllers\AdminTicketController::class, 'downloadTicketForStudent'])->name('admin.students.tickets.download');
+Route::post('/admin/tickets/{ticket}/redownload', [App\Http\Controllers\AdminTicketController::class, 'redownloadTicket'])->name('admin.tickets.redownload');
+Route::get('/admin/tickets/{ticket}/preview', [App\Http\Controllers\AdminTicketController::class, 'previewTicket'])->name('admin.tickets.preview');
 // Instructor Routes
 // Instructor Routes
 Route::prefix('instructor')->group(function () {

@@ -20,6 +20,7 @@ class TicketDownload extends Model
         'ef_id',
         'session_type',
         'download_time',
+        'session_date',
     ];
 
     /**
@@ -29,6 +30,7 @@ class TicketDownload extends Model
      */
     protected $casts = [
         'download_time' => 'datetime',
+        'session_date' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

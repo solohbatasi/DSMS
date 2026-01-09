@@ -124,6 +124,9 @@ function dashboardMenu() {
         mobileMenuOpen: false,
         buttons: [
             @can('view students')
+            { name: 'Dashboard', href: '{{ route("dashboard") }}', type: 'primary', icon: 'fas fa-ticket-alt' },
+            @endcan
+            @can('view students')
             { name: 'Learners', href: '{{ route("students.index") }}', type: 'primary', icon: 'fas fa-tachometer-alt' },
             @endcan
             @can('view results')
