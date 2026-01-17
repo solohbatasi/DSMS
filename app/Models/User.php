@@ -164,13 +164,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $query;
     }
 
-    /**
-     * Get the student profile if user is a student.
-     */
-    public function student()
-    {
-        return $this->hasOne(Student::class, 'user_id');
-    }
+
 
     /**
      * Check if user can access branch data.

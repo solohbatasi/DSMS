@@ -17,6 +17,7 @@
         <div class="bg-gradient-to-r from-teal-600 to-cyan-700 rounded-2xl shadow-lg p-6 mb-8 text-white">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
+                    <h1 class="text-3xl font-bold text-yellow-400  mb-2">Branch: {{ $user->branch->name ?? ' ' }}!</h1>
                     <h1 class="text-2xl font-bold mb-2">Welcome back, {{ $user->name }}!</h1>
                     <p class="text-teal-100 opacity-90">Here's your administrative overview and quick actions</p>
                     <div class="flex flex-wrap gap-4 mt-4">
