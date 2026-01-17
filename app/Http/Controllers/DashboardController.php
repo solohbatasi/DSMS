@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Event;
 use App\Models\VotingContest;
 use App\Models\TicketDownload;
-use App\Models\Vote;
+use App\Models\Branch;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Notifications\DatabaseNotification;
 use App\Models\User;
@@ -35,9 +35,14 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+         // Get user's accessible branches
+        $accessibleBranches = $user->accessibleBranches();
+
         // Base data available for all dashboards
         $data = [
             'user' => $user,
+            'accessible_branches' => $accessibleBranches,
+            'current_branch' => $user->branch,
             'recent_events' => Event::with('category')
                 ->where('is_active', true)
                 ->where('start_date', '>=', now())
@@ -89,6 +94,20 @@ class DashboardController extends Controller
     {
         // Financial Data
         $total_revenue = Payment::where('payment_status', 'completed')->sum('amount');
+
+        $branch_breakdown = Branch::withCount([
+            'students',
+            'activeEfLists as active_ef_lists_count',
+            'payments as total_revenue' => function($query) {
+                $query->where('payment_status', 'completed')->select(DB::raw('SUM(amount)'));
+            },
+            'expenses as total_expenses' => function($query) {
+                $query->where('status', 'approved')->select(DB::raw('SUM(amount)'));
+            }
+        ])
+        ->active()
+        ->get();
+
         $total_expenses = \App\Models\Expense::where('status', 'approved')->sum('amount');
         $net_profit = $total_revenue - $total_expenses;
         $profit_margin = $total_revenue > 0 ? ($net_profit / $total_revenue) * 100 : 0;
@@ -239,6 +258,9 @@ class DashboardController extends Controller
             //permissions list
             'permissions_list' => $permissions_list,
             'roles'=>$roles,
+
+            'branch_breakdown' => $branch_breakdown,
+            'branches' => Branch::active()->get(),
         ];
     }
 
@@ -262,6 +284,7 @@ class DashboardController extends Controller
         // Get student's EF lists with course information
         $ef_lists = \App\Models\Student_ef_list::with(['course'])
             ->where('student_id', $student->id)
+            ->where('branch_id', $student->branch_id) // Branch filter
             ->get();
 
         // Calculate financial summary
@@ -623,10 +646,13 @@ class DashboardController extends Controller
 
     private function getInstructorData($user)
     {
+        $instructorBranchId = $user->branch_id;
         // Get instructor's assigned courses
         $assigned_courses = \App\Models\Course::where('status', 1)
+            ->where('branch_id', $instructorBranchId) // Only courses from instructor's branch
             ->withCount(['studentEfLists as total_students' => function($query) {
-                $query->where('status', 'active');
+                $query->where('status', 'active')
+                  ->where('branch_id', $instructorBranchId);
             }])
             ->get();
 
@@ -682,27 +708,37 @@ class DashboardController extends Controller
 
     private function getReceptionistData($user)
     {
+        $branchId = $user->branch_id;
         // Get total students count
-        $total_students = \App\Models\Student::count();
-
+        $total_students = Student::where('branch_id', $branchId)->count();
         // Get new students registered today
-        $new_students_today = \App\Models\Student::whereDate('created_at', today())->count();
+        $new_students_today = Student::where('branch_id', $branchId)
+            ->whereDate('created_at', today())->count();
 
         // Get total active courses
-        $total_courses = \App\Models\Course::where('status', 1)->count();
+        $total_courses = \App\Models\Course::where('status', 1)
+            ->where('branch_id', $branchId)
+            ->count();
 
         // Get total active EF lists
-        $total_active_ef_lists = \App\Models\Student_ef_list::where('status', 'active')->count();
+        $total_active_ef_lists = \App\Models\Student_ef_list::where('status', 'active')
+            ->where('branch_id', $branchId)
+            ->count();
 
         // Get new EF lists created today
-        $new_ef_lists_today = \App\Models\Student_ef_list::whereDate('created_at', today())->count();
+        $new_ef_lists_today = \App\Models\Student_ef_list::whereDate('created_at', today())
+            ->where('branch_id', $branchId)
+            ->count();
 
         // Get pending verifications (EF lists with pending status)
-        $pending_verifications = \App\Models\Student_ef_list::where('status', 'pending')->count();
+        $pending_verifications = \App\Models\Student_ef_list::where('status', 'pending')
+            ->where('branch_id', $branchId)
+            ->count();
 
         // Get pending EF lists with student and course details
         $pending_ef_lists = \App\Models\Student_ef_list::with(['student', 'course'])
             ->where('status', 'pending')
+            ->where('branch_id', $branchId)
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
@@ -710,22 +746,26 @@ class DashboardController extends Controller
         // Get payments for today
         $payments_today = \App\Models\Payment::whereDate('payment_date', today())
             ->where('payment_status', 'completed')
+            ->where('branch_id', $branchId)
             ->sum('amount');
 
         // Get recent students (last 5 registrations)
         $recent_students = \App\Models\Student::orderBy('created_at', 'desc')
+            ->where('branch_id', $branchId)
             ->take(5)
             ->get();
 
         // Get recent payments (last 5 payments)
         $recent_payments = \App\Models\Payment::with(['efList.student', 'efList.course'])
             ->where('payment_status', 'completed')
+            ->where('branch_id', $branchId)
             ->orderBy('payment_date', 'desc')
             ->take(5)
             ->get();
 
         // Get expiring EF lists (those with balance and created more than 7 days ago)
         $expiring_ef_lists = \App\Models\Student_ef_list::with(['student', 'course'])
+            ->where('branch_id', $branchId)
             ->where('balance', '>', 0)
             ->where('created_at', '<=', now()->subDays(7))
             ->where('status', 'active')
@@ -741,6 +781,7 @@ class DashboardController extends Controller
                 SUM(total_fee) as total_revenue
             ')
             ->where('created_at', '>=', now()->subMonths(6))
+            ->where('branch_id', $branchId)
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
@@ -770,6 +811,7 @@ class DashboardController extends Controller
             ->selectRaw('COUNT(*) as enrollment_count')
             ->with('course')
             ->where('created_at', '>=', now()->subMonths(3))
+            ->where('branch_id', $branchId)
             ->groupBy('course_id')
             ->orderBy('enrollment_count', 'desc')
             ->take(5)
@@ -782,6 +824,7 @@ class DashboardController extends Controller
                 COUNT(*) as enrollment_count
             ')
             ->where('created_at', '>=', now()->subWeeks(8))
+            ->where('branch_id', $branchId)
             ->groupBy('year', 'week')
             ->orderBy('year', 'desc')
             ->orderBy('week', 'desc')
@@ -802,6 +845,7 @@ class DashboardController extends Controller
                 SUM(total_fee) as total_revenue
             ')
             ->where('created_at', '>=', now()->subMonths(6))
+            ->where('branch_id', $branchId)
             ->groupBy('year', 'month')
             ->orderBy('year', 'asc')
             ->orderBy('month', 'asc')
@@ -826,6 +870,7 @@ class DashboardController extends Controller
                 COUNT(*) as enrollment_count
             ')
             ->where('created_at', '>=', now()->subWeeks(8))
+            ->where('branch_id', $branchId)
             ->groupBy('year', 'week')
             ->orderBy('year', 'asc')
             ->orderBy('week', 'asc')
@@ -845,6 +890,7 @@ class DashboardController extends Controller
             ->selectRaw('COUNT(*) as enrollment_count')
             ->with('course')
             ->where('created_at', '>=', now()->subMonths(3))
+            ->where('branch_id', $branchId)
             ->groupBy('course_id')
             ->orderBy('enrollment_count', 'desc')
             ->take(6)
