@@ -794,70 +794,70 @@ class DashboardController extends Controller
                 'enrollments' => $item->enrollment_count
             ];
         })->reverse()->values();
-  // Monthly Enrollment Analytics for Chart
-    $monthly_enrollments = \App\Models\Student_ef_list::selectRaw('
-            YEAR(created_at) as year,
-            MONTH(created_at) as month,
-            COUNT(*) as enrollment_count,
-            SUM(total_fee) as total_revenue
-        ')
-        ->where('created_at', '>=', now()->subMonths(6))
-        ->groupBy('year', 'month')
-        ->orderBy('year', 'asc')
-        ->orderBy('month', 'asc')
-        ->get();
+         // Monthly Enrollment Analytics for Chart
+        $monthly_enrollments = \App\Models\Student_ef_list::selectRaw('
+                YEAR(created_at) as year,
+                MONTH(created_at) as month,
+                COUNT(*) as enrollment_count,
+                SUM(total_fee) as total_revenue
+            ')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'asc')
+            ->orderBy('month', 'asc')
+            ->get();
 
-    // Format data for line chart
-    $chart_months = [];
-    $chart_enrollments = [];
-    $chart_revenue = [];
+        // Format data for line chart
+        $chart_months = [];
+        $chart_enrollments = [];
+        $chart_revenue = [];
 
-    foreach ($monthly_enrollments as $item) {
-        $monthName = \Carbon\Carbon::createFromDate($item->year, $item->month, 1)->format('M Y');
-        $chart_months[] = $monthName;
-        $chart_enrollments[] = $item->enrollment_count;
-        $chart_revenue[] = $item->total_revenue;
-    }
+        foreach ($monthly_enrollments as $item) {
+            $monthName = \Carbon\Carbon::createFromDate($item->year, $item->month, 1)->format('M Y');
+            $chart_months[] = $monthName;
+            $chart_enrollments[] = $item->enrollment_count;
+            $chart_revenue[] = $item->total_revenue;
+        }
 
-    // Weekly enrollment data for bar chart
-    $weekly_enrollments = \App\Models\Student_ef_list::selectRaw('
-            YEAR(created_at) as year,
-            WEEK(created_at) as week,
-            COUNT(*) as enrollment_count
-        ')
-        ->where('created_at', '>=', now()->subWeeks(8))
-        ->groupBy('year', 'week')
-        ->orderBy('year', 'asc')
-        ->orderBy('week', 'asc')
-        ->get();
+        // Weekly enrollment data for bar chart
+        $weekly_enrollments = \App\Models\Student_ef_list::selectRaw('
+                YEAR(created_at) as year,
+                WEEK(created_at) as week,
+                COUNT(*) as enrollment_count
+            ')
+            ->where('created_at', '>=', now()->subWeeks(8))
+            ->groupBy('year', 'week')
+            ->orderBy('year', 'asc')
+            ->orderBy('week', 'asc')
+            ->get();
 
-    $chart_weeks = [];
-    $chart_weekly_enrollments = [];
+        $chart_weeks = [];
+        $chart_weekly_enrollments = [];
 
-    foreach ($weekly_enrollments as $item) {
-        $weekStart = \Carbon\Carbon::now()->setISODate($item->year, $item->week)->startOfWeek();
-        $chart_weeks[] = 'W' . $item->week . ' ' . $weekStart->format('M d');
-        $chart_weekly_enrollments[] = $item->enrollment_count;
-    }
+        foreach ($weekly_enrollments as $item) {
+            $weekStart = \Carbon\Carbon::now()->setISODate($item->year, $item->week)->startOfWeek();
+            $chart_weeks[] = 'W' . $item->week . ' ' . $weekStart->format('M d');
+            $chart_weekly_enrollments[] = $item->enrollment_count;
+        }
 
-    // Course enrollment data for doughnut chart
-    $course_enrollments = \App\Models\Student_ef_list::select('course_id')
-        ->selectRaw('COUNT(*) as enrollment_count')
-        ->with('course')
-        ->where('created_at', '>=', now()->subMonths(3))
-        ->groupBy('course_id')
-        ->orderBy('enrollment_count', 'desc')
-        ->take(6)
-        ->get();
+        // Course enrollment data for doughnut chart
+        $course_enrollments = \App\Models\Student_ef_list::select('course_id')
+            ->selectRaw('COUNT(*) as enrollment_count')
+            ->with('course')
+            ->where('created_at', '>=', now()->subMonths(3))
+            ->groupBy('course_id')
+            ->orderBy('enrollment_count', 'desc')
+            ->take(6)
+            ->get();
 
-    $chart_course_labels = [];
-    $chart_course_data = [];
-    $chart_course_colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+        $chart_course_labels = [];
+        $chart_course_data = [];
+        $chart_course_colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
-    foreach ($course_enrollments as $index => $course_enrollment) {
-        $chart_course_labels[] = $course_enrollment->course->course ?? 'Unknown';
-        $chart_course_data[] = $course_enrollment->enrollment_count;
-    }
+        foreach ($course_enrollments as $index => $course_enrollment) {
+            $chart_course_labels[] = $course_enrollment->course->course ?? 'Unknown';
+            $chart_course_data[] = $course_enrollment->enrollment_count;
+        }
 
         return [
             'total_students' => $total_students,
@@ -890,43 +890,6 @@ class DashboardController extends Controller
             'chart_course_colors' => $chart_course_colors,
         ];
     }
-    public function notifications()
-    {
-        $user = Auth::user();
-        $notifications = DatabaseNotification::where('notifiable_type', \App\Models\User::class)
-            ->where('notifiable_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
 
-        return view('dashboard.notifications', [
-            'notifications' => $notifications,
-
-            'title' => 'My Notifications - EventSphere'
-        ]);
-    }
-
-    public function markNotificationAsRead($id)
-    {
-        $user = Auth::user();
-        $notification = DatabaseNotification::where('notifiable_type', \App\Models\User::class)
-            ->where('notifiable_id', $user->id)
-            ->where('id', $id)
-            ->first();
-
-        if ($notification) {
-            $notification->markAsRead();
-        }
-    }
-
-    public function markAllNotificationsAsRead()
-    {
-        $user = Auth::user();
-        DatabaseNotification::where('notifiable_type', \App\Models\User::class)
-            ->where('notifiable_id', $user->id)
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
-
-        return back()->with('success', 'All notifications marked as read.');
-    }
 
 }

@@ -26,6 +26,7 @@ public function store(Request $request)
         'email' => 'required|email|unique:users,email',
         'password' => 'required|string|min:4',
         'role' => 'required|string|max:50',
+        'branch_id' => ['nullable', 'exists:branches,id'],
         'is_active' => 'required|boolean'
     ]);
 
@@ -41,6 +42,7 @@ public function store(Request $request)
                 'email' => $request->email,
                 'email_verified_at' => now(), // mark email as verified
                 'password' => Hash::make($request->password),
+                'branch_id' => $request->branch_id,
                 'role' => $role->name,
                 'is_active' => $request->boolean('is_active'),
             ]);
@@ -67,7 +69,8 @@ public function update(Request $request, User $user)
         'name' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email,' . $user->id,
         'role' => 'required|string|max:50',
-        'is_active' => 'required|boolean'
+        'is_active' => 'required|boolean',
+        'branch_id' => ['nullable', 'exists:branches,id']
     ]);
 
     try {
@@ -81,6 +84,7 @@ public function update(Request $request, User $user)
                 'name' => $request->name,
                 'email' => $request->email,
                 'role' => $role->name,
+                'branch_id' => $request->branch_id,
                 'is_active' => $request->boolean('is_active'),
                 'email_verified_at' => $user->email_verified_at ?? now(), // verify if not verified
             ];
