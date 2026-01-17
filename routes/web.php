@@ -116,6 +116,9 @@ Route::get('/driving-courses', [PageController::class, 'coursesIndex'])->name('p
 
 
 Route::middleware(['auth'])->group(function () {
+    // In web.php
+Route::get('/students/branch/{branch}/courses', [StudentController::class, 'getBranchCourses'])
+    ->name('students.branch.courses');
 
     // Profile Routes
     Route::prefix('profile')->name('profile.')->group(function () {

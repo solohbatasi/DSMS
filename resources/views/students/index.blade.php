@@ -170,6 +170,26 @@
                     <!-- Filters -->
                     <div class="flex space-x-2">
 
+                    <div class="flex items-center space-x-4">
+                        <!-- Count -->
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                            {{ $students->total() }} learners
+                        </span>
+
+                        @if(auth()->user()->isAdmin())
+                        <!-- Branch Filter for Admin -->
+                        <select id="branchFilter" onchange="filterByBranch()"
+                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm
+                                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Branches</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}" {{ $selectedBranch == $branch->id ? 'selected' : '' }}>
+                                    {{ $branch->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @endif
+
                         <!-- STATUS FILTER -->
                         <select id="statusFilter" onchange="filterStudents()"
                                 class="border border-gray-300 rounded-lg px-3 py-2 text-sm
@@ -189,6 +209,9 @@
                             <option value="fee_high">Fee: High to Low</option>
                             <option value="fee_low">Fee: Low to High</option>
                         </select>
+                    </div>
+
+
 
                     </div>
                 </div>
@@ -205,6 +228,9 @@
                     <thead>
                         <tr class="bg-gray-50">
                             <th class="px-4 py-2">Name</th>
+                            @if(auth()->user()->isAdmin())
+                            <th class="px-4 py-2">Branch</th>
+                            @endif
                             <th class="px-4 py-2">Course</th>
                             <th class="px-4 py-2">Reg No</th>
                             <th class="px-4 py-2">Fees</th>
@@ -221,6 +247,11 @@
                         @endphp
                         <tr class="border-b">
                             <td class="px-4 py-2">{{ $ef->student->name ?? ' '}}</td>
+                            @if(auth()->user()->isAdmin())
+                            <td class="px-4 py-2">
+                                {{ $ef->student->branch->name ?? '-' }}
+                            </td>
+                            @endif
                             <td class="px-4 py-2">{{ $ef->course->course }}</td>
                             <td class="px-4 py-2">{{ $ef->ef_no }}</td>
                             <td class="px-4 py-2">
@@ -282,6 +313,25 @@
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Learner Enrollment</h2>
 
         <form id="enrollmentForm">
+             <!-- BRANCH SELECTION -->
+            <div class="mb-4">
+                <label class="text-sm font-medium">Branch</label>
+                @if(auth()->user()->isAdmin())
+                    <select name="branch_id" id="branchSelect" class="w-full border rounded p-2" required>
+                        <option value="">-- Select Branch --</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                @else
+                    <!-- For non-admin users, show their branch as readonly -->
+                    <input type="hidden" name="branch_id" value="{{ auth()->user()->branch_id }}">
+                    <input type="text"
+                        value="{{ auth()->user()->branch->name ?? 'No Branch' }}"
+                        class="w-full border rounded p-2 bg-gray-100"
+                        readonly>
+                @endif
+            </div>
 
             <!-- STUDENT BASIC INFO -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -326,11 +376,12 @@
                     <label class="text-sm font-medium">Course</label>
                     <select name="course_id" id="courseSelect"
                             class="w-full border rounded p-2" required>
-                        <option value="">-- choose course --</option>
+                        <option value="">-- Select Branch First --</option>
                         @foreach ($courses as $course)
                             <option value="{{ $course->id }}"
                                     data-fee="{{ $course->total_amount }}"
-                                    data-duration="{{ $course->practical_sessions }}">
+                                    data-duration="{{ $course->practical_sessions }}"
+                                    data-branch="{{ $course->branch_id }}">
                                 {{ $course->course }}
                             </option>
                         @endforeach
@@ -377,6 +428,23 @@
         <form id="editStudentForm">
 
             <input type="hidden" name="ef_id" id="edit_ef_id">
+
+            <!-- BRANCH FIELD -->
+            <div class="mb-4">
+                <label class="text-sm font-medium">Branch</label>
+                @if(auth()->user()->isAdmin())
+                    <select name="branch_id" id="edit_branch_id" class="w-full border rounded p-2">
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                @else
+                    <!-- For non-admin users, show readonly -->
+                    <input type="hidden" name="branch_id" id="edit_branch_id" value="">
+                    <input type="text" id="edit_branch_display"
+                        class="w-full border rounded p-2 bg-gray-100" readonly>
+                @endif
+            </div>
 
             <!-- BASIC INFO -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -538,11 +606,60 @@ document.getElementById('enrollmentForm').addEventListener('submit', function (e
 
 <script>
 // OPEN EDIT MODAL
+// Branch filter for admin
+function filterByBranch() {
+    const branchId = document.getElementById('branchFilter').value;
+    const url = new URL(window.location);
+
+    if (branchId) {
+        url.searchParams.set('branch_id', branchId);
+    } else {
+        url.searchParams.delete('branch_id');
+    }
+
+    window.location.href = url.toString();
+}
+
+// Update course options based on selected branch (for enrollment modal)
+document.getElementById('branchSelect')?.addEventListener('change', function() {
+    const branchId = this.value;
+    const courseSelect = document.getElementById('courseSelect');
+
+    if (!branchId) {
+        // Reset course options
+        courseSelect.innerHTML = '<option value="">-- Select Branch First --</option>';
+        document.getElementById('courseFee').value = '';
+        document.getElementById('totalClass').value = '';
+        return;
+    }
+
+    // Fetch courses for selected branch
+    fetch(`/students/branch/${branchId}/courses`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                courseSelect.innerHTML = '<option value="">-- choose course --</option>';
+                data.courses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = course.course;
+                    option.setAttribute('data-fee', course.total_amount);
+                    option.setAttribute('data-duration', course.practical_sessions);
+                    courseSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(err => {
+            console.error('Failed to load courses:', err);
+            toastr.error('Failed to load courses for selected branch');
+        });
+});
+
+// Update edit modal to populate branch info
 function openEditModal(efId) {
     fetch(`/students/${efId}/edit`)
         .then(res => res.json())
         .then(data => {
-
             // EF fields
             document.getElementById('edit_ef_id').value = data.ef.id;
             document.getElementById('edit_ef_no').value = data.ef.ef_no;
@@ -559,9 +676,26 @@ function openEditModal(efId) {
             document.getElementById('edit_email').value = data.student.email ?? '';
             document.getElementById('edit_address').value = data.student.address ?? '';
 
+            // BRANCH field
+            const branchId = data.student.branch_id;
+            const branchSelect = document.getElementById('edit_branch_id');
+            const branchDisplay = document.getElementById('edit_branch_display');
+
+            if (branchSelect) {
+                branchSelect.value = branchId;
+            }
+
+            if (branchDisplay && data.branches) {
+                const branch = data.branches.find(b => b.id == branchId);
+                branchDisplay.value = branch ? branch.name : 'Unknown';
+            }
+
             document.getElementById('editStudentModal').classList.remove('hidden');
         })
-        .catch(err => toastr.error("Failed to load student details"));
+        .catch(err => {
+            console.error(err);
+            toastr.error("Failed to load student details");
+        });
 }
 document.getElementById('edit_course_id').addEventListener('change', function () {
     let option = this.selectedOptions[0];

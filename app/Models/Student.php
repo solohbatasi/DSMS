@@ -27,4 +27,8 @@ class Student extends Model
     {
         return $this->hasMany(TicketDownload::class);
     }
+        public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }

@@ -2,6 +2,11 @@
 <tr>
     <td>{{ $ef->ef_no }}</td>
     <td>{{ $ef->student->name }}</td>
+    @if(auth()->user()->isAdmin())
+    <td class="px-4 py-2">
+        {{ $ef->student->branch->name ?? '-' }}
+    </td>
+    @endif
     <td>{{ $ef->student->id_no }}</td>
     <td>{{ $ef->course->course }}</td>
     <td>{{ $ef->total_fee }}</td>

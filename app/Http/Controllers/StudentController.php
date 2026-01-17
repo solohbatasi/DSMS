@@ -6,10 +6,12 @@ use App\Models\Student;
 use App\Models\Payment;
 use App\Models\Course;
 use App\Models\Student_ef_list;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
@@ -18,40 +20,60 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        $totalStudents =  Student_ef_list::count();
+        $user = Auth::user();
 
-        $activeStudents =  Student_ef_list::where('type', 3)->count();
+        // Base query with branch filtering
+        $query = Student_ef_list::with(['student', 'course', 'payments']);
 
-        $alumniStudents = Student_ef_list::where('type', 4)->count();
+        // Apply branch filter for non-admin users
+        if (!$user->isAdmin()) {
+            // For non-admin users, only show students from their branch
+            $query->whereHas('student', function ($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        } elseif ($user->isAdmin() && $request->has('branch_id')) {
+            // Admin can filter by specific branch
+            $query->whereHas('student', function ($q) use ($request) {
+                $q->where('branch_id', $request->branch_id);
+            });
+        }
 
-        $suspendedStudents =  Student_ef_list::where('type', 2)->count(); // Change 2 if your suspended type is different
-        $courses = Course::all();
-        $students = Student_ef_list::with([
-            'student',
-            'course',
-            'payments'
-        ])
-        ->latest()
-        ->paginate(10);
+        // Counts with branch filtering
+        $countQuery = Student_ef_list::query();
+
+        if (!$user->isAdmin()) {
+            $countQuery->whereHas('student', function ($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        }
+
+        $totalStudents = $countQuery->count();
+        $activeStudents = $countQuery->where('type', 3)->count();
+        $alumniStudents = $countQuery->where('type', 4)->count();
+        $suspendedStudents = $countQuery->where('type', 2)->count();
+
+        // Get courses available for user's branch
+        $coursesQuery = Course::query();
+        if (!$user->isAdmin()) {
+            $coursesQuery->where('branch_id', $user->branch_id);
+        }
+        $courses = $coursesQuery->get();
+
+        // Get branches for admin filter
+        $branches = $user->isAdmin() ? Branch::active()->get() : collect();
+
+        $students = $query->latest()->paginate(10);
 
         return view('students.index', [
             'students' => $students,
             'courses' => $courses,
+            'branches' => $branches,
             'totalStudents' => $totalStudents,
             'activeStudents' => $activeStudents,
             'alumniStudents' => $alumniStudents,
-            'suspendedStudents' => $suspendedStudents
+            'suspendedStudents' => $suspendedStudents,
+            'selectedBranch' => $request->branch_id
         ]);
-
-    }
-
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -66,18 +88,26 @@ class StudentController extends Controller
                 'contact' => 'nullable|string',
                 'email' => 'nullable|unique:users,email',
                 'address' => 'nullable|string',
-
+                'branch_id' => 'required|exists:branches,id',
                 'ef_no' => 'required|unique:student_ef_lists,ef_no',
                 'course_id' => 'required|exists:courses,id',
                 'total_fee' => 'required|numeric',
                 'total_class' => 'required|integer|min:1',
-
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'errors' => $e->errors()
             ], 422);
+        }
+
+        // Check if user can assign to this branch
+        $user = Auth::user();
+        if (!$user->isAdmin() && $request->branch_id != $user->branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only add students to your own branch.'
+            ], 403);
         }
 
         try {
@@ -90,10 +120,10 @@ class StudentController extends Controller
                 'email' => $request->email ?? $request->id_no . '@example.com',
                 'password' => Hash::make($password),
                 'role' => 'student',
+                'branch_id' => $request->branch_id, // Student's user account also has branch
                 'email_verified_at' => now(),
             ]);
             $user->assignRole('student');
-
 
             // Create student linked to user
             $student = Student::create([
@@ -103,6 +133,7 @@ class StudentController extends Controller
                 'contact' => $request->contact,
                 'address' => $request->address,
                 'email' => $request->email,
+                'branch_id' => $request->branch_id,
             ]);
 
             // Create EF list
@@ -114,6 +145,7 @@ class StudentController extends Controller
                 'balance' => $request->total_fee,
                 'total_class' => $request->total_class,
                 'type' => $request->type,
+                'branch_id' => $request->branch_id,
                 'status' => 'active',
             ]);
 
@@ -134,52 +166,66 @@ class StudentController extends Controller
         }
     }
 
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Student $student)
-    {
-        //
-    }
-
     /**
      * Show the form for editing the specified resource.
      */
     public function edit($id)
     {
-        $ef = Student_ef_list::with('student')->findOrFail($id);
+        $user = Auth::user();
+        $ef = Student_ef_list::with('student', 'course')->findOrFail($id);
+
+        // Check if user can access this student
+        if (!$user->isAdmin() && $ef->branch_id != $user->branch_id) {
+            abort(403, 'You do not have permission to access this student.');
+        }
+
+        // Get branches for admin
+        $branches = $user->isAdmin() ? Branch::active()->get() : null;
 
         return response()->json([
             'ef' => $ef,
             'student' => $ef->student,
-              'course' => $ef->course
+            'course' => $ef->course,
+            'branches' => $branches
         ]);
     }
-
 
     /**
      * Update the specified resource in storage.
      */
-   public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $ef = Student_ef_list::findOrFail($id);
         $student = $ef->student;
+        $user = Auth::user();
+
+        // Check if user can access this student
+        if (!$user->isAdmin() && $ef->branch_id != $user->branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to update this student.'
+            ], 403);
+        }
+
+        $validationRules = [
+            'id_no' => 'required|unique:students,id_no,' . $student->id,
+            'name' => 'required|string',
+            'contact' => 'nullable|string',
+            'email' => 'nullable|unique:users,email,' . ($student->user_id ?? 'NULL') . ',id',
+            'address' => 'nullable|string',
+            'ef_no' => 'required|unique:student_ef_lists,ef_no,' . $ef->id,
+            'course_id' => 'required|exists:courses,id',
+            'total_fee' => 'required|numeric',
+            'total_class' => 'required|integer|min:1',
+        ];
+
+        // Only admin can change branch
+        if ($user->isAdmin()) {
+            $validationRules['branch_id'] = 'required|exists:branches,id';
+        }
 
         try {
-            $validated = $request->validate([
-                'id_no' => 'required|unique:students,id_no,' . $student->id,
-                'name' => 'required|string',
-                'contact' => 'nullable|string',
-                'email' => 'nullable|unique:users,email,' . ($student->user_id ?? 'NULL') . ',id',
-                'address' => 'nullable|string',
-
-                'ef_no' => 'required|unique:student_ef_lists,ef_no,' . $ef->id,
-                'course_id' => 'required|exists:courses,id',
-                'total_fee' => 'required|numeric',
-                'total_class' => 'required|integer|min:1',
-            ]);
+            $validated = $request->validate($validationRules);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -191,29 +237,50 @@ class StudentController extends Controller
             DB::beginTransaction();
 
             // Update student
-            $student->update([
+            $updateData = [
                 'id_no' => $request->id_no,
                 'name' => $request->name,
                 'contact' => $request->contact,
                 'address' => $request->address,
                 'email' => $request->email,
-            ]);
+            ];
+
+            // Only admin can change branch
+            if ($user->isAdmin() && $request->has('branch_id')) {
+                $updateData['branch_id'] = $request->branch_id;
+            }
+
+            $student->update($updateData);
 
             // Update EF list
-            $ef->update([
+            $efUpdateData = [
                 'ef_no' => $request->ef_no,
                 'course_id' => $request->course_id,
                 'total_fee' => $request->total_fee,
                 'total_class' => $request->total_class,
-            ]);
+            ];
+
+            // Only admin can change branch in EF list
+            if ($user->isAdmin() && $request->has('branch_id')) {
+                $efUpdateData['branch_id'] = $request->branch_id;
+            }
+
+            $ef->update($efUpdateData);
 
             // Update linked user account
             if ($student->user_id) {
-                $user = User::find($student->user_id);
-                $user->update([
+                $userAccount = User::find($student->user_id);
+                $userUpdateData = [
                     'name' => $student->name,
                     'email' => $student->email ?? ($student->id_no . '@example.com')
-                ]);
+                ];
+
+                // Only admin can change user's branch
+                if ($user->isAdmin() && $request->has('branch_id')) {
+                    $userUpdateData['branch_id'] = $request->branch_id;
+                }
+
+                $userAccount->update($userUpdateData);
             }
 
             DB::commit();
@@ -233,52 +300,161 @@ class StudentController extends Controller
         }
     }
 
-
     /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)
     {
+        $user = Auth::user();
         $ef = Student_ef_list::findOrFail($id);
+
+        // Check if user can delete this student
+        if (!$user->isAdmin() && $ef->branch_id != $user->branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to delete this student.'
+            ], 403);
+        }
+
         $ef->student->delete();
         $ef->delete();
 
         return response()->json(['success' => true]);
     }
+
     public function search(Request $request)
     {
+        $user = Auth::user();
         $query = $request->get('q');
 
-        $students = Student_ef_list::with(['student', 'course', 'payments'])
-            ->whereHas('student', function($q) use ($query) {
-                $q->where('name', 'like', "%$query%")
-                ->orWhere('id_no', 'like', "%$query%")
-                ->orWhere('contact', 'like', "%$query%")
-                ->orWhere('email', 'like', "%$query%");
-            })
-            ->limit(20)
-            ->get()
-            ->map(function($ef) {
+        // Start the query with branch filtering
+        $searchQuery = Student_ef_list::with(['student', 'course', 'payments', 'student.branch']);
+
+        // Apply branch filter FIRST
+        if (!$user->isAdmin()) {
+            // Filter by branch_id in the student_ef_lists table
+            $searchQuery->where('branch_id', $user->branch_id);
+        }
+
+        // Only apply search filters if a query is provided
+        if (!empty($query)) {
+            $searchQuery->where(function($q) use ($query) {
+                // Search in student_ef_lists table
+                $q->where('ef_no', 'like', "%$query%")
+                ->orWhereHas('student', function($sq) use ($query) {
+                    // Search in students table
+                    $sq->where('name', 'like', "%$query%")
+                        ->orWhere('id_no', 'like', "%$query%")
+                        ->orWhere('contact', 'like', "%$query%")
+                        ->orWhere('email', 'like', "%$query%");
+                })
+                ->orWhereHas('course', function($cq) use ($query) {
+                    // Search in courses table
+                    $cq->where('course', 'like', "%$query%");
+                });
+            });
+        }
+
+        // Apply additional filters if provided
+        if ($request->has('status') && $request->status != 'all') {
+            // Map status values to type values if needed
+            $statusMap = [
+                'active' => 3,
+                'completed' => 4,
+                'dropped' => 2,
+            ];
+
+            if (isset($statusMap[$request->status])) {
+                $searchQuery->where('type', $statusMap[$request->status]);
+            }
+        }
+
+        // Apply sorting
+        if ($request->has('sort')) {
+            switch ($request->sort) {
+                case 'oldest':
+                    $searchQuery->orderBy('created_at', 'asc');
+                    break;
+                case 'fee_high':
+                    $searchQuery->orderBy('total_fee', 'desc');
+                    break;
+                case 'fee_low':
+                    $searchQuery->orderBy('total_fee', 'asc');
+                    break;
+                default:
+                    $searchQuery->orderBy('created_at', 'desc');
+            }
+        } else {
+            $searchQuery->orderBy('created_at', 'desc');
+        }
+
+        // Limit results
+        $searchQuery->limit(20);
+
+        $students = $searchQuery->get()
+            ->map(function($ef) use ($user) {
                 $totalPaid = $ef->payments->sum('amount');
                 $balance = $ef->total_fee - $totalPaid;
 
+                // Check if user can view this student (additional security)
+                if (!$user->isAdmin() && $ef->branch_id != $user->branch_id) {
+                    return null; // Skip students from other branches
+                }
+
                 return [
                     'id' => $ef->id,
-                    'student_name' => $ef->student->name,
+                    'student_name' => $ef->student->name ?? 'Unknown',
                     'course_name' => $ef->course->course ?? '-',
                     'ef_no' => $ef->ef_no,
                     'total_fee' => number_format($ef->total_fee, 2),
                     'total_paid' => number_format($totalPaid, 2),
-                    'balance' => number_format($balance, 2)
+                    'balance' => number_format($balance, 2),
+                    'branch_name' => $ef->student->branch->name ?? 'N/A',
+                    'can_edit' => $user->isAdmin() || $ef->branch_id == $user->branch_id,
+                    'can_delete' => $user->isAdmin() || $ef->branch_id == $user->branch_id
+                ];
+            })
+            ->filter() // Remove null entries (students from other branches)
+            ->values(); // Reindex array
+
+        return response()->json([
+            'success' => true,
+            'students' => $students,
+            'count' => $students->count()
+        ]);
+    }
+
+    /**
+     * Get courses for a specific branch
+     */
+    public function getBranchCourses($branchId)
+    {
+        $user = Auth::user();
+
+        // Check if user can access this branch's courses
+        if (!$user->isAdmin() && $branchId != $user->branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to access this branch.'
+            ], 403);
+        }
+
+        $courses = Course::where('branch_id', $branchId)
+            ->where('status', 1)
+            ->get()
+            ->map(function($course) {
+                return [
+                    'id' => $course->id,
+                    'course' => $course->course,
+                    'total_amount' => $course->total_amount,
+                    'practical_sessions' => $course->practical_sessions,
+                    'theoretical_sessions' => $course->theoretical_sessions
                 ];
             });
 
         return response()->json([
             'success' => true,
-            'students' => $students
+            'courses' => $courses
         ]);
     }
-
-
-
 }
