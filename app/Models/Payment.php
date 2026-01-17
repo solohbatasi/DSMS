@@ -16,6 +16,7 @@ class Payment extends Model
         'remarks',
         'payment_status',
         'payment_method',
+         'branch_id',
     ];
 
     protected $casts = [

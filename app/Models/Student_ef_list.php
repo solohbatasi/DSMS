@@ -23,6 +23,7 @@ class Student_ef_list extends Model
         'remaining_practical',
         'attended_theoretical',
         'remaining_theoretical',
+         'branch_id',
     ];
 
     protected $dates = ['last_payment_date'];

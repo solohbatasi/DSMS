@@ -28,6 +28,7 @@ class Course extends Model
         'practical_sessions',
         'theoretical_sessions',
         'total_amount',
+         'branch_id',
         'status',
     ];
 

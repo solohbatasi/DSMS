@@ -27,6 +27,7 @@ class LessonApplication extends Model
         'contacted_at',
         'reviewed_at',
         'reviewed_by',
+         'branch_id',
     ];
 
     protected $casts = [
