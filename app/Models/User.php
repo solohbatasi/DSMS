@@ -100,130 +100,100 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(Student::class);
     }
-  public function enrolledCourses(): BelongsToMany
+    public function enrolledCourses(): BelongsToMany
     {
         return $this->belongsToMany(Student::class)
                     ->withTimestamps();
     }
-    public function eventsAttending()
+     /**
+     * Get the branch associated with the user.
+     */
+    public function branch()
     {
-        return $this->hasManyThrough(
-            Event::class,
-            TicketPurchase::class,
-            'user_id', // Foreign key on ticket_purchases table
-            'id', // Foreign key on events table
-            'id', // Local key on users table
-            'event_id' // Local key on ticket_purchases table
-        )->where('ticket_purchases.status', 'paid');
+        return $this->belongsTo(Branch::class);
     }
 
-    public function events()
-    {
-        return $this->hasMany(Event::class, 'organizer_id');
-    }
-
-    public function votingContests()
-    {
-        return $this->hasMany(VotingContest::class, 'organizer_id');
-    }
-
-    public function votes()
-    {
-        return $this->hasMany(Vote::class);
-    }
-
-    public function votePurchases()
-    {
-        return $this->hasMany(VotePurchase::class);
-    }
-
-    public function ticketPurchases()
-    {
-        return $this->hasMany(TicketPurchase::class);
-    }
-
-    public function bookings()
-    {
-        return $this->hasMany(Booking::class);
-    }
-
-    // Scopes
-    public function scopeOrganizers($query)
-    {
-        return $query->where('role', 'organizer');
-    }
-
-    public function scopeVendors($query)
-    {
-        return $query->where('role', 'vendor');
-    }
-
-    public function scopeAttendees($query)
-    {
-        return $query->where('role', 'attendee');
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeVerified($query)
-    {
-        return $query->where('is_verified', true);
-    }
-
-    public function scopeCanVote($query)
-    {
-        return $query->where('can_vote', true);
-    }
-
-    // Helper Methods
-    public function isOrganizer()
-    {
-        return $this->role === 'organizer';
-    }
-
-    public function isVendor()
-    {
-        return $this->role === 'vendor';
-    }
-
-    public function isAttendee()
-    {
-        return $this->role === 'attendee';
-    }
-
-    public function isAdmin()
+    /**
+     * Check if user is admin.
+     */
+    public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
-    public function getProfileCompletionAttribute()
+    /**
+     * Check if user is branch manager.
+     */
+    public function isBranchManager(): bool
     {
-        $filledFields = 0;
-        $totalFields = 0;
+        return $this->role === 'branch_manager';
+    }
 
-        $profileFields = [
-            'name',
-            'email',
-            'phone',
-            'bio',
-            'avatar',
-            // Organizer specific
-            'company_name',
-            'website',
-            'address'
-        ];
+    /**
+     * Check if user is instructor.
+     */
+    public function isInstructor(): bool
+    {
+        return $this->role === 'instructor';
+    }
 
-        foreach ($profileFields as $field) {
-            $totalFields++;
-            if (!empty($this->$field)) {
-                $filledFields++;
-            }
+    /**
+     * Check if user is receptionist/staff.
+     */
+    public function isStaff(): bool
+    {
+        return $this->role === 'staff';
+    }
+
+    /**
+     * Check if user is student.
+     */
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
+    }
+
+    /**
+     * Scope a query to only include users from a specific branch.
+     */
+    public function scopeFromBranch($query, $branchId)
+    {
+        if ($branchId) {
+            return $query->where('branch_id', $branchId);
+        }
+        return $query;
+    }
+
+    /**
+     * Get the student profile if user is a student.
+     */
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'user_id');
+    }
+
+    /**
+     * Check if user can access branch data.
+     */
+    public function canAccessBranch($branchId): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
         }
 
-        return $totalFields > 0 ? round(($filledFields / $totalFields) * 100) : 0;
+        return $this->branch_id == $branchId;
+    }
+
+    /**
+     * Get accessible branches for the user.
+     */
+    public function accessibleBranches()
+    {
+        if ($this->isAdmin()) {
+            return Branch::all();
+        }
+
+        return Branch::where('id', $this->branch_id)->get();
     }
 
 }
