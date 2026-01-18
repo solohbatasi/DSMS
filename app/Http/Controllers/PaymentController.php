@@ -23,22 +23,47 @@ class PaymentController extends Controller
         // Base query with branch filtering
         $paymentsQuery = Payment::with(['efList.student', 'efList.course', 'efList.student.branch']);
 
-        if (!$user->isAdmin()) {
-            // For non-admin users, only show payments from their branch
+        // Apply branch filtering based on user role and branch selection
+        if ($user->isAdmin()) {
+            // Admin: Check if viewing a specific branch or all branches
+            $selectedBranchId = session('admin_selected_branch');
+
+            if ($selectedBranchId) {
+                // Admin is viewing a specific branch
+                $paymentsQuery->whereHas('efList', function ($q) use ($selectedBranchId) {
+                    $q->where('branch_id', $selectedBranchId);
+                });
+            }
+            // If $selectedBranchId is null/empty, admin is viewing all branches (no additional filter)
+        } else {
+            // Non-admin users: only show payments from their assigned branch
             $paymentsQuery->whereHas('efList', function ($q) use ($user) {
                 $q->where('branch_id', $user->branch_id);
             });
-        } elseif ($user->isAdmin() && $request->has('branch_id')) {
-            // Admin can filter by specific branch
-            $paymentsQuery->whereHas('efList', function ($q) use ($request) {
-                $q->where('branch_id', $request->branch_id);
-            });
+        }
+
+        // Additional branch filter from request (for admin branch switcher UI)
+        if ($user->isAdmin() && $request->has('branch_id')) {
+            $branchId = $request->branch_id;
+            if ($branchId) {
+                $paymentsQuery->whereHas('efList', function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                });
+            }
         }
 
         // Get counts with branch filtering
         $countQuery = Payment::query();
 
-        if (!$user->isAdmin()) {
+        // Apply the same branch filtering to counts
+        if ($user->isAdmin()) {
+            $selectedBranchId = session('admin_selected_branch');
+            if ($selectedBranchId) {
+                $countQuery->whereHas('efList', function ($q) use ($selectedBranchId) {
+                    $q->where('branch_id', $selectedBranchId);
+                });
+            }
+        } else {
             $countQuery->whereHas('efList', function ($q) use ($user) {
                 $q->where('branch_id', $user->branch_id);
             });
@@ -59,6 +84,13 @@ class PaymentController extends Controller
         // Get branches for admin filter
         $branches = $user->isAdmin() ? Branch::active()->get() : collect();
 
+        // Get selected branch info for display
+        $selectedBranch = null;
+        if ($user->isAdmin()) {
+            $selectedBranchId = session('admin_selected_branch');
+            $selectedBranch = $selectedBranchId ? Branch::find($selectedBranchId) : null;
+        }
+
         return view('payments.index', [
             'payments' => $payments,
             'totalPayments' => $totalPayments,
@@ -67,9 +99,11 @@ class PaymentController extends Controller
             'completedPayments' => $completedPayments,
             'recentPayments' => $recentPayments,
             'branches' => $branches,
-            'selectedBranch' => $request->branch_id
+            'selectedBranch' => $request->branch_id ?: ($selectedBranch ? $selectedBranch->id : null),
+            'viewingBranch' => $selectedBranch
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -316,8 +350,20 @@ class PaymentController extends Controller
             // Start with base query with branch filtering
             $paymentsQuery = Payment::with(['efList.student', 'efList.course', 'efList.student.branch']);
 
-            // Apply branch filter for non-admin users
-            if (!$user->isAdmin()) {
+            // Apply branch filtering based on user role and branch selection
+            if ($user->isAdmin()) {
+                // Admin: Check if viewing a specific branch or all branches
+                $selectedBranchId = session('admin_selected_branch');
+
+                if ($selectedBranchId) {
+                    // Admin is viewing a specific branch
+                    $paymentsQuery->whereHas('efList', function ($q) use ($selectedBranchId) {
+                        $q->where('branch_id', $selectedBranchId);
+                    });
+                }
+                // If $selectedBranchId is null/empty, admin is viewing all branches (no additional filter)
+            } else {
+                // Non-admin users: only show payments from their assigned branch
                 $paymentsQuery->whereHas('efList', function ($q) use ($user) {
                     $q->where('branch_id', $user->branch_id);
                 });
@@ -383,8 +429,13 @@ class PaymentController extends Controller
             $payments = $paymentsQuery->get()
                 ->map(function($payment) use ($user) {
                     // Additional security check
-                    if (!$user->isAdmin() && $payment->efList->branch_id != $user->branch_id) {
-                        return null; // Skip payments from other branches
+                    if ($user->isAdmin()) {
+                        $selectedBranchId = session('admin_selected_branch');
+                        if ($selectedBranchId && $payment->efList->branch_id != $selectedBranchId) {
+                            return null; // Skip payments from other branches when admin is viewing a specific branch
+                        }
+                    } elseif (!$user->isAdmin() && $payment->efList->branch_id != $user->branch_id) {
+                        return null; // Skip payments from other branches for non-admin users
                     }
 
                     return [
@@ -409,7 +460,8 @@ class PaymentController extends Controller
             return response()->json([
                 'success' => true,
                 'payments' => $payments,
-                'count' => $payments->count()
+                'count' => $payments->count(),
+                'branch_context' => $user->isAdmin() ? session('admin_selected_branch_name', 'All Branches') : ($user->branch->name ?? 'N/A')
             ]);
 
         } catch (\Exception $e) {
@@ -452,8 +504,18 @@ class PaymentController extends Controller
                 })
                 ->where('status', 'active');
 
-            // Apply branch filter for non-admin users
-            if (!$user->isAdmin()) {
+            // Apply branch filtering based on user role and branch selection
+            if ($user->isAdmin()) {
+                // Admin: Check if viewing a specific branch or all branches
+                $selectedBranchId = session('admin_selected_branch');
+
+                if ($selectedBranchId) {
+                    // Admin is viewing a specific branch
+                    $studentsQuery->where('branch_id', $selectedBranchId);
+                }
+                // If $selectedBranchId is null/empty, admin is viewing all branches (no additional filter)
+            } else {
+                // Non-admin users: only show students from their assigned branch
                 $studentsQuery->where('branch_id', $user->branch_id);
             }
 
@@ -462,8 +524,13 @@ class PaymentController extends Controller
                 ->get()
                 ->map(function ($ef) use ($user) {
                     // Additional security check
-                    if (!$user->isAdmin() && $ef->branch_id != $user->branch_id) {
-                        return null; // Skip students from other branches
+                    if ($user->isAdmin()) {
+                        $selectedBranchId = session('admin_selected_branch');
+                        if ($selectedBranchId && $ef->branch_id != $selectedBranchId) {
+                            return null; // Skip students from other branches when admin is viewing a specific branch
+                        }
+                    } elseif (!$user->isAdmin() && $ef->branch_id != $user->branch_id) {
+                        return null; // Skip students from other branches for non-admin users
                     }
 
                     return [
@@ -484,7 +551,8 @@ class PaymentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'students' => $students
+                'students' => $students,
+                'branch_context' => $user->isAdmin() ? session('admin_selected_branch_name', 'All Branches') : ($user->branch->name ?? 'N/A')
             ]);
 
         } catch (\Exception $e) {
@@ -496,6 +564,7 @@ class PaymentController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Get payments by branch (for admin reports)
