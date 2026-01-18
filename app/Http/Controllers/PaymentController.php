@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\Student_ef_list;
 use App\Models\Student;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -16,19 +18,46 @@ class PaymentController extends Controller
      */
     public function index(Request $request)
     {
-        $totalPayments = Payment::sum('amount');
-        $todayPayments = Payment::whereDate('payment_date', today())->sum('amount');
-        $pendingPayments = Payment::where('payment_status', 'pending')->count();
-        $completedPayments = Payment::where('payment_status', 'completed')->count();
+        $user = Auth::user();
 
-        $recentPayments = Payment::with(['efList.student', 'efList.course'])
+        // Base query with branch filtering
+        $paymentsQuery = Payment::with(['efList.student', 'efList.course', 'efList.student.branch']);
+
+        if (!$user->isAdmin()) {
+            // For non-admin users, only show payments from their branch
+            $paymentsQuery->whereHas('efList', function ($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        } elseif ($user->isAdmin() && $request->has('branch_id')) {
+            // Admin can filter by specific branch
+            $paymentsQuery->whereHas('efList', function ($q) use ($request) {
+                $q->where('branch_id', $request->branch_id);
+            });
+        }
+
+        // Get counts with branch filtering
+        $countQuery = Payment::query();
+
+        if (!$user->isAdmin()) {
+            $countQuery->whereHas('efList', function ($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        }
+
+        $totalPayments = $countQuery->sum('amount');
+        $todayPayments = $countQuery->clone()->whereDate('payment_date', today())->sum('amount');
+        $pendingPayments = $countQuery->clone()->where('payment_status', 'pending')->count();
+        $completedPayments = $countQuery->clone()->where('payment_status', 'completed')->count();
+
+        $recentPayments = $paymentsQuery->clone()
             ->orderBy('created_at', 'desc')
             ->take(6)
             ->get();
 
-        $payments = Payment::with(['efList.student', 'efList.course'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $payments = $paymentsQuery->orderBy('created_at', 'desc')->paginate(10);
+
+        // Get branches for admin filter
+        $branches = $user->isAdmin() ? Branch::active()->get() : collect();
 
         return view('payments.index', [
             'payments' => $payments,
@@ -36,17 +65,10 @@ class PaymentController extends Controller
             'todayPayments' => $todayPayments,
             'pendingPayments' => $pendingPayments,
             'completedPayments' => $completedPayments,
-            'recentPayments' => $recentPayments
+            'recentPayments' => $recentPayments,
+            'branches' => $branches,
+            'selectedBranch' => $request->branch_id
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        // Not used - we use modal instead
-        return redirect()->route('payments.index');
     }
 
     /**
@@ -54,6 +76,8 @@ class PaymentController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+
         try {
             $validated = $request->validate([
                 'ef_id' => 'required|exists:student_ef_lists,id',
@@ -72,11 +96,19 @@ class PaymentController extends Controller
             ], 422);
         }
 
+        // Get the EF list record and check branch access
+        $efList = Student_ef_list::with('student')->findOrFail($request->ef_id);
+
+        // Check if user can access this student's branch
+        if (!$user->isAdmin() && $efList->branch_id != $user->branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only add payments for students in your branch.'
+            ], 403);
+        }
+
         try {
             DB::beginTransaction();
-
-            // Get the EF list record
-            $efList = Student_ef_list::findOrFail($request->ef_id);
 
             // Validate payment amount doesn't exceed balance
             if ($request->amount > $efList->balance) {
@@ -91,7 +123,7 @@ class PaymentController extends Controller
 
             // Create payment record
             $payment = Payment::create([
-                'user_id' => auth()->id(),
+                'user_id' => $user->id,
                 'ef_id' => $request->ef_id,
                 'reference' => $request->reference,
                 'amount' => $request->amount,
@@ -99,7 +131,8 @@ class PaymentController extends Controller
                 'payment_date' => $request->payment_date,
                 'payment_method' => $request->payment_method,
                 'payment_status' => $request->payment_status,
-                'remarks' => $request->remarks
+                'remarks' => $request->remarks,
+                'branch_id' => $efList->branch_id // Store branch_id with payment
             ]);
 
             // Update EF list record
@@ -128,20 +161,17 @@ class PaymentController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show($id)
-    {
-        // Redirect to index since we don't have a show page
-        return redirect()->route('payments.index');
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit($id)
     {
-        $payment = Payment::with(['efList.student', 'efList.course'])->findOrFail($id);
+        $user = Auth::user();
+        $payment = Payment::with(['efList.student', 'efList.course', 'efList.student.branch'])->findOrFail($id);
+
+        // Check if user can access this payment
+        if (!$user->isAdmin() && $payment->efList->branch_id != $user->branch_id) {
+            abort(403, 'You do not have permission to access this payment.');
+        }
 
         return response()->json([
             'payment' => $payment
@@ -153,7 +183,16 @@ class PaymentController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = Auth::user();
         $payment = Payment::findOrFail($id);
+
+        // Check if user can access this payment
+        if (!$user->isAdmin() && $payment->efList->branch_id != $user->branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to update this payment.'
+            ], 403);
+        }
 
         try {
             $validated = $request->validate([
@@ -223,7 +262,16 @@ class PaymentController extends Controller
      */
     public function destroy($id)
     {
+        $user = Auth::user();
         $payment = Payment::findOrFail($id);
+
+        // Check if user can delete this payment
+        if (!$user->isAdmin() && $payment->efList->branch_id != $user->branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to delete this payment.'
+            ], 403);
+        }
 
         try {
             DB::beginTransaction();
@@ -259,13 +307,21 @@ class PaymentController extends Controller
     public function search(Request $request)
     {
         try {
+            $user = Auth::user();
             $query = $request->get('q', '');
             $status = $request->get('status', 'all');
             $date = $request->get('date', 'all');
             $sort = $request->get('sort', 'newest');
 
-            // Start with base query
-            $paymentsQuery = Payment::with(['efList.student', 'efList.course']);
+            // Start with base query with branch filtering
+            $paymentsQuery = Payment::with(['efList.student', 'efList.course', 'efList.student.branch']);
+
+            // Apply branch filter for non-admin users
+            if (!$user->isAdmin()) {
+                $paymentsQuery->whereHas('efList', function ($q) use ($user) {
+                    $q->where('branch_id', $user->branch_id);
+                });
+            }
 
             // Apply search filter
             if (!empty($query)) {
@@ -325,22 +381,30 @@ class PaymentController extends Controller
             }
 
             $payments = $paymentsQuery->get()
-                ->map(function($payment) {
+                ->map(function($payment) use ($user) {
+                    // Additional security check
+                    if (!$user->isAdmin() && $payment->efList->branch_id != $user->branch_id) {
+                        return null; // Skip payments from other branches
+                    }
+
                     return [
                         'id' => $payment->id,
-                        'student_name' => $payment->efList->student->name,
-                        'student_id' => $payment->efList->student->id_no,
+                        'student_name' => $payment->efList->student->name ?? 'Unknown',
+                        'student_id' => $payment->efList->student->id_no ?? 'N/A',
                         'ef_number' => $payment->efList->ef_no,
-                        'course_name' => $payment->efList->course->course,
+                        'course_name' => $payment->efList->course->course ?? '-',
                         'reference' => $payment->reference,
                         'amount' => number_format($payment->amount, 2),
                         'balance' => number_format($payment->balance, 2),
                         'payment_date' => $payment->payment_date ? $payment->payment_date->format('M d, Y') : 'N/A',
                         'payment_method' => $payment->payment_method,
                         'payment_status' => $payment->payment_status,
-                        'remarks' => $payment->remarks
+                        'remarks' => $payment->remarks,
+                        'branch_name' => $payment->efList->student->branch->name ?? 'N/A'
                     ];
-                });
+                })
+                ->filter() // Remove null entries
+                ->values(); // Reindex array
 
             return response()->json([
                 'success' => true,
@@ -364,6 +428,7 @@ class PaymentController extends Controller
     public function searchStudents(Request $request)
     {
         try {
+            $user = Auth::user();
             $query = $request->get('q', '');
 
             if (strlen($query) < 2) {
@@ -373,7 +438,8 @@ class PaymentController extends Controller
                 ]);
             }
 
-            $students = Student_ef_list::with(['student', 'course'])
+            // Start query with branch filtering
+            $studentsQuery = Student_ef_list::with(['student', 'course', 'student.branch'])
                 ->where(function ($q) use ($query) {
                     $q->where('ef_no', 'like', "%{$query}%")
                       ->orWhereHas('student', function ($q) use ($query) {
@@ -384,11 +450,22 @@ class PaymentController extends Controller
                           $q->where('course', 'like', "%{$query}%");
                       });
                 })
-                ->where('status', 'active')
-                ->orderBy('ef_no')
+                ->where('status', 'active');
+
+            // Apply branch filter for non-admin users
+            if (!$user->isAdmin()) {
+                $studentsQuery->where('branch_id', $user->branch_id);
+            }
+
+            $students = $studentsQuery->orderBy('ef_no')
                 ->limit(25)
                 ->get()
-                ->map(function ($ef) {
+                ->map(function ($ef) use ($user) {
+                    // Additional security check
+                    if (!$user->isAdmin() && $ef->branch_id != $user->branch_id) {
+                        return null; // Skip students from other branches
+                    }
+
                     return [
                         'ef_id' => $ef->id,
                         'student_name' => $ef->student->name,
@@ -398,9 +475,12 @@ class PaymentController extends Controller
                         'total_fee' => $ef->total_fee,
                         'paid_amount' => $ef->paid_amount,
                         'balance' => $ef->balance,
-                        'status' => $ef->status
+                        'status' => $ef->status,
+                        'branch_name' => $ef->student->branch->name ?? 'N/A'
                     ];
-                });
+                })
+                ->filter() // Remove null entries
+                ->values(); // Reindex array
 
             return response()->json([
                 'success' => true,
@@ -415,5 +495,31 @@ class PaymentController extends Controller
                 'students' => []
             ], 500);
         }
+    }
+
+    /**
+     * Get payments by branch (for admin reports)
+     */
+    public function getBranchPayments($branchId)
+    {
+        $user = Auth::user();
+
+        if (!$user->isAdmin()) {
+            abort(403, 'Only administrators can view branch-specific reports.');
+        }
+
+        $branch = Branch::findOrFail($branchId);
+
+        $payments = Payment::with(['efList.student', 'efList.course'])
+            ->whereHas('efList', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            })
+            ->orderBy('payment_date', 'desc')
+            ->paginate(20);
+
+        return view('payments.branch', [
+            'payments' => $payments,
+            'branch' => $branch
+        ]);
     }
 }
