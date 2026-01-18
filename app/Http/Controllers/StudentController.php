@@ -25,26 +25,53 @@ class StudentController extends Controller
         // Base query with branch filtering
         $query = Student_ef_list::with(['student', 'course', 'payments']);
 
-        // Apply branch filter for non-admin users
-        if (!$user->isAdmin()) {
-            // For non-admin users, only show students from their branch
+        // Apply branch filtering based on user role and branch selection
+        if ($user->isAdmin()) {
+            // Admin: Check if viewing a specific branch or all branches
+            $selectedBranchId = session('admin_selected_branch');
+
+            if ($selectedBranchId) {
+                // Admin is viewing a specific branch
+                $query->where('branch_id', $selectedBranchId);
+
+                // Also filter by branch_id in students table for consistency
+                $query->whereHas('student', function ($q) use ($selectedBranchId) {
+                    $q->where('branch_id', $selectedBranchId);
+                });
+            }
+            // If $selectedBranchId is null/empty, admin is viewing all branches (no additional filter)
+        } else {
+            // Non-admin users: only show students from their assigned branch
+            $query->where('branch_id', $user->branch_id);
+
+            // Also filter by branch_id in students table for consistency
             $query->whereHas('student', function ($q) use ($user) {
                 $q->where('branch_id', $user->branch_id);
             });
-        } elseif ($user->isAdmin() && $request->has('branch_id')) {
-            // Admin can filter by specific branch
-            $query->whereHas('student', function ($q) use ($request) {
-                $q->where('branch_id', $request->branch_id);
-            });
+        }
+
+        // Additional branch filter from request (for admin branch switcher UI)
+        if ($user->isAdmin() && $request->has('branch_id')) {
+            $branchId = $request->branch_id;
+            if ($branchId) {
+                $query->where('branch_id', $branchId);
+                $query->whereHas('student', function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                });
+            }
         }
 
         // Counts with branch filtering
         $countQuery = Student_ef_list::query();
 
-        if (!$user->isAdmin()) {
-            $countQuery->whereHas('student', function ($q) use ($user) {
-                $q->where('branch_id', $user->branch_id);
-            });
+        // Apply the same branch filtering to counts
+        if ($user->isAdmin()) {
+            $selectedBranchId = session('admin_selected_branch');
+            if ($selectedBranchId) {
+                $countQuery->where('branch_id', $selectedBranchId);
+            }
+        } else {
+            $countQuery->where('branch_id', $user->branch_id);
         }
 
         $totalStudents = $countQuery->count();
@@ -52,17 +79,32 @@ class StudentController extends Controller
         $alumniStudents = $countQuery->where('type', 4)->count();
         $suspendedStudents = $countQuery->where('type', 2)->count();
 
-        // Get courses available for user's branch
+        // Get courses available for user's branch/viewing context
         $coursesQuery = Course::query();
-        if (!$user->isAdmin()) {
+
+        if ($user->isAdmin()) {
+            $selectedBranchId = session('admin_selected_branch');
+            if ($selectedBranchId) {
+                $coursesQuery->where('branch_id', $selectedBranchId);
+            }
+            // If no branch selected, show all courses (including those without branch assignment)
+        } else {
             $coursesQuery->where('branch_id', $user->branch_id);
         }
+
         $courses = $coursesQuery->get();
 
         // Get branches for admin filter
         $branches = $user->isAdmin() ? Branch::active()->get() : collect();
 
         $students = $query->latest()->paginate(10);
+
+        // Get selected branch info for display
+        $selectedBranch = null;
+        if ($user->isAdmin()) {
+            $selectedBranchId = session('admin_selected_branch');
+            $selectedBranch = $selectedBranchId ? Branch::find($selectedBranchId) : null;
+        }
 
         return view('students.index', [
             'students' => $students,
@@ -72,9 +114,11 @@ class StudentController extends Controller
             'activeStudents' => $activeStudents,
             'alumniStudents' => $alumniStudents,
             'suspendedStudents' => $suspendedStudents,
-            'selectedBranch' => $request->branch_id
+            'selectedBranch' => $request->branch_id ?: ($selectedBranch ? $selectedBranch->id : null),
+            'viewingBranch' => $selectedBranch
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -330,9 +374,18 @@ class StudentController extends Controller
         // Start the query with branch filtering
         $searchQuery = Student_ef_list::with(['student', 'course', 'payments', 'student.branch']);
 
-        // Apply branch filter FIRST
-        if (!$user->isAdmin()) {
-            // Filter by branch_id in the student_ef_lists table
+        // Apply branch filtering based on user role and branch selection
+        if ($user->isAdmin()) {
+            // Admin: Check if viewing a specific branch or all branches
+            $selectedBranchId = session('admin_selected_branch');
+
+            if ($selectedBranchId) {
+                // Admin is viewing a specific branch
+                $searchQuery->where('branch_id', $selectedBranchId);
+            }
+            // If $selectedBranchId is null/empty, admin is viewing all branches (no additional filter)
+        } else {
+            // Non-admin users: only show students from their assigned branch
             $searchQuery->where('branch_id', $user->branch_id);
         }
 
@@ -396,9 +449,14 @@ class StudentController extends Controller
                 $totalPaid = $ef->payments->sum('amount');
                 $balance = $ef->total_fee - $totalPaid;
 
-                // Check if user can view this student (additional security)
-                if (!$user->isAdmin() && $ef->branch_id != $user->branch_id) {
-                    return null; // Skip students from other branches
+                // Additional security check for admin viewing specific branch
+                if ($user->isAdmin()) {
+                    $selectedBranchId = session('admin_selected_branch');
+                    if ($selectedBranchId && $ef->branch_id != $selectedBranchId) {
+                        return null; // Skip students from other branches when admin is viewing a specific branch
+                    }
+                } elseif (!$user->isAdmin() && $ef->branch_id != $user->branch_id) {
+                    return null; // Skip students from other branches for non-admin users
                 }
 
                 return [
@@ -420,7 +478,8 @@ class StudentController extends Controller
         return response()->json([
             'success' => true,
             'students' => $students,
-            'count' => $students->count()
+            'count' => $students->count(),
+            'branch_context' => $user->isAdmin() ? session('admin_selected_branch_name', 'All Branches') : ($user->branch->name ?? 'N/A')
         ]);
     }
 
