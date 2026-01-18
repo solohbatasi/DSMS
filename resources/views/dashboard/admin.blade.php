@@ -8,23 +8,289 @@
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\DB;
 @endphp
+<!-- Add this after the page title or in a prominent place -->
+<!-- Branch Context Indicator & Switcher -->
+@if(auth()->user()->isAdmin())
+<div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Current Branch Info -->
+        <div class="flex items-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-blue-200 shadow-sm mr-3">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+            </div>
+            <div>
+                  <p class="text-sm font-medium text-blue-800 mb-0.5">Current Branch {{ session('admin_selected_branch_name', 'All Branches') }}
+               </p>
 
+                @if(session('admin_selected_branch_name'))
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        Viewing data for this branch only
+                    </p>
+                @else
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        Viewing aggregated data from all branches
+                    </p>
+                @endif
+            </div>
+        </div>
+
+        <!-- Branch Switcher -->
+        <div class="relative" x-data="branchSwitcher()">
+            <button @click="toggleDropdown()"
+                    :class="{'ring-2 ring-blue-500 ring-opacity-50': open}"
+                    class="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-200 shadow-sm min-w-[200px] justify-between">
+                <div class="flex items-center">
+                    @if(session('admin_selected_branch_name'))
+                        <svg class="w-4 h-4 mr-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        <span class="truncate">{{ session('admin_selected_branch_name') }}</span>
+                    @else
+                        <svg class="w-4 h-4 mr-2.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <span class="text-gray-600">All Branches</span>
+                    @endif
+                </div>
+                <svg class="w-4 h-4 ml-2 text-gray-400 transition-transform duration-200"
+                     :class="{'transform rotate-180': open}"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div x-show="open"
+                 x-cloak
+                 @click.away="open = false"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-75"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="absolute right-0 mt-2 w-72 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 overflow-hidden">
+                <!-- Header -->
+                <div class="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                    <p class="text-sm font-semibold text-blue-900">Switch Branch Context</p>
+                    <p class="text-xs text-blue-700 mt-0.5">Select a branch to view its data</p>
+                </div>
+
+                <div class="py-2 max-h-80 overflow-y-auto">
+                    <!-- All Branches -->
+                    <button @click="switchBranch('')"
+                            :class="{'bg-blue-50 border-l-4 border-blue-500': !currentBranch}"
+                            class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 border-l-4 border-transparent">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900">All Branches</p>
+                                <p class="text-xs text-gray-500 mt-0.5">View aggregated data</p>
+                            </div>
+                            @if(!session('admin_selected_branch_name'))
+                            <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            @endif
+                        </div>
+                    </button>
+
+                    <!-- Divider -->
+                    <div class="border-t border-gray-200 my-2"></div>
+
+                    <!-- Branch List -->
+                    @foreach($branches as $branch)
+                    <button @click="switchBranch('{{ $branch->id }}')"
+                            :class="{'bg-blue-50 border-l-4 border-blue-500': currentBranch == '{{ $branch->id }}'}"
+                            class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 border-l-4 border-transparent">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900">{{ $branch->name }}</p>
+                                @if($branch->location)
+                                <p class="text-xs text-gray-500 mt-0.5 truncate">{{ $branch->location }}</p>
+                                @endif
+                            </div>
+                            @if(session('admin_selected_branch_id') == $branch->id)
+                            <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            @endif
+                        </div>
+                    </button>
+                    @endforeach
+                </div>
+
+                <!-- Footer -->
+                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                    <p class="text-xs text-gray-500">
+                        Branch changes apply to data views only
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function branchSwitcher() {
+    return {
+        open: false,
+        isLoading: false,
+        currentBranch: '{{ session('admin_selected_branch_id') }}',
+
+        toggleDropdown() {
+            this.open = !this.open;
+        },
+
+        async switchBranch(branchId) {
+            this.isLoading = true;
+            this.open = false;
+
+            // Get the button element
+            const button = document.querySelector('[x-data] button');
+            const originalContent = button.innerHTML;
+
+            // Show loading state
+            button.innerHTML = `
+                <div class="flex items-center">
+                    <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent mr-2.5"></div>
+                    <span class="text-blue-600">Switching...</span>
+                </div>
+            `;
+            button.disabled = true;
+
+            try {
+                const response = await fetch('{{ route("branch.update-selected") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ branch_id: branchId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success feedback
+                    button.innerHTML = `
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-500 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-green-600">Switched!</span>
+                        </div>
+                    `;
+
+                    // Wait a moment before reloading for better UX
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 600);
+                } else {
+                    this.showNotification(data.message || 'Failed to switch branch', 'error');
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.showNotification('Network error. Please try again.', 'error');
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            }
+
+            this.isLoading = false;
+        },
+
+        showNotification(message, type = 'info') {
+            // Use existing notification system or create a temporary one
+            if (typeof toastr !== 'undefined') {
+                const toastType = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+                toastr[toastType](message);
+            } else if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: type,
+                    title: message,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            } else {
+                // Create a simple notification
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${
+                    type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+                    type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
+                    'bg-blue-50 text-blue-800 border border-blue-200'
+                }`;
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="${type === 'error' ? 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' :
+                                  type === 'success' ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' :
+                                  'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'}"
+                            ></path>
+                        </svg>
+                        <span>${message}</span>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        }
+    };
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+
+/* Custom scrollbar for dropdown */
+.scrollbar-custom {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 3px;
+}
+</style>
+@endif
 <div class="min-h-screen bg-gray-50">
     <!-- Enhanced Header -->
     @include('components.dashboard-header')
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Financial Overview Cards -->
-        <div class="mb-6 flex justify-end">
-            <a href="https://lim110.truehost.cloud:2096/webmaillogout.cgi"
-               target="_blank"
-               class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
-                Access Mail
-            </a>
-        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
              <!-- Active Courses -->
             <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-xl shadow-sm border border-blue-400 overflow-hidden transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer">
@@ -56,6 +322,7 @@
                     </div>
                 </a>
             </div>
+
             <!-- Total Revenue -->
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md">
@@ -394,6 +661,7 @@
                         <tr class="bg-gray-50 border-b border-gray-100">
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Active</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -433,6 +701,13 @@
                                     {{ ucfirst($user->role) }}
                                 </span>
                             </td>
+                             <td class="px-6 py-4 whitespace-nowrap">
+
+                                @if($user->branch)
+
+                                <span class="text-xs text-gray-500 mt-1">{{ $user->branch->name ?? ' '}}</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                     {{ $user->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
@@ -450,6 +725,7 @@
                                             data-user-name="{{ $user->name }}"
                                             data-user-email="{{ $user->email }}"
                                             data-user-role="{{ $user->role }}"
+                                            data-user-branch-id="{{ $user->branch_id }}"
                                             data-user-active="{{ $user->is_active }}">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -604,7 +880,19 @@
                                 @endforeach
                             </select>
                         </div>
-
+                        <!-- In the Add User Modal form -->
+                        <div>
+                            <label for="add_branch_id" class="block text-sm font-semibold text-gray-900 mb-2">Branch</label>
+                            <select name="branch_id" id="add_branch_id" class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200">
+                                <option value="">Select Branch</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">
+                                Leave empty for admin users, required for branch-specific roles
+                            </p>
+                        </div>
                         <div>
                             <input type="hidden" name="is_active" value="0">
                             <label class="flex items-center space-x-3">
@@ -697,7 +985,16 @@
                                 @endforeach
                             </select>
                         </div>
-
+                        <!-- In the Edit User Modal form -->
+                        <div>
+                            <label for="edit_branch_id" class="block text-sm font-semibold text-gray-900 mb-2">Branch</label>
+                            <select name="branch_id" id="edit_branch_id" class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200">
+                                <option value="">Select Branch</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div>
                             <input type="hidden" name="is_active" value="0">
                             <label class="flex items-center space-x-3">
@@ -815,436 +1112,438 @@
 
 <script>
   // Complete User Management JavaScript
-document.addEventListener('DOMContentLoaded', function() {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    // Modal Elements
-    const addUserModal = document.getElementById('addUserModal');
-    const editUserModal = document.getElementById('editUserModal');
-    const permissionsModal = document.getElementById('permissionsModal');
+        // Modal Elements
+        const addUserModal = document.getElementById('addUserModal');
+        const editUserModal = document.getElementById('editUserModal');
+        const permissionsModal = document.getElementById('permissionsModal');
 
-    // Modal Management Functions
-    function openModal(modal) {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        modal.classList.add('animate-fade-in-up');
-    }
-
-    function closeModal(modal) {
-        modal.classList.add('hidden');
-        document.body.style.overflow = '';
-        modal.classList.remove('animate-fade-in-up');
-    }
-
-    // Close modals when clicking outside
-    window.addEventListener('click', function(event) {
-        if (event.target === addUserModal) closeModal(addUserModal);
-        if (event.target === editUserModal) closeModal(editUserModal);
-        if (event.target === permissionsModal) closeModal(permissionsModal);
-    });
-
-    // Close modals with Escape key
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            if (!addUserModal.classList.contains('hidden')) closeModal(addUserModal);
-            if (!editUserModal.classList.contains('hidden')) closeModal(editUserModal);
-            if (!permissionsModal.classList.contains('hidden')) closeModal(permissionsModal);
+        // Modal Management Functions
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            modal.classList.add('animate-fade-in-up');
         }
-    });
 
-    // Add User Modal Functionality
-    const addUserBtn = document.getElementById('addUserBtn');
-    const closeAddModal = document.getElementById('closeAddModal');
-    const closeAddModalBtn = document.getElementById('closeAddModalBtn');
-    const createUserBtn = document.getElementById('createUserBtn');
+        function closeModal(modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+            modal.classList.remove('animate-fade-in-up');
+        }
 
-    if (addUserBtn) {
-        addUserBtn.addEventListener('click', function() {
-            openModal(addUserModal);
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === addUserModal) closeModal(addUserModal);
+            if (event.target === editUserModal) closeModal(editUserModal);
+            if (event.target === permissionsModal) closeModal(permissionsModal);
         });
-    }
 
-    if (closeAddModal) {
-        closeAddModal.addEventListener('click', function() {
-            closeModal(addUserModal);
-        });
-    }
-
-    if (closeAddModalBtn) {
-        closeAddModalBtn.addEventListener('click', function() {
-            closeModal(addUserModal);
-        });
-    }
-
-    if (createUserBtn) {
-        createUserBtn.addEventListener('click', function() {
-            createUser();
-        });
-    }
-
-    // Edit User Modal Functionality
-    const closeEditModal = document.getElementById('closeEditModal');
-    const closeEditModalBtn = document.getElementById('closeEditModalBtn');
-    const updateUserBtn = document.getElementById('updateUserBtn');
-
-    if (closeEditModal) {
-        closeEditModal.addEventListener('click', function() {
-            closeModal(editUserModal);
-        });
-    }
-
-    if (closeEditModalBtn) {
-        closeEditModalBtn.addEventListener('click', function() {
-            closeModal(editUserModal);
-        });
-    }
-
-    if (updateUserBtn) {
-        updateUserBtn.addEventListener('click', function() {
-            updateUser();
-        });
-    }
-
-    // Permissions Modal Functionality
-    const closePermissionsModal = document.getElementById('closePermissionsModal');
-    const closePermissionsModalBtn = document.getElementById('closePermissionsModalBtn');
-    const updatePermissionsBtn = document.getElementById('updatePermissionsBtn');
-
-    if (closePermissionsModal) {
-        closePermissionsModal.addEventListener('click', function() {
-            closeModal(permissionsModal);
-        });
-    }
-
-    if (closePermissionsModalBtn) {
-        closePermissionsModalBtn.addEventListener('click', function() {
-            closeModal(permissionsModal);
-        });
-    }
-
-    if (updatePermissionsBtn) {
-        updatePermissionsBtn.addEventListener('click', function() {
-            updatePermissions();
-        });
-    }
-
-    // Delegated event listeners for dynamic content
-    document.addEventListener('click', function(e) {
-        // Edit User Button
-        const editBtn = e.target.closest('.edit-user-btn');
-        if (editBtn) {
-            e.preventDefault();
-            const userId = editBtn.dataset.userId;
-            const userName = editBtn.dataset.userName;
-            const userEmail = editBtn.dataset.userEmail;
-            const userRole = editBtn.dataset.userRole;
-            const userActive = editBtn.dataset.userActive === '1';
-
-            document.getElementById('edit_user_id').value = userId;
-            document.getElementById('edit_name').value = userName;
-            document.getElementById('edit_email').value = userEmail;
-            document.getElementById('edit_role').value = userRole;
-            document.getElementById('edit_is_active').checked = userActive;
-            document.getElementById('edit_user_name_preview').textContent = userName;
-            document.getElementById('edit_user_email_preview').textContent = userEmail;
-
-            const avatarContainer = document.getElementById('edit_user_avatar');
-            const userAvatar = editBtn.closest('tr').querySelector('img')?.src || '';
-            if (userAvatar) {
-                avatarContainer.innerHTML = `<img src="${userAvatar}" alt="${userName}" class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm">`;
-            } else {
-                const initial = userName.charAt(0).toUpperCase();
-                avatarContainer.innerHTML = `<span class="text-lg font-semibold text-blue-700">${initial}</span>`;
+        // Close modals with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (!addUserModal.classList.contains('hidden')) closeModal(addUserModal);
+                if (!editUserModal.classList.contains('hidden')) closeModal(editUserModal);
+                if (!permissionsModal.classList.contains('hidden')) closeModal(permissionsModal);
             }
+        });
 
-            openModal(editUserModal);
-        }
+        // Add User Modal Functionality
+        const addUserBtn = document.getElementById('addUserBtn');
+        const closeAddModal = document.getElementById('closeAddModal');
+        const closeAddModalBtn = document.getElementById('closeAddModalBtn');
+        const createUserBtn = document.getElementById('createUserBtn');
 
-        // Permissions Button
-        const permBtn = e.target.closest('.permissions-btn');
-        if (permBtn) {
-            e.preventDefault();
-            const userId = permBtn.dataset.userId;
-            const userName = permBtn.dataset.userName;
-            const userRole = permBtn.dataset.userRole;
-            const userEmail = permBtn.closest('tr').querySelector('td:first-child .text-gray-500')?.textContent || '';
-
-            document.getElementById('perm_user_id').value = userId;
-            document.getElementById('perm_user_name').textContent = userName;
-            document.getElementById('perm_user_email').textContent = userEmail;
-            document.getElementById('perm_user_role').textContent = userRole;
-
-            const avatarContainer = document.getElementById('perm_user_avatar');
-            const userAvatar = permBtn.closest('tr').querySelector('img')?.src || '';
-            if (userAvatar) {
-                avatarContainer.innerHTML = `<img src="${userAvatar}" alt="${userName}" class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm">`;
-            } else {
-                const initial = userName.charAt(0).toUpperCase();
-                avatarContainer.innerHTML = `<span class="text-lg font-semibold text-purple-700">${initial}</span>`;
-            }
-
-            // Load user permissions
-            loadUserPermissions(userId);
-            openModal(permissionsModal);
-        }
-
-        // Delete User Button
-        const deleteBtn = e.target.closest('.delete-user-btn');
-        if (deleteBtn) {
-            e.preventDefault();
-            const userId = deleteBtn.dataset.userId;
-            const userName = deleteBtn.dataset.userName;
-            deleteUser(userId, userName);
-        }
-    });
-
-    // Permission checkboxes count update
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('permission-checkbox')) {
-            updatePermissionsCount();
-        }
-    });
-
-    // Search functionality
-    const userSearch = document.getElementById('userSearch');
-    if (userSearch) {
-        userSearch.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#usersTableBody tr');
-
-            rows.forEach(row => {
-                const userName = row.querySelector('td:first-child .text-gray-900').textContent.toLowerCase();
-                const userEmail = row.querySelector('td:first-child .text-gray-500').textContent.toLowerCase();
-                const userRole = row.querySelector('td:nth-child(2) span').textContent.toLowerCase();
-
-                if (userName.includes(searchTerm) || userEmail.includes(searchTerm) || userRole.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+        if (addUserBtn) {
+            addUserBtn.addEventListener('click', function() {
+                openModal(addUserModal);
             });
-        });
-    }
-
-    // API Functions
-    function createUser() {
-        const formData = new FormData(document.getElementById('addUserForm'));
-
-        // Show loading state
-        const originalText = createUserBtn.innerHTML;
-        createUserBtn.innerHTML = `
-            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
-            <span>Creating...</span>
-        `;
-        createUserBtn.disabled = true;
-
-        fetch('{{ route("admin.users.store") }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('User created successfully', 'success');
-                closeModal(addUserModal);
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                throw new Error(data.message || 'Failed to create user');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification(error.message || 'An error occurred while creating the user', 'error');
-        })
-        .finally(() => {
-            createUserBtn.innerHTML = originalText;
-            createUserBtn.disabled = false;
-        });
-    }
-
-    function updateUser() {
-        const userId = document.getElementById('edit_user_id').value;
-        const formData = new FormData(document.getElementById('editUserForm'));
-
-        // Show loading state
-        const originalText = updateUserBtn.innerHTML;
-        updateUserBtn.innerHTML = `
-            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
-            <span>Updating...</span>
-        `;
-        updateUserBtn.disabled = true;
-
-        fetch(`/admin/users/${userId}`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('User updated successfully', 'success');
-                closeModal(editUserModal);
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                throw new Error(data.message || 'Failed to update user');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification(error.message || 'An error occurred while updating the user', 'error');
-        })
-        .finally(() => {
-            updateUserBtn.innerHTML = originalText;
-            updateUserBtn.disabled = false;
-        });
-    }
-
-    function deleteUser(userId, userName) {
-        if (!confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
-            return;
         }
 
-        showNotification(`Deleting user "${userName}"...`, 'info');
+        if (closeAddModal) {
+            closeAddModal.addEventListener('click', function() {
+                closeModal(addUserModal);
+            });
+        }
 
-        fetch(`/admin/users/${userId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken,
-                'Content-Type': 'application/json'
+        if (closeAddModalBtn) {
+            closeAddModalBtn.addEventListener('click', function() {
+                closeModal(addUserModal);
+            });
+        }
+
+        if (createUserBtn) {
+            createUserBtn.addEventListener('click', function() {
+                createUser();
+            });
+        }
+
+        // Edit User Modal Functionality
+        const closeEditModal = document.getElementById('closeEditModal');
+        const closeEditModalBtn = document.getElementById('closeEditModalBtn');
+        const updateUserBtn = document.getElementById('updateUserBtn');
+
+        if (closeEditModal) {
+            closeEditModal.addEventListener('click', function() {
+                closeModal(editUserModal);
+            });
+        }
+
+        if (closeEditModalBtn) {
+            closeEditModalBtn.addEventListener('click', function() {
+                closeModal(editUserModal);
+            });
+        }
+
+        if (updateUserBtn) {
+            updateUserBtn.addEventListener('click', function() {
+                updateUser();
+            });
+        }
+
+        // Permissions Modal Functionality
+        const closePermissionsModal = document.getElementById('closePermissionsModal');
+        const closePermissionsModalBtn = document.getElementById('closePermissionsModalBtn');
+        const updatePermissionsBtn = document.getElementById('updatePermissionsBtn');
+
+        if (closePermissionsModal) {
+            closePermissionsModal.addEventListener('click', function() {
+                closeModal(permissionsModal);
+            });
+        }
+
+        if (closePermissionsModalBtn) {
+            closePermissionsModalBtn.addEventListener('click', function() {
+                closeModal(permissionsModal);
+            });
+        }
+
+        if (updatePermissionsBtn) {
+            updatePermissionsBtn.addEventListener('click', function() {
+                updatePermissions();
+            });
+        }
+
+        // Delegated event listeners for dynamic content
+        document.addEventListener('click', function(e) {
+            // Edit User Button
+            const editBtn = e.target.closest('.edit-user-btn');
+            if (editBtn) {
+                e.preventDefault();
+                const userId = editBtn.dataset.userId;
+                const userName = editBtn.dataset.userName;
+                const userEmail = editBtn.dataset.userEmail;
+                const userRole = editBtn.dataset.userRole;
+                const userActive = editBtn.dataset.userActive === '1';
+                const userBranchId = editBtn.dataset.userBranchId || '';
+
+                document.getElementById('edit_user_id').value = userId;
+                document.getElementById('edit_name').value = userName;
+                document.getElementById('edit_email').value = userEmail;
+                document.getElementById('edit_role').value = userRole;
+                document.getElementById('edit_is_active').checked = userActive;
+                document.getElementById('edit_user_name_preview').textContent = userName;
+                document.getElementById('edit_user_email_preview').textContent = userEmail;
+                document.getElementById('edit_branch_id').value = userBranchId;
+
+                const avatarContainer = document.getElementById('edit_user_avatar');
+                const userAvatar = editBtn.closest('tr').querySelector('img')?.src || '';
+                if (userAvatar) {
+                    avatarContainer.innerHTML = `<img src="${userAvatar}" alt="${userName}" class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm">`;
+                } else {
+                    const initial = userName.charAt(0).toUpperCase();
+                    avatarContainer.innerHTML = `<span class="text-lg font-semibold text-blue-700">${initial}</span>`;
+                }
+
+                openModal(editUserModal);
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('User deleted successfully', 'success');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                throw new Error(data.message || 'Failed to delete user');
+
+            // Permissions Button
+            const permBtn = e.target.closest('.permissions-btn');
+            if (permBtn) {
+                e.preventDefault();
+                const userId = permBtn.dataset.userId;
+                const userName = permBtn.dataset.userName;
+                const userRole = permBtn.dataset.userRole;
+                const userEmail = permBtn.closest('tr').querySelector('td:first-child .text-gray-500')?.textContent || '';
+
+                document.getElementById('perm_user_id').value = userId;
+                document.getElementById('perm_user_name').textContent = userName;
+                document.getElementById('perm_user_email').textContent = userEmail;
+                document.getElementById('perm_user_role').textContent = userRole;
+
+                const avatarContainer = document.getElementById('perm_user_avatar');
+                const userAvatar = permBtn.closest('tr').querySelector('img')?.src || '';
+                if (userAvatar) {
+                    avatarContainer.innerHTML = `<img src="${userAvatar}" alt="${userName}" class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm">`;
+                } else {
+                    const initial = userName.charAt(0).toUpperCase();
+                    avatarContainer.innerHTML = `<span class="text-lg font-semibold text-purple-700">${initial}</span>`;
+                }
+
+                // Load user permissions
+                loadUserPermissions(userId);
+                openModal(permissionsModal);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification(error.message || 'An error occurred while deleting the user', 'error');
+
+            // Delete User Button
+            const deleteBtn = e.target.closest('.delete-user-btn');
+            if (deleteBtn) {
+                e.preventDefault();
+                const userId = deleteBtn.dataset.userId;
+                const userName = deleteBtn.dataset.userName;
+                deleteUser(userId, userName);
+            }
         });
-    }
 
-    function loadUserPermissions(userId) {
-        fetch(`/admin/users/${userId}/permissions`)
+        // Permission checkboxes count update
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('permission-checkbox')) {
+                updatePermissionsCount();
+            }
+        });
+
+        // Search functionality
+        const userSearch = document.getElementById('userSearch');
+        if (userSearch) {
+            userSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#usersTableBody tr');
+
+                rows.forEach(row => {
+                    const userName = row.querySelector('td:first-child .text-gray-900').textContent.toLowerCase();
+                    const userEmail = row.querySelector('td:first-child .text-gray-500').textContent.toLowerCase();
+                    const userRole = row.querySelector('td:nth-child(2) span').textContent.toLowerCase();
+
+                    if (userName.includes(searchTerm) || userEmail.includes(searchTerm) || userRole.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // API Functions
+        function createUser() {
+            const formData = new FormData(document.getElementById('addUserForm'));
+
+            // Show loading state
+            const originalText = createUserBtn.innerHTML;
+            createUserBtn.innerHTML = `
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
+                <span>Creating...</span>
+            `;
+            createUserBtn.disabled = true;
+
+            fetch('{{ route("admin.users.store") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
             .then(response => response.json())
             .then(data => {
-                // Clear all checkboxes first
-                document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-
-                // Check the user's permissions
-                if (data.permissions) {
-                    data.permissions.forEach(permission => {
-                        const checkbox = document.querySelector(`.permission-checkbox[value="${permission}"]`);
-                        if (checkbox) {
-                            checkbox.checked = true;
-                        }
-                    });
+                if (data.success) {
+                    showNotification('User created successfully', 'success');
+                    closeModal(addUserModal);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    throw new Error(data.message || 'Failed to create user');
                 }
-
-                updatePermissionsCount();
             })
             .catch(error => {
-                console.error('Error loading permissions:', error);
-                showNotification('Failed to load permissions', 'error');
+                console.error('Error:', error);
+                showNotification(error.message || 'An error occurred while creating the user', 'error');
+            })
+            .finally(() => {
+                createUserBtn.innerHTML = originalText;
+                createUserBtn.disabled = false;
             });
-    }
-
-    function updatePermissions() {
-        const userId = document.getElementById('perm_user_id').value;
-        const formData = new FormData(document.getElementById('permissionsForm'));
-
-        // Show loading state
-        const originalText = updatePermissionsBtn.innerHTML;
-        updatePermissionsBtn.innerHTML = `
-            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
-            <span>Updating...</span>
-        `;
-        updatePermissionsBtn.disabled = true;
-
-        fetch(`/admin/users/${userId}/permissions`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Permissions updated successfully', 'success');
-                closeModal(permissionsModal);
-            } else {
-                throw new Error(data.message || 'Failed to update permissions');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification(error.message || 'An error occurred while updating permissions', 'error');
-        })
-        .finally(() => {
-            updatePermissionsBtn.innerHTML = originalText;
-            updatePermissionsBtn.disabled = false;
-        });
-    }
-
-    function updatePermissionsCount() {
-        const count = document.querySelectorAll('.permission-checkbox:checked').length;
-        const countElement = document.getElementById('selectedPermissionsCount');
-        if (countElement) {
-            countElement.textContent = count;
         }
-    }
 
-    // Notification function
-    function showNotification(message, type = 'info') {
-        // Remove existing notifications
-        const existingNotifications = document.querySelectorAll('.custom-notification');
-        existingNotifications.forEach(notification => notification.remove());
+        function updateUser() {
+            const userId = document.getElementById('edit_user_id').value;
+            const formData = new FormData(document.getElementById('editUserForm'));
 
-        const notification = document.createElement('div');
-        notification.className = `custom-notification fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg text-white transform transition-all duration-300 ${
-            type === 'success' ? 'bg-green-500' :
-            type === 'error' ? 'bg-red-500' :
-            type === 'warning' ? 'bg-yellow-500' :
-            'bg-blue-500'
-        } animate-fade-in-up`;
-        notification.innerHTML = `
-            <div class="flex items-center space-x-3">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${
-                        type === 'success' ? 'M5 13l4 4L19 7' :
-                        type === 'error' ? 'M6 18L18 6M6 6l12 12' :
-                        type === 'warning' ? 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z' :
-                        'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-                    }"></path>
-                </svg>
-                <span class="font-medium">${message}</span>
-            </div>
-        `;
+            // Show loading state
+            const originalText = updateUserBtn.innerHTML;
+            updateUserBtn.innerHTML = `
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
+                <span>Updating...</span>
+            `;
+            updateUserBtn.disabled = true;
 
-        document.body.appendChild(notification);
+            fetch(`/admin/users/${userId}`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('User updated successfully', 'success');
+                    closeModal(editUserModal);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    throw new Error(data.message || 'Failed to update user');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification(error.message || 'An error occurred while updating the user', 'error');
+            })
+            .finally(() => {
+                updateUserBtn.innerHTML = originalText;
+                updateUserBtn.disabled = false;
+            });
+        }
 
-        setTimeout(() => {
-            notification.classList.add('opacity-0', 'transform', 'scale-95');
-            setTimeout(() => notification.remove(), 300);
-        }, 4000);
-    }
-});
+        function deleteUser(userId, userName) {
+            if (!confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            showNotification(`Deleting user "${userName}"...`, 'info');
+
+            fetch(`/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('User deleted successfully', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    throw new Error(data.message || 'Failed to delete user');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification(error.message || 'An error occurred while deleting the user', 'error');
+            });
+        }
+
+        function loadUserPermissions(userId) {
+            fetch(`/admin/users/${userId}/permissions`)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear all checkboxes first
+                    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+
+                    // Check the user's permissions
+                    if (data.permissions) {
+                        data.permissions.forEach(permission => {
+                            const checkbox = document.querySelector(`.permission-checkbox[value="${permission}"]`);
+                            if (checkbox) {
+                                checkbox.checked = true;
+                            }
+                        });
+                    }
+
+                    updatePermissionsCount();
+                })
+                .catch(error => {
+                    console.error('Error loading permissions:', error);
+                    showNotification('Failed to load permissions', 'error');
+                });
+        }
+
+        function updatePermissions() {
+            const userId = document.getElementById('perm_user_id').value;
+            const formData = new FormData(document.getElementById('permissionsForm'));
+
+            // Show loading state
+            const originalText = updatePermissionsBtn.innerHTML;
+            updatePermissionsBtn.innerHTML = `
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
+                <span>Updating...</span>
+            `;
+            updatePermissionsBtn.disabled = true;
+
+            fetch(`/admin/users/${userId}/permissions`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Permissions updated successfully', 'success');
+                    closeModal(permissionsModal);
+                } else {
+                    throw new Error(data.message || 'Failed to update permissions');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification(error.message || 'An error occurred while updating permissions', 'error');
+            })
+            .finally(() => {
+                updatePermissionsBtn.innerHTML = originalText;
+                updatePermissionsBtn.disabled = false;
+            });
+        }
+
+        function updatePermissionsCount() {
+            const count = document.querySelectorAll('.permission-checkbox:checked').length;
+            const countElement = document.getElementById('selectedPermissionsCount');
+            if (countElement) {
+                countElement.textContent = count;
+            }
+        }
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.custom-notification');
+            existingNotifications.forEach(notification => notification.remove());
+
+            const notification = document.createElement('div');
+            notification.className = `custom-notification fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg text-white transform transition-all duration-300 ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'warning' ? 'bg-yellow-500' :
+                'bg-blue-500'
+            } animate-fade-in-up`;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${
+                            type === 'success' ? 'M5 13l4 4L19 7' :
+                            type === 'error' ? 'M6 18L18 6M6 6l12 12' :
+                            type === 'warning' ? 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z' :
+                            'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                        }"></path>
+                    </svg>
+                    <span class="font-medium">${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('opacity-0', 'transform', 'scale-95');
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+    });
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

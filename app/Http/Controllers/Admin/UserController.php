@@ -21,6 +21,16 @@ class UserController extends Controller
 
 public function store(Request $request)
 {
+    $user = Auth::user();
+
+    // Only admin can create users
+    if (!$user->isAdmin()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Only administrators can create users.'
+        ], 403);
+    }
+
     $request->validate([
         'name' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email',
@@ -30,9 +40,26 @@ public function store(Request $request)
         'is_active' => 'required|boolean'
     ]);
 
-    try {
-        DB::transaction(function () use ($request) {
+    // Validate branch assignment based on role
+    if ($request->role === 'admin') {
+        // Admin can have null branch or any branch
+        $branchId = $request->branch_id;
+    } elseif (in_array($request->role, ['branch_manager', 'instructor', 'staff', 'receptionist'])) {
+        // Branch-specific roles require a branch
+        if (!$request->branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Branch is required for this role.'
+            ], 422);
+        }
+        $branchId = $request->branch_id;
+    } else {
+        // Other roles (like student) might have different logic
+        $branchId = $request->branch_id;
+    }
 
+    try {
+        DB::transaction(function () use ($request, $branchId) {
             // Create or get the role
             $role = Role::firstOrCreate(['name' => $request->role]);
 
@@ -40,9 +67,9 @@ public function store(Request $request)
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'email_verified_at' => now(), // mark email as verified
+                'email_verified_at' => now(),
                 'password' => Hash::make($request->password),
-                'branch_id' => $request->branch_id,
+                'branch_id' => $branchId,
                 'role' => $role->name,
                 'is_active' => $request->boolean('is_active'),
             ]);
@@ -65,17 +92,43 @@ public function store(Request $request)
 
 public function update(Request $request, User $user)
 {
+    $currentUser = Auth::user();
+
+    // Only admin can update users
+    if (!$currentUser->isAdmin()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Only administrators can update users.'
+        ], 403);
+    }
+
     $request->validate([
         'name' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email,' . $user->id,
         'role' => 'required|string|max:50',
-        'is_active' => 'required|boolean',
-        'branch_id' => ['nullable', 'exists:branches,id']
+        'branch_id' => ['nullable', 'exists:branches,id'],
+        'is_active' => 'required|boolean'
     ]);
 
-    try {
-        DB::transaction(function () use ($request, $user) {
+    // Validate branch assignment based on role
+    if ($request->role === 'admin') {
+        // Admin can have null branch or any branch
+        $branchId = $request->branch_id;
+    } elseif (in_array($request->role, ['branch_manager', 'instructor', 'staff', 'receptionist'])) {
+        // Branch-specific roles require a branch
+        if (!$request->branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Branch is required for this role.'
+            ], 422);
+        }
+        $branchId = $request->branch_id;
+    } else {
+        $branchId = $request->branch_id;
+    }
 
+    try {
+        DB::transaction(function () use ($request, $user, $branchId) {
             // Create or get the role
             $role = Role::firstOrCreate(['name' => $request->role]);
 
@@ -84,9 +137,9 @@ public function update(Request $request, User $user)
                 'name' => $request->name,
                 'email' => $request->email,
                 'role' => $role->name,
-                'branch_id' => $request->branch_id,
+                'branch_id' => $branchId,
                 'is_active' => $request->boolean('is_active'),
-                'email_verified_at' => $user->email_verified_at ?? now(), // verify if not verified
+                'email_verified_at' => $user->email_verified_at ?? now(),
             ];
 
             if ($request->filled('password')) {
@@ -110,7 +163,6 @@ public function update(Request $request, User $user)
         ], 500);
     }
 }
-
     /**
      * Get User Permissions
      */

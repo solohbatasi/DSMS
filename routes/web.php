@@ -40,8 +40,7 @@ use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\LessonApplicationController;
 use App\Http\Controllers\AdminTicketController;
-
-
+use App\Http\Controllers\BranchSwitchController;
 
 use App\Models\Customer;
 
@@ -343,7 +342,15 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
 
 });
-
+// Branch switching routes (admin only)
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::prefix('branch')->name('branch.')->group(function () {
+        Route::get('/select', [BranchSwitchController::class, 'select'])->name('select');
+        Route::post('/switch', [BranchSwitchController::class, 'switch'])->name('switch');
+        Route::get('/clear', [BranchSwitchController::class, 'clear'])->name('clear');
+        Route::post('/update-selected', [BranchSwitchController::class, 'updateSelected'])->name('update-selected');
+    });
+});
 
 /*
 |--------------------------------------------------------------------------

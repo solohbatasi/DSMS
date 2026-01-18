@@ -31,238 +31,353 @@ use Illuminate\Support\Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
-    {
-        $user = Auth::user();
+ public function index()
+{
+    $user = Auth::user();
 
-         // Get user's accessible branches
-        $accessibleBranches = $user->accessibleBranches();
+    // Get user's accessible branches
+    $accessibleBranches = $user->accessibleBranches();
 
-        // Base data available for all dashboards
-        $data = [
-            'user' => $user,
-            'accessible_branches' => $accessibleBranches,
-            'current_branch' => $user->branch,
-            'recent_events' => Event::with('category')
-                ->where('is_active', true)
-                ->where('start_date', '>=', now())
-                ->orderBy('start_date')
-                ->take(5)
-                ->paginate(10),
+    // Base data available for all dashboards
+    $data = [
+        'user' => $user,
+        'accessible_branches' => $accessibleBranches,
+        'current_branch' => $user->branch,
+        'recent_events' => Event::with('category')
+            ->where('is_active', true)
+            ->where('start_date', '>=', now())
+            ->orderBy('start_date')
+            ->take(5)
+            ->paginate(10),
 
-            'active_voting' => VotingContest::with('category')
-                ->where('is_active', true)
-                ->where(function ($query) {
-                    $query->where('end_date', '>=', now())
-                        ->orWhereNull('end_date');
-                })
-                ->orderBy('end_date', 'asc')
-                ->take(5)
-                ->get(),
-        ];
+        'active_voting' => VotingContest::with('category')
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->where('end_date', '>=', now())
+                    ->orWhereNull('end_date');
+            })
+            ->orderBy('end_date', 'asc')
+            ->take(5)
+            ->get(),
+    ];
 
-        // Safeguard for users without assigned roles
-        if (!$user || !$user->role) {
-            abort(403, 'Unauthorized: Role not assigned.');
-        }
-
-        // Role-specific logic
-        switch ($user->role) {
-            case 'admin':
-                $data = array_merge($data, $this->getAdminData());
-                return view('dashboard.admin', $data);
-
-            case 'student':
-                $data = array_merge($data, $this->getStudentData($user));
-                return view('dashboard.student', $data);
-
-            case 'instructor':
-                $data = array_merge($data, $this->getInstructorData($user));
-                return view('dashboard.instructor', $data);
-
-            case 'receptionist':
-                $data = array_merge($data, $this->getReceptionistData($user));
-                return view('dashboard.receptionist', $data);
-
-            default: // attendee or fallback
-                $data = array_merge($data, $this->getGuestData($user));
-                return view('dashboard.guest', $data);
-        }
+    // Safeguard for users without assigned roles
+    if (!$user || !$user->role) {
+        abort(403, 'Unauthorized: Role not assigned.');
     }
 
-    private function getAdminData()
-    {
-        // Financial Data
-        $total_revenue = Payment::where('payment_status', 'completed')->sum('amount');
+    // Role-specific logic
+    switch ($user->role) {
+        case 'admin':
+            $data = array_merge($data, $this->getAdminData());
+            return view('dashboard.admin', $data);
 
-        $branch_breakdown = Branch::withCount([
-            'students',
-            'activeEfLists as active_ef_lists_count',
-            'payments as total_revenue' => function($query) {
-                $query->where('payment_status', 'completed')->select(DB::raw('SUM(amount)'));
-            },
-            'expenses as total_expenses' => function($query) {
-                $query->where('status', 'approved')->select(DB::raw('SUM(amount)'));
-            }
-        ])
-        ->active()
+        case 'student':
+            $data = array_merge($data, $this->getStudentData($user));
+            return view('dashboard.student', $data);
+
+        case 'instructor':
+            $data = array_merge($data, $this->getInstructorData($user));
+            return view('dashboard.instructor', $data);
+
+        case 'receptionist':
+            $data = array_merge($data, $this->getReceptionistData($user));
+            return view('dashboard.receptionist', $data);
+
+        default: // attendee or fallback
+            $data = array_merge($data, $this->getGuestData($user));
+            return view('dashboard.guest', $data);
+    }
+}
+
+ private function getAdminData()
+{
+    $user = Auth::user();
+    $selectedBranchId = session('admin_selected_branch');
+
+    // Create base queries that can be modified based on branch selection
+    $paymentQuery = Payment::query();
+    $expenseQuery = \App\Models\Expense::query();
+    $studentQuery = \App\Models\Student::query();
+    $studentEfQuery = \App\Models\Student_ef_list::query();
+    $courseQuery = \App\Models\Course::query();
+    $userQuery = \App\Models\User::query();
+
+    // Apply branch filtering if a specific branch is selected
+    if ($selectedBranchId) {
+        // Payment filtering
+        $paymentQuery->whereHas('efList', function($query) use ($selectedBranchId) {
+            $query->where('branch_id', $selectedBranchId);
+        });
+
+        // Expense filtering
+        $expenseQuery->where('branch_id', $selectedBranchId);
+
+        // Student filtering
+        $studentQuery->where('branch_id', $selectedBranchId);
+
+        // Student EF list filtering
+        $studentEfQuery->where('branch_id', $selectedBranchId);
+
+        // Course filtering
+        $courseQuery->where(function($query) use ($selectedBranchId) {
+            $query->where('branch_id', $selectedBranchId)
+                  ->orWhereNull('branch_id'); // Include courses that are not branch-specific
+        });
+
+        // User filtering (non-admin users)
+        $userQuery->where(function($query) use ($selectedBranchId) {
+            $query->where('branch_id', $selectedBranchId)
+                  ->orWhere('role', 'admin'); // Always include admin users
+        });
+    }
+
+    // Get current viewing branch info
+    $viewingBranch = $selectedBranchId ? Branch::find($selectedBranchId) : null;
+    $isViewingAllBranches = !$selectedBranchId;
+
+    // Financial Data
+    $total_revenue = (clone $paymentQuery)->where('payment_status', 'completed')->sum('amount');
+    $total_expenses = (clone $expenseQuery)->where('status', 'approved')->sum('amount');
+    $net_profit = $total_revenue - $total_expenses;
+    $profit_margin = $total_revenue > 0 ? ($net_profit / $total_revenue) * 100 : 0;
+
+    // Branch breakdown (always show all branches for admin)
+    $branch_breakdown = Branch::withCount([
+        'students',
+        'activeEfLists as active_ef_lists_count',
+        'payments as total_revenue' => function($query) {
+            $query->where('payment_status', 'completed')->select(DB::raw('SUM(amount)'));
+        },
+        'expenses as total_expenses' => function($query) {
+            $query->where('status', 'approved')->select(DB::raw('SUM(amount)'));
+        }
+    ])
+    ->active()
+    ->get();
+
+    // Student Data
+    $total_students = (clone $studentQuery)->count();
+    $students_with_balance = (clone $studentEfQuery)->where('balance', '>', 0)->count();
+    $outstanding_balance = (clone $studentEfQuery)->sum('balance');
+
+    // Course Data
+    $active_courses = (clone $courseQuery)->where('status', 1)->count();
+
+    // Payment Data
+    $pending_payments = (clone $paymentQuery)->where('payment_status', 'pending')->count();
+    $recent_payments = (clone $paymentQuery)
+        ->with(['EfList.student', 'EfList'])
+        ->where('payment_status', 'completed')
+        ->latest()
+        ->take(5)
         ->get();
 
-        $total_expenses = \App\Models\Expense::where('status', 'approved')->sum('amount');
-        $net_profit = $total_revenue - $total_expenses;
-        $profit_margin = $total_revenue > 0 ? ($net_profit / $total_revenue) * 100 : 0;
+    // EF Lists Data
+    $active_ef_lists = (clone $studentEfQuery)->where('status', 'active')->count();
+    $pending_verifications = (clone $studentEfQuery)->where('status', 'pending')->count();
 
-        // Student Data
-        $total_students = \App\Models\Student::count();
-        $students_with_balance = \App\Models\Student_ef_list::where('balance', '>', 0)->count();
-        $outstanding_balance = \App\Models\Student_ef_list::sum('balance');
-
-        // Course Data
-        $active_courses = \App\Models\Course::where('status', 1)->count();
-
-        // Payment Data
-        $pending_payments = Payment::where('payment_status', 'pending')->count();
-        $recent_payments = Payment::with(['EfList.student', 'EfList'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // EF Lists Data
-        $active_ef_lists = \App\Models\Student_ef_list::where('status', 'active')->count();
-        $pending_verifications = \App\Models\Student_ef_list::where('status', 'pending')->count();
-
-        // User Data (excluding students and developers)
-        $system_users = \App\Models\User::whereNotIn('role', ['student', 'developer'])
-
+    // User Data (excluding students and developers)
+    $system_users = (clone $userQuery)
+        ->whereNotIn('role', ['student', 'developer'])
+        ->with('branch')
         ->latest()
         ->paginate(10);
 
+    $staff_users = (clone $userQuery)
+        ->whereNotIn('role', ['student', 'developer', 'instructor'])
+        ->where('is_active', true)
+        ->count();
 
-        $staff_users = \App\Models\User::whereNotIn('role', ['student', 'developer', 'instructor'])
-            ->where('is_active', true)
-            ->count();
+    $instructors = (clone $userQuery)
+        ->where('role', 'instructor')
+        ->where('is_active', true)
+        ->count();
 
-        $instructors = \App\Models\User::where('role', 'instructor')
-            ->where('is_active', true)
-            ->count();
+    // Expense Data
+    $expense_categories = \App\Models\ExpenseCategory::count();
 
-        // Expense Data
-        $expense_categories = \App\Models\ExpenseCategory::count();
+    // Additional Metrics
+    $average_payment = (clone $paymentQuery)
+        ->where('payment_status', 'completed')
+        ->avg('amount') ?? 0;
 
-        // Additional Metrics
-        $average_payment = Payment::where('payment_status', 'completed')->avg('amount') ?? 0;
-        $collection_rate = \App\Models\Student_ef_list::sum('total_fee') > 0 ?
-            ((\App\Models\Student_ef_list::sum('paid_amount') / \App\Models\Student_ef_list::sum('total_fee')) * 100) : 0;
+    // Collection rate calculation with branch filtering
+    $total_fee_sum = $selectedBranchId
+        ? (clone $studentEfQuery)->sum('total_fee')
+        : \App\Models\Student_ef_list::sum('total_fee');
 
-        // Chart Data - Monthly Revenue
-        $monthly_revenue = Payment::select(
-                DB::raw('MONTH(payment_date) as month'),
-                DB::raw('SUM(amount) as total')
-            )
-            ->where('payment_status', 'completed')
-            ->whereYear('payment_date', date('Y'))
-            ->groupBy('month')
-            ->pluck('total', 'month')
-            ->toArray();
+    $paid_amount_sum = $selectedBranchId
+        ? (clone $studentEfQuery)->sum('paid_amount')
+        : \App\Models\Student_ef_list::sum('paid_amount');
 
-        $monthly_revenue = array_replace(array_fill(1, 12, 0), $monthly_revenue);
+    $collection_rate = $total_fee_sum > 0
+        ? ($paid_amount_sum / $total_fee_sum) * 100
+        : 0;
 
-        // Chart Data - Monthly Expenses
-        $monthly_expenses = \App\Models\Expense::select(
-                DB::raw('MONTH(expense_date) as month'),
-                DB::raw('SUM(amount) as total')
-            )
-            ->where('status', 'approved')
-            ->whereYear('expense_date', date('Y'))
-            ->groupBy('month')
-            ->pluck('total', 'month')
-            ->toArray();
+    // Chart Data - Monthly Revenue with branch filtering
+    $monthlyRevenueQuery = Payment::select(
+            DB::raw('MONTH(payment_date) as month'),
+            DB::raw('SUM(amount) as total')
+        )
+        ->where('payment_status', 'completed')
+        ->whereYear('payment_date', date('Y'));
 
-        $monthly_expenses = array_replace(array_fill(1, 12, 0), $monthly_expenses);
-
-        // Payment Status Distribution
-        $payment_status_distribution = Payment::select('payment_status', DB::raw('COUNT(*) as count'))
-            ->groupBy('payment_status')
-            ->pluck('count', 'payment_status')
-            ->toArray();
-
-        // Expense Categories Distribution
-        $expense_categories_data = \App\Models\Expense::join('expense_categories', 'expenses.category_id', '=', 'expense_categories.id')
-            ->select('expense_categories.name', DB::raw('SUM(expenses.amount) as total'))
-            ->where('expenses.status', 'approved')
-            ->groupBy('expense_categories.name')
-            ->pluck('total', 'expense_categories.name')
-            ->toArray();
-
-        $expense_categories_labels = array_keys($expense_categories_data);
-        $expense_categories_data = array_values($expense_categories_data);
-
-        // Course Enrollment
-        $course_enrollment = \App\Models\Student_ef_list::join('courses', 'student_ef_lists.course_id', '=', 'courses.id')
-            ->select('courses.course', DB::raw('COUNT(*) as count'))
-            ->groupBy('courses.course')
-            ->pluck('count', 'courses.course')
-            ->toArray();
-
-        $course_enrollment_labels = array_keys($course_enrollment);
-        $course_enrollment_data = array_values($course_enrollment);
-
-        // Revenue Growth (placeholder - you might want to calculate this properly)
-        $revenue_growth = 12.5; // This should be calculated based on previous month comparison
-
-        //spartie permissions
-         $permissions_list = \Spatie\Permission\Models\Permission::all();
-         $roles = \Spatie\Permission\Models\Role::all();
-        return [
-            // Financial Metrics
-            'total_revenue' => $total_revenue,
-            'total_expenses' => $total_expenses,
-            'net_profit' => $net_profit,
-            'profit_margin' => $profit_margin,
-            'revenue_growth' => $revenue_growth,
-
-            // Student Metrics
-            'total_students' => $total_students,
-            'students_with_balance' => $students_with_balance,
-            'outstanding_balance' => $outstanding_balance,
-
-            // Course Metrics
-            'active_courses' => $active_courses,
-
-            // Payment Metrics
-            'pending_payments' => $pending_payments,
-            'recent_payments' => $recent_payments,
-            'average_payment' => $average_payment,
-            'collection_rate' => $collection_rate,
-
-            // EF List Metrics
-            'active_ef_lists' => $active_ef_lists,
-            'pending_verifications' => $pending_verifications,
-
-            // User Metrics
-            'system_users' => $system_users,
-            'staff_users' => $staff_users,
-            'instructors' => $instructors,
-
-            // Expense Metrics
-            'expense_categories' => $expense_categories,
-
-            // Chart Data
-            'monthly_revenue' => array_values($monthly_revenue),
-            'monthly_expenses' => array_values($monthly_expenses),
-            'payment_status_distribution' => $payment_status_distribution,
-            'expense_categories_labels' => $expense_categories_labels,
-            'expense_categories_data' => $expense_categories_data,
-            'course_enrollment_labels' => $course_enrollment_labels,
-            'course_enrollment_data' => $course_enrollment_data,
-            //permissions list
-            'permissions_list' => $permissions_list,
-            'roles'=>$roles,
-
-            'branch_breakdown' => $branch_breakdown,
-            'branches' => Branch::active()->get(),
-        ];
+    if ($selectedBranchId) {
+        $monthlyRevenueQuery->whereHas('efList', function($query) use ($selectedBranchId) {
+            $query->where('branch_id', $selectedBranchId);
+        });
     }
+
+    $monthly_revenue = $monthlyRevenueQuery
+        ->groupBy('month')
+        ->pluck('total', 'month')
+        ->toArray();
+
+    $monthly_revenue = array_replace(array_fill(1, 12, 0), $monthly_revenue);
+
+    // Chart Data - Monthly Expenses with branch filtering
+    $monthlyExpenseQuery = \App\Models\Expense::select(
+            DB::raw('MONTH(expense_date) as month'),
+            DB::raw('SUM(amount) as total')
+        )
+        ->where('status', 'approved')
+        ->whereYear('expense_date', date('Y'));
+
+    if ($selectedBranchId) {
+        $monthlyExpenseQuery->where('branch_id', $selectedBranchId);
+    }
+
+    $monthly_expenses = $monthlyExpenseQuery
+        ->groupBy('month')
+        ->pluck('total', 'month')
+        ->toArray();
+
+    $monthly_expenses = array_replace(array_fill(1, 12, 0), $monthly_expenses);
+
+    // Payment Status Distribution with branch filtering
+    $paymentStatusQuery = Payment::select('payment_status', DB::raw('COUNT(*) as count'));
+
+    if ($selectedBranchId) {
+        $paymentStatusQuery->whereHas('efList', function($query) use ($selectedBranchId) {
+            $query->where('branch_id', $selectedBranchId);
+        });
+    }
+
+    $payment_status_distribution = $paymentStatusQuery
+        ->groupBy('payment_status')
+        ->pluck('count', 'payment_status')
+        ->toArray();
+
+    // Expense Categories Distribution with branch filtering
+    $expenseCategoriesQuery = \App\Models\Expense::join('expense_categories', 'expenses.category_id', '=', 'expense_categories.id')
+        ->select('expense_categories.name', DB::raw('SUM(expenses.amount) as total'))
+        ->where('expenses.status', 'approved');
+
+    if ($selectedBranchId) {
+        $expenseCategoriesQuery->where('expenses.branch_id', $selectedBranchId);
+    }
+
+    $expense_categories_data = $expenseCategoriesQuery
+        ->groupBy('expense_categories.name')
+        ->pluck('total', 'expense_categories.name')
+        ->toArray();
+
+    $expense_categories_labels = array_keys($expense_categories_data);
+    $expense_categories_data = array_values($expense_categories_data);
+
+    // Course Enrollment with branch filtering
+    $courseEnrollmentQuery = \App\Models\Student_ef_list::join('courses', 'student_ef_lists.course_id', '=', 'courses.id')
+        ->select('courses.course', DB::raw('COUNT(*) as count'));
+
+    if ($selectedBranchId) {
+        $courseEnrollmentQuery->where('student_ef_lists.branch_id', $selectedBranchId);
+    }
+
+    $course_enrollment = $courseEnrollmentQuery
+        ->groupBy('courses.course')
+        ->pluck('count', 'courses.course')
+        ->toArray();
+
+    $course_enrollment_labels = array_keys($course_enrollment);
+    $course_enrollment_data = array_values($course_enrollment);
+
+    // Calculate revenue growth based on previous month
+    $currentMonthRevenue = array_sum($monthly_revenue);
+    $previousMonth = date('n') - 1;
+    $previousMonthRevenue = $monthly_revenue[$previousMonth] ?? 0;
+
+    $revenue_growth = $previousMonthRevenue > 0
+        ? (($currentMonthRevenue - $previousMonthRevenue) / $previousMonthRevenue) * 100
+        : 0;
+
+    // Spatie permissions
+    $permissions_list = \Spatie\Permission\Models\Permission::all();
+    $roles = \Spatie\Permission\Models\Role::all();
+
+    // Get all active branches for dropdown
+    $all_branches = Branch::active()->get();
+
+    return [
+        // Financial Metrics
+        'total_revenue' => $total_revenue,
+        'total_expenses' => $total_expenses,
+        'net_profit' => $net_profit,
+        'profit_margin' => $profit_margin,
+        'revenue_growth' => $revenue_growth,
+
+        // Student Metrics
+        'total_students' => $total_students,
+        'students_with_balance' => $students_with_balance,
+        'outstanding_balance' => $outstanding_balance,
+
+        // Course Metrics
+        'active_courses' => $active_courses,
+
+        // Payment Metrics
+        'pending_payments' => $pending_payments,
+        'recent_payments' => $recent_payments,
+        'average_payment' => $average_payment,
+        'collection_rate' => $collection_rate,
+
+        // EF List Metrics
+        'active_ef_lists' => $active_ef_lists,
+        'pending_verifications' => $pending_verifications,
+
+        // User Metrics
+        'system_users' => $system_users,
+        'staff_users' => $staff_users,
+        'instructors' => $instructors,
+
+        // Expense Metrics
+        'expense_categories' => $expense_categories,
+
+        // Chart Data
+        'monthly_revenue' => array_values($monthly_revenue),
+        'monthly_expenses' => array_values($monthly_expenses),
+        'payment_status_distribution' => $payment_status_distribution,
+        'expense_categories_labels' => $expense_categories_labels,
+        'expense_categories_data' => $expense_categories_data,
+        'course_enrollment_labels' => $course_enrollment_labels,
+        'course_enrollment_data' => $course_enrollment_data,
+
+        // Permissions list
+        'permissions_list' => $permissions_list,
+        'roles' => $roles,
+
+        // Branch Data
+        'branch_breakdown' => $branch_breakdown,
+        'branches' => $all_branches,
+        'selected_branch_id' => $selectedBranchId,
+        'viewing_branch' => $viewingBranch,
+        'is_viewing_all_branches' => $isViewingAllBranches,
+
+        // For display purposes
+        'current_view_title' => $viewingBranch
+            ? "Viewing: {$viewingBranch->name}"
+            : "Viewing All Branches"
+    ];
+}
 
     private function getStudentData($user)
     {

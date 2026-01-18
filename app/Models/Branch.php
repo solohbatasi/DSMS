@@ -65,7 +65,7 @@ class Branch extends Model
      */
     public function studentEfLists()
     {
-        return $this->hasMany(StudentEfList::class);
+        return $this->hasMany(Student_ef_list::class);
     }
 
     /**
