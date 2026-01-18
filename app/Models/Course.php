@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Course extends Model
 {
@@ -28,7 +29,8 @@ class Course extends Model
         'practical_sessions',
         'theoretical_sessions',
         'total_amount',
-         'branch_id',
+        'branch_id',
+        'category_id',
         'status',
     ];
 
@@ -408,5 +410,57 @@ class Course extends Model
             'inactive' => self::inactive()->count(),
             'total_revenue' => self::active()->sum('total_amount'),
         ];
+    }
+    // Relationship with branch
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    // Relationship with category
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(CourseCategory::class);
+    }
+
+    // Scope for computer courses
+    public function scopeComputer($query)
+    {
+        return $query->whereHas('category', function($q) {
+            $q->where('name', 'LIKE', '%computer%');
+        });
+    }
+
+    // Scope for driving courses
+    public function scopeDriving($query)
+    {
+        return $query->whereHas('category', function($q) {
+            $q->where('name', 'LIKE', '%driving%');
+        });
+    }
+
+    // Scope by level
+    public function scopeBasic($query)
+    {
+        return $query->where('level', 'basic');
+    }
+
+    public function scopeAdvanced($query)
+    {
+        return $query->where('level', 'advanced');
+    }
+
+    public function scopeIntermediate($query)
+    {
+        return $query->where('level', 'intermediate');
+    }
+
+    // Get full course name with category
+    public function getFullCourseNameAttribute(): string
+    {
+        if ($this->category) {
+            return $this->category->name . ' - ' . $this->course;
+        }
+        return $this->course;
     }
 }

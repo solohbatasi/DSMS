@@ -219,10 +219,12 @@
             <!-- Courses Table -->
             <div class="overflow-x-auto">
                 <table class="w-full">
-                   <!-- In your courses table, update the headers and add session columns -->
+                   <!-- In your courses table, update the headers and columns -->
                     <thead>
                         <tr class="bg-gray-50">
+                            <th class="px-4 py-3 text-left">Category</th>
                             <th class="px-4 py-3 text-left">Course Name</th>
+                            <th class="px-4 py-3 text-left">Level</th>
                             <th class="px-4 py-3 text-left">Duration</th>
                             <th class="px-4 py-3 text-left">Sessions</th>
                             <th class="px-4 py-3 text-left">Breakdown</th>
@@ -241,9 +243,14 @@
                         @endphp
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ $course->category->name ?? 'N/A' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
                                 <div class="flex items-center">
-                                    @if($course->image_exists)
-                                    <img src="{{ $course->image_url }}"
+                                    @if($course->image)
+                                    <img src="{{ Storage::url($course->image) }}"
                                         alt="{{ $course->course }}"
                                         class="w-10 h-10 rounded-lg object-cover mr-3">
                                     @else
@@ -253,6 +260,14 @@
                                     @endif
                                     <span class="font-medium text-gray-800">{{ $course->course }}</span>
                                 </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                    {{ $course->level == 'basic' ? 'bg-green-100 text-green-800' :
+                                    ($course->level == 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800') }}">
+                                    {{ ucfirst($course->level) }}
+                                </span>
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-600">{{ $course->training_duration }}</td>
                             <td class="px-4 py-3">
@@ -326,7 +341,17 @@
 
         <form id="courseForm" enctype="multipart/form-data">
             @csrf
-
+             <!-- Category Selection -->
+            <div class="mb-4">
+                <label class="text-sm font-medium">Category *</label>
+                <select name="category_id" id="category_id"
+                        class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">Select Category</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <!-- Course Basic Info -->
             <div class="grid grid-cols-1 gap-4 mb-4">
                 <div>
@@ -387,7 +412,20 @@
                     <input type="number" name="total_amount" step="0.01" min="0" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" required>
                 </div>
             </div>
-
+            <!-- Branch Selection (Admin only) -->
+            @if(auth()->user()->isAdmin())
+            <div class="mb-4">
+                <label class="text-sm font-medium">Branch *</label>
+                <select name="branch_id" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">Select Branch</option>
+                    @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}" {{ $selectedBranch == $branch->id ? 'selected' : '' }}>
+                            {{ $branch->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
             <!-- Status and Image -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
@@ -424,7 +462,17 @@
         <form id="editCourseForm" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="course_id" id="edit_course_id">
-
+            <!-- Category Selection -->
+            <div class="mb-4">
+                <label class="text-sm font-medium">Category *</label>
+                <select name="category_id" id="category_id"
+                        class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">Select Category</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <!-- Course Basic Info -->
             <div class="grid grid-cols-1 gap-4 mb-4">
                 <div>
@@ -484,7 +532,20 @@
                     <input type="number" name="total_amount" id="edit_total_amount" step="0.01" min="0" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" required>
                 </div>
             </div>
-
+            <!-- Branch Selection (Admin only) -->
+            @if(auth()->user()->isAdmin())
+            <div class="mb-4">
+                <label class="text-sm font-medium">Branch *</label>
+                <select name="branch_id" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">Select Branch</option>
+                    @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}" {{ $selectedBranch == $branch->id ? 'selected' : '' }}>
+                            {{ $branch->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
             <!-- Status and Image -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
@@ -546,6 +607,7 @@ function openEditModal(courseId) {
         .then(res => res.json())
         .then(data => {
             const course = data.course;
+            const categories = data.categories;
 
             document.getElementById('edit_course_id').value = course.id;
             document.getElementById('edit_course').value = course.course;
@@ -555,6 +617,23 @@ function openEditModal(courseId) {
             document.getElementById('edit_theoretical_sessions').value = course.theoretical_sessions || 0;
             document.getElementById('edit_total_amount').value = course.total_amount;
             document.getElementById('edit_status').value = course.status;
+            document.getElementById('edit_level').value = course.level;
+
+            // Set category dropdown
+            const categorySelect = document.getElementById('edit_category_id');
+            categorySelect.innerHTML = '<option value="">Select Category</option>';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                option.selected = category.id == course.category_id;
+                categorySelect.appendChild(option);
+            });
+
+            // Set branch if admin
+            @if(auth()->user()->isAdmin())
+            document.getElementById('edit_branch_id').value = course.branch_id;
+            @endif
 
             // Show current image if exists
             const currentImageDiv = document.getElementById('currentImage');
