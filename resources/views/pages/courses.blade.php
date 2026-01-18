@@ -502,8 +502,9 @@
                     </div>
 
                     <div class="flex space-x-3 mt-auto">
-                        <a href="{{ route('book-lessons') }}?course={{ $course->id }}"
-                           class="enroll-btn">
+                       <!-- Change this line in the course card -->
+                        <a href="{{ route('book-lessons') }}?course={{ $course->id }}&branch={{ $course->branch_id }}"
+                        class="enroll-btn">
                             <i class="fas fa-calendar-check mr-2"></i>
                             Enroll Now
                         </a>

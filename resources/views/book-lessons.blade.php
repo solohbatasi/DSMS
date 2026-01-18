@@ -200,7 +200,7 @@
                     </div>
                     <div class="step">
                         <div class="step-number">2</div>
-                        <div class="step-label">Course Selection</div>
+                        <div class="step-label">Branch & Course</div>
                     </div>
                     <div class="step">
                         <div class="step-number">3</div>
@@ -265,33 +265,59 @@
                         </div>
                     </div>
 
-                    <!-- Course Selection -->
+                    <!-- Branch and Course Selection -->
                     <div class="form-section-step mt-12">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Course Selection</h3>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Branch & Course Selection</h3>
 
-                        <div class="form-group">
-                            <label for="course_id" class="form-label">Select Course *</label>
-                            <select id="course_id" name="course_id" required class="form-input form-select">
-                                <option value="">Choose a course...</option>
-                                @foreach($courses as $course)
-                                    <option value="{{ $course->id }}"
-                                            {{ (old('course_id') == $course->id || $selectedCourse == $course->id) ? 'selected' : '' }}
-                                            data-price="{{ $course->total_amount }}"
-                                            data-duration="{{ $course->training_duration }}"
-                                            data-sessions="{{ $course->practical_sessions + $course->theoretical_sessions }}">
-                                        {{ $course->course }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('course_id')
-                                <span class="text-red-500 text-sm">{{ $message }}</span>
-                            @enderror
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Branch Selection -->
+                            <div class="form-group">
+                                <label for="branch_id" class="form-label">Select Branch *</label>
+                                <select id="branch_id" name="branch_id" required class="form-input form-select">
+                                    <option value="">Choose a branch...</option>
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}"
+                                                {{ (old('branch_id') == $branch->id || $selectedBranch == $branch->id) ? 'selected' : '' }}>
+                                            {{ $branch->name }} - {{ $branch->location }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('branch_id')
+                                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <!-- Course Selection -->
+                            <div class="form-group">
+                                <label for="course_id" class="form-label">Select Course *</label>
+                                <select id="course_id" name="course_id" required class="form-input form-select">
+                                    <option value="">Select branch first...</option>
+                                    @foreach($courses as $course)
+                                        <option value="{{ $course->id }}"
+                                                {{ (old('course_id') == $course->id || $selectedCourse == $course->id) ? 'selected' : '' }}
+                                                data-price="{{ $course->total_amount }}"
+                                                data-duration="{{ $course->training_duration }}"
+                                                data-sessions="{{ $course->practical_sessions + $course->theoretical_sessions }}"
+                                                data-branch-id="{{ $course->branch_id }}"
+                                                data-branch-name="{{ $course->branch ? $course->branch->name : 'N/A' }}">
+                                            {{ $course->course }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('course_id')
+                                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                                @enderror
+                            </div>
                         </div>
 
                         <!-- Course Summary -->
                         <div id="courseSummary" class="course-summary" style="display: none;">
                             <h4 class="font-bold text-lg text-gray-900 mb-3">Course Summary</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <span class="font-semibold">Branch:</span>
+                                    <span id="summaryBranch">-</span>
+                                </div>
                                 <div>
                                     <span class="font-semibold">Duration:</span>
                                     <span id="summaryDuration">-</span>
@@ -392,22 +418,92 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Course selection summary
+    // Get branch and course selects
+    const branchSelect = document.getElementById('branch_id');
     const courseSelect = document.getElementById('course_id');
     const courseSummary = document.getElementById('courseSummary');
+    const summaryBranch = document.getElementById('summaryBranch');
     const summaryDuration = document.getElementById('summaryDuration');
     const summarySessions = document.getElementById('summarySessions');
     const summaryFee = document.getElementById('summaryFee');
 
+    // Store all courses data from HTML data attributes
+    function getAllCoursesData() {
+        const courses = [];
+        const courseOptions = document.querySelectorAll('#course_id option[value]');
+
+        courseOptions.forEach(option => {
+            if (option.value) {
+                courses.push({
+                    id: option.value,
+                    name: option.textContent,
+                    price: option.dataset.price || '0',
+                    duration: option.dataset.duration || '0',
+                    sessions: option.dataset.sessions || '0',
+                    branch_id: option.dataset.branchId || '',
+                    branch_name: option.dataset.branchName || 'N/A'
+                });
+            }
+        });
+
+        return courses;
+    }
+
+    // Function to populate courses based on selected branch
+    function populateCourses(branchId) {
+        const allCourses = getAllCoursesData();
+
+        // Clear current options
+        courseSelect.innerHTML = '<option value="">Select a course...</option>';
+
+        // Filter courses by branch
+        const filteredCourses = allCourses.filter(course => {
+            return branchId === '' || course.branch_id == branchId;
+        });
+
+        // Add filtered courses
+        filteredCourses.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.id;
+            option.textContent = course.name;
+            option.dataset.price = course.price;
+            option.dataset.duration = course.duration;
+            option.dataset.sessions = course.sessions;
+            option.dataset.branchId = course.branch_id;
+            option.dataset.branchName = course.branch_name;
+            courseSelect.appendChild(option);
+        });
+
+        // If there's a pre-selected course from query parameter, select it
+        const selectedCourseId = "{{ $selectedCourse }}";
+        if (selectedCourseId && courseSelect.querySelector(`option[value="${selectedCourseId}"]`)) {
+            courseSelect.value = selectedCourseId;
+            setTimeout(() => {
+                courseSelect.dispatchEvent(new Event('change'));
+            }, 100);
+        }
+    }
+
+    // Branch selection change handler
+    branchSelect.addEventListener('change', function() {
+        populateCourses(this.value);
+        // Clear course summary when branch changes
+        courseSummary.style.display = 'none';
+        courseSelect.value = '';
+    });
+
+    // Course selection change handler
     courseSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
 
-        if (selectedOption.value) {
-            const price = selectedOption.getAttribute('data-price');
-            const duration = selectedOption.getAttribute('data-duration');
-            const sessions = selectedOption.getAttribute('data-sessions');
+        if (selectedOption && selectedOption.value) {
+            const price = selectedOption.dataset.price || '0';
+            const duration = selectedOption.dataset.duration || '0';
+            const sessions = selectedOption.dataset.sessions || '0';
+            const branchName = selectedOption.dataset.branchName || 'N/A';
 
-            summaryDuration.textContent = duration;
+            summaryBranch.textContent = branchName;
+            summaryDuration.textContent = duration + ' days';
             summarySessions.textContent = sessions + ' sessions';
             summaryFee.textContent = 'KES ' + Number(price).toLocaleString();
 
@@ -417,9 +513,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Trigger change on page load if course is pre-selected
-    if (courseSelect.value) {
-        courseSelect.dispatchEvent(new Event('change'));
+    // Initialize with selected branch if any
+    const selectedBranch = "{{ $selectedBranch }}";
+    if (selectedBranch) {
+        branchSelect.value = selectedBranch;
+        setTimeout(() => {
+            branchSelect.dispatchEvent(new Event('change'));
+        }, 100);
     }
 
     // Schedule option selection
@@ -434,30 +534,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Set minimum date for start date (tomorrow)
     const startDateInput = document.getElementById('preferred_start_date');
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    startDateInput.min = tomorrow.toISOString().split('T')[0];
+    if (startDateInput) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        startDateInput.min = tomorrow.toISOString().split('T')[0];
+    }
 
     // Form validation
     const form = document.getElementById('bookingForm');
-    form.addEventListener('submit', function(e) {
-        const requiredFields = form.querySelectorAll('[required]');
-        let valid = true;
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let valid = true;
 
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                valid = false;
-                field.style.borderColor = '#ef4444';
-            } else {
-                field.style.borderColor = '#e2e8f0';
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    valid = false;
+                    field.style.borderColor = '#ef4444';
+                } else {
+                    field.style.borderColor = '#e2e8f0';
+                }
+            });
+
+            // Special validation for branch-course combination
+            const branchId = branchSelect.value;
+            const courseBranchId = courseSelect.options[courseSelect.selectedIndex]?.dataset.branchId;
+
+            if (branchId && courseBranchId && branchId != courseBranchId) {
+                alert('The selected course is not available at the selected branch. Please choose a different course or branch.');
+                e.preventDefault();
+                return;
+            }
+
+            if (!valid) {
+                e.preventDefault();
+                alert('Please fill in all required fields.');
             }
         });
+    }
 
-        if (!valid) {
-            e.preventDefault();
-            alert('Please fill in all required fields.');
-        }
-    });
+    // If course is pre-selected, update summary
+    const selectedCourseId = "{{ $selectedCourse }}";
+    if (selectedCourseId && courseSelect.value === selectedCourseId) {
+        setTimeout(() => {
+            courseSelect.dispatchEvent(new Event('change'));
+        }, 200);
+    }
 });
 </script>
 @endsection

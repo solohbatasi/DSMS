@@ -5,18 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\LessonApplication;
 use App\Models\Course;
 use App\Models\Student;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class LessonApplicationController extends Controller
 {
-    // Show booking form
-    public function create(Request $request)
+   public function create(Request $request)
     {
-        $courses = Course::where('status', 1)->get();
+        $branches = Branch::where('status', 1)->get(); // Add this line
         $selectedCourse = $request->query('course');
+        $selectedBranch = $request->query('branch'); // Add this line
 
-        return view('book-lessons', compact('courses', 'selectedCourse'));
+        // Get courses based on selected branch
+        if ($selectedBranch) {
+            $courses = Course::where('status', 1)
+                ->where('branch_id', $selectedBranch)
+                ->get();
+        } else {
+            $courses = Course::where('status', 1)->get();
+        }
+
+        return view('book-lessons', compact('courses', 'selectedCourse', 'branches', 'selectedBranch'));
     }
 
     // Store new application
@@ -30,7 +40,8 @@ class LessonApplicationController extends Controller
             'id_number' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:500',
 
-            // Course information
+            // Branch and Course information
+            'branch_id' => 'required|exists:branches,id', // Add this line
             'course_id' => 'required|exists:courses,id',
             'preferred_start_date' => 'required|date|after:today',
             'preferred_schedule' => 'required|in:weekday_morning,weekday_afternoon,weekday_evening,weekend_morning,weekend_afternoon,flexible',
@@ -58,6 +69,7 @@ class LessonApplicationController extends Controller
                 'phone' => $validated['phone'],
                 'id_number' => $validated['id_number'],
                 'address' => $validated['address'],
+                'branch_id' => $validated['branch_id'], // Add this line
                 'course_id' => $validated['course_id'],
                 'preferred_start_date' => $validated['preferred_start_date'],
                 'preferred_schedule' => $validated['preferred_schedule'],
@@ -81,6 +93,7 @@ class LessonApplicationController extends Controller
                 ->withInput();
         }
     }
+
 
     // Show success page
     public function success($applicationNumber)
