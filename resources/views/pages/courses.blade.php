@@ -402,7 +402,16 @@
             <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">Find Your Perfect Course</h2>
 
             <div class="filter-grid">
-
+                <!-- ADD BRANCH FILTER HERE -->
+                <div class="filter-group">
+                    <label for="branch" class="block text-sm font-medium text-gray-700 mb-2">Branch</label>
+                    <select id="branch" class="filter-select">
+                        <option value="all">All Branches</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
                 <div class="filter-group">
                     <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">Duration</label>
@@ -443,6 +452,7 @@
             <div class="course-card {{ $loop->index == 1 ? 'popular' : '' }}"
                  data-category="beginner"
                  data-duration="medium"
+                 data-branch="{{ $course->branch_id ?? 'all' }}"
                  data-price="{{ $course->total_amount <= 20000 ? 'budget' : ($course->total_amount <= 40000 ? 'standard' : 'premium') }}"
                  data-level="beginner">
 
@@ -466,6 +476,7 @@
                 </div>
 
                 <div class="course-content">
+                    <h2 class="text-2xl font-black text-blue-900 mb-3 leading-tight"> Branch: {{ $branch->name ?? '' }}</h2>
                     <h3 class="text-2xl font-black text-gray-900 mb-3 leading-tight">{{ $course->course }}</h3>
 
                     <div class="course-description">
@@ -478,11 +489,6 @@
                         <i class="fas fa-clock mr-2"></i>
                         {{ $course->training_duration }} Days Training
                     </div>
-
-                    <!-- <div class="course-price">
-                        KES {{ number_format($course->total_amount) }}
-                        <span class="course-price-period">/course</span>
-                    </div> -->
 
                     <!-- Progress/Sessions Info -->
                     <div class="mb-4">
@@ -501,9 +507,6 @@
                             <i class="fas fa-calendar-check mr-2"></i>
                             Enroll Now
                         </a>
-                        <!-- <button class="info-btn" onclick="showCourseDetails({{ $course->id }})">
-                            <i class="fas fa-info"></i>
-                        </button> -->
                     </div>
                 </div>
             </div>
@@ -512,7 +515,30 @@
     </div>
 </section>
 
-
+<!-- Statistics Section -->
+<section class="py-16 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-white text-center mb-12">Our Course Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-item bg-white/10 backdrop-blur-sm">
+                <div class="stat-number text-white">{{ $stats['total_courses'] }}+</div>
+                <p class="text-blue-100">Professional Courses</p>
+            </div>
+            <div class="stat-item bg-white/10 backdrop-blur-sm">
+                <div class="stat-number text-white">{{ $stats['total_branches'] }}+</div>
+                <p class="text-blue-100">Training Branches</p>
+            </div>
+            <div class="stat-item bg-white/10 backdrop-blur-sm">
+                <div class="stat-number text-white">{{ $stats['average_price'] }}+</div>
+                <p class="text-blue-100">Average Course Fee</p>
+            </div>
+            <div class="stat-item bg-white/10 backdrop-blur-sm">
+                <div class="stat-number text-white">95%</div>
+                <p class="text-blue-100">Success Rate</p>
+            </div>
+        </div>
+    </div>
+</section>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -521,18 +547,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const courseCards = document.querySelectorAll('.course-card');
 
     function filterCourses() {
+        const branchValue = document.getElementById('branch').value;
         const typeValue = document.getElementById('courseType').value;
         const durationValue = document.getElementById('duration').value;
-        const priceValue = document.getElementById('priceRange').value;
         const levelValue = document.getElementById('skillLevel').value;
 
         courseCards.forEach(card => {
+            const matchesBranch = branchValue === 'all' || card.getAttribute('data-branch') === branchValue;
             const matchesType = typeValue === 'all' || card.getAttribute('data-category') === typeValue;
             const matchesDuration = durationValue === 'all' || card.getAttribute('data-duration') === durationValue;
-            const matchesPrice = priceValue === 'all' || card.getAttribute('data-price') === priceValue;
             const matchesLevel = levelValue === 'all' || card.getAttribute('data-level') === levelValue;
 
-            if (matchesType && matchesDuration && matchesPrice && matchesLevel) {
+            if (matchesBranch && matchesType && matchesDuration && matchesLevel) {
                 card.style.display = 'block';
                 setTimeout(() => {
                     card.style.opacity = '1';

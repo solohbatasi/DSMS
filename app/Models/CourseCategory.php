@@ -32,7 +32,7 @@ class CourseCategory extends Model
     // Relationship with courses
     public function courses(): HasMany
     {
-        return $this->hasMany(Course::class);
+        return $this->hasMany(Course::class, 'category_id');
     }
 
     // Get active courses

@@ -463,4 +463,21 @@ class Course extends Model
         }
         return $this->course;
     }
+
+
+    // Add accessor for full information
+    public function getFullInfoAttribute()
+    {
+        $info = $this->course;
+
+        if ($this->category) {
+            $info .= " ({$this->category->name})";
+        }
+
+        if ($this->branch) {
+            $info .= " - {$this->branch->name}";
+        }
+
+        return $info;
+    }
 }
