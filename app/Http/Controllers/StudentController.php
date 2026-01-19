@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Course;
 use App\Models\Student_ef_list;
 use App\Models\Branch;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
@@ -157,16 +158,62 @@ class StudentController extends Controller
         try {
             DB::beginTransaction();
 
-            // Create user first
-            $password = $request->id_no ?? 'Password123';
+           // Create user first
+            $password = 'password';
+
+            // Generate email if not provided
+            if (!$request->has('email') || empty($request->email)) {
+                // First, convert to lowercase
+                $lowercaseName = Str::lower($request->name);
+
+                // Remove all spaces
+                $noSpaces = str_replace(' ', '', $lowercaseName);
+
+                // Remove any non-alphanumeric characters (keep letters and numbers only)
+                $clean = preg_replace('/[^a-z0-9]/', '', $noSpaces);
+
+                // Debug: Check what's happening
+                // \Log::info('Email generation', [
+                //     'original' => $request->name,
+                //     'lowercase' => $lowercaseName,
+                //     'no_spaces' => $noSpaces,
+                //     'clean' => $clean,
+                // ]);
+
+                // If result is empty or too short, use a default
+                if (strlen($clean) < 3) {
+                    $clean = 'student' . rand(100, 999);
+                }
+
+                $email = $clean . '@gmail.com';
+
+                // Make email unique
+                $counter = 1;
+                $originalEmail = $email;
+                while (User::where('email', $email)->exists()) {
+                    $email = $clean . $counter . '@gmail.com';
+                    $counter++;
+
+                    // Safety limit
+                    if ($counter > 100) {
+                        $email = 'student_' . time() . '@gmail.com';
+                        break;
+                    }
+                }
+            } else {
+                // If email is provided, clean it
+                $email = Str::lower(trim($request->email));
+            }
+
             $user = User::create([
                 'name' => $request->name,
-                'email' => $request->email ?? $request->id_no . '@example.com',
+                'email' => $email,
                 'password' => Hash::make($password),
                 'role' => 'student',
-                'branch_id' => $request->branch_id, // Student's user account also has branch
+                'branch_id' => $request->branch_id,
                 'email_verified_at' => now(),
             ]);
+
             $user->assignRole('student');
 
             // Create student linked to user
