@@ -529,10 +529,7 @@
                 <div class="stat-number text-white">{{ $stats['total_branches'] }}+</div>
                 <p class="text-blue-100">Training Branches</p>
             </div>
-            <div class="stat-item bg-white/10 backdrop-blur-sm">
-                <div class="stat-number text-white">{{ $stats['average_price'] }}+</div>
-                <p class="text-blue-100">Average Course Fee</p>
-            </div>
+
             <div class="stat-item bg-white/10 backdrop-blur-sm">
                 <div class="stat-number text-white">95%</div>
                 <p class="text-blue-100">Success Rate</p>
