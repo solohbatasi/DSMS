@@ -227,6 +227,18 @@ class StudentController extends Controller
                 'branch_id' => $request->branch_id,
             ]);
 
+            // Calculate remaining practical and theoretical sessions
+            $practicalSessions = $course->practical_sessions ?? 0;
+            $theoreticalSessions = $course->theoretical_sessions ?? 0;
+
+            // If course doesn't have sessions defined, use total_class
+            if ($practicalSessions == 0 && $theoreticalSessions == 0) {
+                // You might want to split total_class into practical and theoretical
+                // For example: 70% practical, 30% theoretical
+                $practicalSessions = (int) ceil($request->total_class * 0.7);
+                $theoreticalSessions = $request->total_class - $practicalSessions;
+            }
+
             // Create EF list
             $ef = Student_ef_list::create([
                 'student_id' => $student->id,
@@ -235,6 +247,13 @@ class StudentController extends Controller
                 'total_fee' => $request->total_fee,
                 'balance' => $request->total_fee,
                 'total_class' => $request->total_class,
+                // Practical sessions
+                'attended_practical' => 0,
+                'remaining_practical' => $practicalSessions,
+
+                // Theoretical sessions
+                'attended_theoretical' => 0,
+                'remaining_theoretical' => $theoreticalSessions,
                 'type' => $request->type,
                 'branch_id' => $request->branch_id,
                 'status' => 'active',
