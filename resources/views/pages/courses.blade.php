@@ -476,7 +476,7 @@
                 </div>
 
                 <div class="course-content">
-                    <h2 class="text-2xl font-black text-blue-900 mb-3 leading-tight"> Branch: {{ $branch->name ?? '' }}</h2>
+                    <h2 class="text-2xl font-black text-blue-900 mb-3 leading-tight"> Branch: {{ $course->branch->name ?? ' '}}</h2>
                     <h3 class="text-2xl font-black text-gray-900 mb-3 leading-tight">{{ $course->course }}</h3>
 
                     <div class="course-description">
