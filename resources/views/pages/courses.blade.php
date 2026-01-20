@@ -9,6 +9,14 @@
 
 <style>
     /* Professional Courses Styles */
+    .description-bullets li {
+        transition: all 0.3s ease;
+    }
+
+    .description-bullets li:hover {
+        transform: translateX(5px);
+        color: #374151;
+    }
     .courses-hero {
         background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
         position: relative;
@@ -561,9 +569,31 @@
                     <h3 class="text-2xl font-black text-gray-900 mb-3 leading-tight">{{ $course->course }}</h3>
 
                     <div class="course-description">
-                        <p class="text-gray-600 leading-relaxed">
-                            {{ $course->description ?: 'Comprehensive driving program designed to build confidence and skills for safe road navigation.' }}
-                        </p>
+                        @php
+                            $description = $course->description ?:
+                                'Comprehensive driving program designed to build confidence and skills for safe road navigation. ' .
+                                'Professional instruction from certified trainers. ' .
+                                'Flexible scheduling options available. ' .
+                                'Modern training vehicles with dual controls. ' .
+                                'Theoretical and practical sessions included.';
+
+                            $sentences = array_filter(array_map('trim',
+                                preg_split('/[.!?]+/', $description, -1, PREG_SPLIT_NO_EMPTY)
+                            ));
+                        @endphp
+
+                        <ul class="space-y-2">
+                            @foreach($sentences as $sentence)
+                                @if(!empty($sentence))
+                                    <li class="flex items-start text-gray-600">
+                                        <svg class="w-4 h-4 text-blue-500 mr-2 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">{{ $sentence }}.</span>
+                                    </li>
+                                @endif
+                            @endforeach
+                        </ul>
                     </div>
 
                     <div class="course-duration">
