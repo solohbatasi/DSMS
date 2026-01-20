@@ -24,6 +24,23 @@
         border: 1px solid #f1f5f9;
         position: relative;
         height: 100%;
+        display: none; /* Hidden by default */
+    }
+
+    .course-card.show {
+        display: block;
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .course-card:hover {
@@ -371,6 +388,54 @@
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
+
+    .instruction-box {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border: 2px solid #bae6fd;
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        margin: 30px 0;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    .instruction-box h3 {
+        color: #0369a1;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+
+    .instruction-box p {
+        color: #0c4a6e;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    .instruction-icon {
+        font-size: 4rem;
+        color: #3b82f6;
+        margin-bottom: 20px;
+        filter: drop-shadow(0 4px 6px rgba(59, 130, 246, 0.2));
+    }
+
+    .no-courses-message {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        display: none;
+    }
+
+    .no-courses-message.show {
+        display: block;
+    }
+
+    .no-courses-icon {
+        font-size: 5rem;
+        color: #e2e8f0;
+        margin-bottom: 20px;
+    }
 </style>
 
 <!-- CTA Section -->
@@ -399,23 +464,36 @@
 <section class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="filter-section">
-            <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">Find Your Perfect Course</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Find Courses by Branch</h2>
+            <p class="text-blue-600 text-center mb-8">Select a branch to view available courses at that location</p>
 
             <div class="filter-grid">
-                <!-- ADD BRANCH FILTER HERE -->
+                <!-- BRANCH FILTER - Most Important -->
                 <div class="filter-group">
-                    <label for="branch" class="block text-sm font-medium text-gray-700 mb-2">Branch</label>
-                    <select id="branch" class="filter-select">
-                        <option value="all">All Branches</option>
+                    <label for="branch" class="block text-sm font-medium text-gray-700 mb-2">Select Branch *</label>
+                    <select id="branch" class="filter-select" required>
+                        <option value="">-- Choose a Branch --</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                         @endforeach
                     </select>
                 </div>
 
+                <!-- Additional filters - Only enabled after branch selection -->
+                <div class="filter-group">
+                    <label for="courseType" class="block text-sm font-medium text-gray-700 mb-2">Course Type</label>
+                    <select id="courseType" class="filter-select" disabled>
+                        <option value="all">All Courses</option>
+                        <option value="beginner">Beginner Programs</option>
+                        <option value="advanced">Advanced Driving</option>
+                        <option value="commercial">Commercial License</option>
+                        <option value="specialized">Specialized Training</option>
+                    </select>
+                </div>
+
                 <div class="filter-group">
                     <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                    <select id="duration" class="filter-select">
+                    <select id="duration" class="filter-select" disabled>
                         <option value="all">Any Duration</option>
                         <option value="short">1-2 Weeks</option>
                         <option value="medium">3-4 Weeks</option>
@@ -425,28 +503,31 @@
 
                 <div class="filter-group">
                     <label for="skillLevel" class="block text-sm font-medium text-gray-700 mb-2">Skill Level</label>
-                    <select id="skillLevel" class="filter-select">
+                    <select id="skillLevel" class="filter-select" disabled>
                         <option value="all">All Levels</option>
                         <option value="beginner">Beginner</option>
                         <option value="intermediate">Intermediate</option>
                         <option value="advanced">Advanced</option>
                     </select>
                 </div>
-
-                <div class="filter-group">
-                    <label for="courseType" class="block text-sm font-medium text-gray-700 mb-2">Course Type</label>
-                    <select id="courseType" class="filter-select">
-                        <option value="all">All Courses</option>
-                        <option value="beginner">Beginner Programs</option>
-                        <option value="advanced">Advanced Driving</option>
-                        <option value="commercial">Commercial License</option>
-                        <option value="specialized">Specialized Training</option>
-                    </select>
-                </div>
             </div>
+
+
         </div>
 
-        <!-- Course Grid -->
+        <!-- No Courses Message (Initially Hidden) -->
+        <div id="noCoursesMessage" class="no-courses-message">
+            <div class="no-courses-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-700 mb-4">No Courses Found</h3>
+            <p class="text-gray-600 mb-6">No courses are available for the selected branch and filters.</p>
+            <button id="resetFiltersBtn" class="enroll-btn bg-blue-600 text-white hover:bg-blue-700 max-w-xs mx-auto">
+                <i class="fas fa-redo mr-2"></i> Reset Filters
+            </button>
+        </div>
+
+        <!-- Course Grid (Initially Hidden) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach($courses as $course)
             <div class="course-card {{ $loop->index == 1 ? 'popular' : '' }}"
@@ -540,41 +621,127 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Course filtering functionality
-    const filterSelects = document.querySelectorAll('.filter-select');
+    // Get DOM elements
+    const branchSelect = document.getElementById('branch');
+    const courseTypeSelect = document.getElementById('courseType');
+    const durationSelect = document.getElementById('duration');
+    const skillLevelSelect = document.getElementById('skillLevel');
     const courseCards = document.querySelectorAll('.course-card');
+    const noCoursesMessage = document.getElementById('noCoursesMessage');
+    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+    const additionalFilters = [courseTypeSelect, durationSelect, skillLevelSelect];
 
-    function filterCourses() {
-        const branchValue = document.getElementById('branch').value;
-        const typeValue = document.getElementById('courseType').value;
-        const durationValue = document.getElementById('duration').value;
-        const levelValue = document.getElementById('skillLevel').value;
+    // Initially hide all course cards
+    courseCards.forEach(card => {
+        card.style.display = 'none';
+    });
 
-        courseCards.forEach(card => {
-            const matchesBranch = branchValue === 'all' || card.getAttribute('data-branch') === branchValue;
-            const matchesType = typeValue === 'all' || card.getAttribute('data-category') === typeValue;
-            const matchesDuration = durationValue === 'all' || card.getAttribute('data-duration') === durationValue;
-            const matchesLevel = levelValue === 'all' || card.getAttribute('data-level') === levelValue;
+    // Enable/Disable additional filters based on branch selection
+    function toggleAdditionalFilters() {
+        const isBranchSelected = branchSelect.value !== '';
 
-            if (matchesBranch && matchesType && matchesDuration && matchesLevel) {
-                card.style.display = 'block';
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0) scale(1)';
-                }, 100);
+        additionalFilters.forEach(filter => {
+            filter.disabled = !isBranchSelected;
+
+            // Visual feedback for disabled state
+            if (isBranchSelected) {
+                filter.classList.remove('opacity-50', 'cursor-not-allowed');
+                filter.style.opacity = '1';
+                filter.style.cursor = 'pointer';
             } else {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px) scale(0.95)';
-                setTimeout(() => {
-                    card.style.display = 'none';
-                }, 300);
+                filter.classList.add('opacity-50', 'cursor-not-allowed');
+                filter.style.opacity = '0.5';
+                filter.style.cursor = 'not-allowed';
             }
         });
     }
 
-    filterSelects.forEach(select => {
-        select.addEventListener('change', filterCourses);
+    // Filter courses based on selections
+    function filterCourses() {
+        const branchValue = branchSelect.value;
+        const typeValue = courseTypeSelect.value;
+        const durationValue = durationSelect.value;
+        const levelValue = skillLevelSelect.value;
+
+        let visibleCards = 0;
+
+        // If no branch is selected, hide all cards
+        if (!branchValue) {
+            courseCards.forEach(card => {
+                card.classList.remove('show');
+                card.style.display = 'none';
+            });
+            noCoursesMessage.classList.remove('show');
+            return;
+        }
+
+        // Show/hide cards based on filters
+        courseCards.forEach(card => {
+            const cardBranch = card.getAttribute('data-branch');
+            const cardType = card.getAttribute('data-category');
+            const cardDuration = card.getAttribute('data-duration');
+            const cardLevel = card.getAttribute('data-level');
+
+            // Check if card matches all filters
+            const matchesBranch = cardBranch === branchValue;
+            const matchesType = typeValue === 'all' || cardType === typeValue;
+            const matchesDuration = durationValue === 'all' || cardDuration === durationValue;
+            const matchesLevel = levelValue === 'all' || cardLevel === levelValue;
+
+            if (matchesBranch && matchesType && matchesDuration && matchesLevel) {
+                card.classList.add('show');
+                card.style.display = 'block';
+                visibleCards++;
+            } else {
+                card.classList.remove('show');
+                card.style.display = 'none';
+            }
+        });
+
+        // Show no courses message if no cards are visible
+        if (visibleCards === 0) {
+            noCoursesMessage.classList.add('show');
+        } else {
+            noCoursesMessage.classList.remove('show');
+        }
+    }
+
+    // Reset all filters
+    function resetFilters() {
+        branchSelect.value = '';
+        courseTypeSelect.value = 'all';
+        durationSelect.value = 'all';
+        skillLevelSelect.value = 'all';
+
+        toggleAdditionalFilters();
+        filterCourses();
+
+        // Focus on branch select
+        branchSelect.focus();
+    }
+
+    // Initialize
+    toggleAdditionalFilters();
+    filterCourses();
+
+    // Event Listeners
+    branchSelect.addEventListener('change', function() {
+        toggleAdditionalFilters();
+        filterCourses();
+
+        // Reset other filters when branch changes
+        if (this.value) {
+            courseTypeSelect.value = 'all';
+            durationSelect.value = 'all';
+            skillLevelSelect.value = 'all';
+        }
     });
+
+    additionalFilters.forEach(filter => {
+        filter.addEventListener('change', filterCourses);
+    });
+
+    resetFiltersBtn.addEventListener('click', resetFilters);
 
     // Animation on scroll
     const observerOptions = {
@@ -584,7 +751,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
+            if (entry.isIntersecting && entry.target.classList.contains('show')) {
                 entry.target.style.opacity = '1';
                 entry.target.style.transform = 'translateY(0) scale(1)';
             }
@@ -602,7 +769,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add hover effects
     courseCards.forEach(card => {
         card.addEventListener('mouseenter', function() {
-            this.style.zIndex = '10';
+            if (this.classList.contains('show')) {
+                this.style.zIndex = '10';
+            }
         });
 
         card.addEventListener('mouseleave', function() {
