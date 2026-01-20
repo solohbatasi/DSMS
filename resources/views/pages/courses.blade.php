@@ -721,25 +721,32 @@
                     @if($course->category && Str::contains(strtolower($course->category->name), 'computer'))
                         <!-- Simple Pricing Display - ONLY FOR COMPUTER COURSES -->
                         <div class="mt-6 mb-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                            @php
+                                $discounted = $course->total_amount;
+                                $markupPercent = $discounted <= 30000 ? 10 : 20;
+                                $original = $discounted * (1 + ($markupPercent / 100));
+                            @endphp
+
                             <div class="flex items-center justify-between mb-2">
                                 <div>
                                     <div class="text-sm text-gray-500">Original Price</div>
                                     <div class="text-xl font-bold text-red-500 line-through">
-                                        Ksh {{ number_format($course->total_amount) }}
+                                        Ksh {{ number_format($original) }}
                                     </div>
                                 </div>
                                 <div class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                                    -{{ $course->total_amount <= 30000 ? '15%' : '20%' }}
+                                    +{{ $markupPercent }}%
                                 </div>
                             </div>
 
                             <div class="mb-2">
                                 <div class="text-sm text-gray-500">Discounted Price</div>
                                 <div class="text-xl font-black text-blue-600">
-                                    Ksh {{ number_format($course->total_amount * ($course->total_amount <= 30000 ? 0.85 : 0.80)) }}
+                                    Ksh {{ number_format($discounted) }}
                                 </div>
                             </div>
                         </div>
+
                     @endif
 
                     <div class="flex space-x-3 mt-auto">
