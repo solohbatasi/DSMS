@@ -6,6 +6,224 @@
 @endphp
 
 @can('view applications')
+<!-- Branch Context Indicator & Switcher -->
+@if(auth()->user()->isAdmin())
+<div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Current Branch Info -->
+        <div class="flex items-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-blue-200 shadow-sm mr-3">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-blue-800 mb-0.5">
+                    Current Branch: {{ session('admin_selected_branch_name', 'All Branches') }}
+                </p>
+                @if(session('admin_selected_branch_name'))
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        Viewing applications for this branch only
+                    </p>
+                @else
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        Viewing applications from all branches
+                    </p>
+                @endif
+            </div>
+        </div>
+
+        <!-- Branch Switcher -->
+        <div class="relative" x-data="branchSwitcher()">
+            <button @click="toggleDropdown()"
+                    :class="{'ring-2 ring-blue-500 ring-opacity-50': open}"
+                    class="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-200 shadow-sm min-w-[200px] justify-between">
+                <div class="flex items-center">
+                    @if(session('admin_selected_branch_name'))
+                        <svg class="w-4 h-4 mr-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        <span class="truncate">{{ session('admin_selected_branch_name') }}</span>
+                    @else
+                        <svg class="w-4 h-4 mr-2.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <span class="text-gray-600">All Branches</span>
+                    @endif
+                </div>
+                <svg class="w-4 h-4 ml-2 text-gray-400 transition-transform duration-200"
+                     :class="{'transform rotate-180': open}"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div x-show="open"
+                 x-cloak
+                 @click.away="open = false"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-75"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="absolute right-0 mt-2 w-72 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 overflow-hidden">
+                <!-- Header -->
+                <div class="px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                    <p class="text-sm font-semibold text-blue-900">Switch Branch Context</p>
+                    <p class="text-xs text-blue-700 mt-0.5">Select a branch to view its applications</p>
+                </div>
+
+                <div class="py-2 max-h-80 overflow-y-auto">
+                    <!-- All Branches -->
+                    <button @click="switchBranch('')"
+                            :class="{'bg-blue-50 border-l-4 border-blue-500': !currentBranch}"
+                            class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 border-l-4 border-transparent">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
+                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900">All Branches</p>
+                                <p class="text-xs text-gray-500 mt-0.5">View aggregated data</p>
+                            </div>
+                            @if(!session('admin_selected_branch_name'))
+                            <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            @endif
+                        </div>
+                    </button>
+
+                    <!-- Divider -->
+                    <div class="border-t border-gray-200 my-2"></div>
+
+                    <!-- Branch List -->
+                    @foreach($branches as $branch)
+                    <button @click="switchBranch('{{ $branch->id }}')"
+                            :class="{'bg-blue-50 border-l-4 border-blue-500': currentBranch == '{{ $branch->id }}'}"
+                            class="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-150 border-l-4 border-transparent">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900">{{ $branch->name }}</p>
+                                @if($branch->location)
+                                <p class="text-xs text-gray-500 mt-0.5 truncate">{{ $branch->location }}</p>
+                                @endif
+                            </div>
+                            @if(session('admin_selected_branch_id') == $branch->id)
+                            <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            @endif
+                        </div>
+                    </button>
+                    @endforeach
+                </div>
+
+                <!-- Footer -->
+                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                    <p class="text-xs text-gray-500">
+                        Branch changes apply to applications view only
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function branchSwitcher() {
+    return {
+        open: false,
+        isLoading: false,
+        currentBranch: '{{ session('admin_selected_branch_id') }}',
+
+        toggleDropdown() {
+            this.open = !this.open;
+        },
+
+        async switchBranch(branchId) {
+            this.isLoading = true;
+            this.open = false;
+
+            // Get the button element
+            const button = document.querySelector('[x-data] button');
+            const originalContent = button.innerHTML;
+
+            // Show loading state
+            button.innerHTML = `
+                <div class="flex items-center">
+                    <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent mr-2.5"></div>
+                    <span class="text-blue-600">Switching...</span>
+                </div>
+            `;
+            button.disabled = true;
+
+            try {
+                const response = await fetch('{{ route("branch.update-selected") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ branch_id: branchId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success feedback
+                    button.innerHTML = `
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-500 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-green-600">Switched!</span>
+                        </div>
+                    `;
+
+                    // Wait a moment before reloading for better UX
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 600);
+                } else {
+                    this.showNotification(data.message || 'Failed to switch branch', 'error');
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.showNotification('Network error. Please try again.', 'error');
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            }
+
+            this.isLoading = false;
+        },
+
+        showNotification(message, type = 'info') {
+            if (typeof toastr !== 'undefined') {
+                const toastType = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+                toastr[toastType](message);
+            }
+        }
+    };
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+</style>
+@endif
 <div class="min-h-screen bg-gray-50">
     <!-- Header Section -->
     @php
@@ -13,10 +231,7 @@
 
     if (auth()->user()->can('add applications')) {
         $actionButtons[] = [
-            'text' => 'Add Application',
-            'onclick' => 'openAddModal()',
-            'icon' => 'fas fa-plus',
-            'color' => 'bg-green-600 hover:bg-green-700'
+
         ];
     }
     @endphp
@@ -218,19 +433,7 @@
                                         <i class="fas fa-eye mr-1"></i> View
                                     </a>
 
-                                    @can('edit applications')
-                                    <a href="{{ route('admin.applications.edit', $application) }}"
-                                       class="text-green-600 hover:text-green-900">
-                                        <i class="fas fa-edit mr-1"></i> Edit
-                                    </a>
-                                    @endcan
 
-                                    @can('delete applications')
-                                    <button onclick="confirmDelete({{ $application->id }})"
-                                            class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-trash mr-1"></i> Delete
-                                    </button>
-                                    @endcan
                                 </div>
                             </td>
                         </tr>
