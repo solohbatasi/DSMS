@@ -95,6 +95,13 @@ Route::get('/book-lessons', [LessonApplicationController::class, 'create'])->nam
 Route::post('/book-lessons', [LessonApplicationController::class, 'store'])->name('applications.store');
 Route::get('/application-success/{applicationNumber}', [LessonApplicationController::class, 'success'])->name('application.success');
 
+
+Route::get('admin/applications', [LessonApplicationController::class, 'index'])->name('applications.index');
+Route::get('admin/applications/{application}', [LessonApplicationController::class, 'show'])->name('applications.show');
+Route::put('admin/applications/{application}/status', [LessonApplicationController::class, 'updateStatus'])->name('applications.update-status');
+Route::delete('admin/applications/{application}', [LessonApplicationController::class, 'destroy'])->name('applications.destroy');
+
+
 Route::get('/driving-courses', [PageController::class, 'coursesIndex'])->name('pages.courses');
 
 Route::get('/payments/{id}/receipt-data', [PaymentController::class, 'getReceiptData'])->name('payments.receipt-data');

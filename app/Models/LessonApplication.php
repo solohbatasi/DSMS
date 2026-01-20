@@ -27,7 +27,7 @@ class LessonApplication extends Model
         'contacted_at',
         'reviewed_at',
         'reviewed_by',
-         'branch_id',
+        'branch_id',
     ];
 
     protected $casts = [
@@ -57,6 +57,11 @@ class LessonApplication extends Model
         return $this->belongsTo(User::class, 'reviewed_by');
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     // Scopes
     public function scopePending($query)
     {
@@ -71,6 +76,16 @@ class LessonApplication extends Model
     public function scopeApproved($query)
     {
         return $query->where('status', 'approved');
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('status', 'rejected');
+    }
+
+    public function scopeEnrolled($query)
+    {
+        return $query->where('status', 'enrolled');
     }
 
     // Methods
