@@ -98,7 +98,7 @@ Route::get('/application-success/{applicationNumber}', [LessonApplicationControl
 
 Route::get('admin/applications', [LessonApplicationController::class, 'index'])->name('applications.index');
 Route::get('admin/applications/{application}', [LessonApplicationController::class, 'show'])->name('applications.show');
-Route::put('admin/applications/{application}/status', [LessonApplicationController::class, 'updateStatus'])->name('applications.update-status');
+Route::post('/applications/{application}/status', [LessonApplicationController::class, 'updateStatus'])->name('applications.update-status');
 Route::delete('admin/applications/{application}', [LessonApplicationController::class, 'destroy'])->name('applications.destroy');
 
 

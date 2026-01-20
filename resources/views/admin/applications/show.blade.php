@@ -6,31 +6,9 @@
     <!-- Header Section -->
     @php
     $actionButtons = [
-        [
-            'text' => 'Back to List',
-            'href' => route('admin.applications.index'),
-            'icon' => 'fas fa-arrow-left',
-            'color' => 'bg-gray-600 hover:bg-gray-700'
-        ]
+
     ];
 
-    if (auth()->user()->can('edit applications')) {
-        $actionButtons[] = [
-            'text' => 'Edit',
-            'onclick' => 'openEditModal()',
-            'icon' => 'fas fa-edit',
-            'color' => 'bg-blue-600 hover:bg-blue-700'
-        ];
-    }
-
-    if ($application->status == 'approved' && auth()->user()->can('add students')) {
-        $actionButtons[] = [
-            'text' => 'Enroll Student',
-            'onclick' => 'enrollStudent()',
-            'icon' => 'fas fa-user-plus',
-            'color' => 'bg-green-600 hover:bg-green-700'
-        ];
-    }
     @endphp
 
     @include('components.dashboard-header', [
