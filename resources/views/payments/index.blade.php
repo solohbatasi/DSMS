@@ -280,6 +280,103 @@ function branchSwitcher() {
     border-radius: 3px;
 }
 </style>
+<style>
+    /* Thermal Printer Styles for 80mm */
+@page {
+    size: 80mm auto;
+    margin: 0;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .receipt-container, .receipt-container * {
+        visibility: visible;
+    }
+
+    .receipt-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        margin: 0;
+        padding: 2mm;
+        font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+        font-size: 10px;
+        line-height: 1.2;
+        background: white;
+        color: black;
+    }
+
+    /* Hide unnecessary elements in print */
+    .no-print, .action-buttons, .modal, .footer, .header {
+        display: none !important;
+    }
+
+    /* Thermal printer specific styling */
+    .receipt-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 11px;
+        margin-bottom: 2mm;
+        text-transform: uppercase;
+    }
+
+    .receipt-line {
+        border-bottom: 1px dashed #000;
+        margin: 2mm 0;
+    }
+
+    .receipt-detail {
+        display: flex;
+        justify-content: space-between;
+        margin: 1mm 0;
+    }
+
+    .receipt-label {
+        font-weight: bold;
+    }
+
+    .receipt-value {
+        text-align: right;
+    }
+
+    .receipt-header, .receipt-footer {
+        text-align: center;
+        margin: 2mm 0;
+    }
+
+    .receipt-qr {
+        text-align: center;
+        margin: 2mm 0;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .bold {
+        font-weight: bold;
+    }
+
+    .underline {
+        border-bottom: 1px solid #000;
+        padding-bottom: 1mm;
+        margin-bottom: 1mm;
+    }
+
+    .double-line {
+        border-bottom: 3px double #000;
+        margin: 2mm 0;
+    }
+}
+</style>
 @endif
 <div class="min-h-screen bg-gray-50">
     <!-- Header Section -->
@@ -551,6 +648,11 @@ function branchSwitcher() {
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex gap-2">
+                                    <!-- Print Button -->
+                                    <button onclick="printReceipt({{ $payment->id }})"
+                                        class="text-green-600 hover:text-green-800 text-sm print-btn">
+                                        <i class="fas fa-print"></i> Print
+                                    </button>
                                     @can('edit payments')
                                     <button onclick="openEditModal({{ $payment->id }})"
                                         class="text-blue-600 hover:text-blue-800 text-sm">
@@ -1484,7 +1586,346 @@ function renderPayments(payments) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Payments page loaded');
 });
-</script>
+// Print Receipt Function
+async function printReceipt(paymentId) {
+    try {
+        // Show loading state
+        const printBtn = document.querySelector(`button[onclick="printReceipt(${paymentId})"]`);
+        const originalContent = printBtn.innerHTML;
+        printBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        printBtn.disabled = true;
 
+        // Fetch payment data
+        const response = await fetch(`/payments/${paymentId}/receipt-data`);
+        if (!response.ok) throw new Error('Failed to fetch receipt data');
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load receipt data');
+        }
+
+        // Populate receipt template
+        populateReceiptTemplate(data.payment, data.student, data.course, data.branch);
+
+        // Print the receipt
+        setTimeout(() => {
+            const receiptDiv = document.getElementById('receiptTemplate');
+            const printWindow = window.open('', '_blank', 'width=80mm,height=600');
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Receipt - ${data.payment.reference || 'Payment'}</title>
+                    <style>
+                        @page { size: 80mm auto; margin: 0; }
+                        body {
+                            margin: 0;
+                            padding: 2mm;
+                            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+                            font-size: 10px;
+                            line-height: 1.2;
+                            width: 80mm;
+                        }
+                        .receipt-title { text-align: center; font-weight: bold; font-size: 11px; margin-bottom: 2mm; text-transform: uppercase; }
+                        .receipt-line { border-bottom: 1px dashed #000; margin: 2mm 0; }
+                        .receipt-detail { display: flex; justify-content: space-between; margin: 1mm 0; }
+                        .receipt-label { font-weight: bold; }
+                        .receipt-value { text-align: right; }
+                        .receipt-header, .receipt-footer { text-align: center; margin: 2mm 0; }
+                        .text-center { text-align: center; }
+                        .text-right { text-align: right; }
+                        .bold { font-weight: bold; }
+                        .underline { border-bottom: 1px solid #000; padding-bottom: 1mm; margin-bottom: 1mm; }
+                        .double-line { border-bottom: 3px double #000; margin: 2mm 0; }
+                        .receipt-qr { text-align: center; margin: 2mm 0; }
+                    </style>
+                </head>
+                <body>
+                    ${receiptDiv.innerHTML}
+                </body>
+                </html>
+            `);
+
+            printWindow.document.close();
+
+            // Auto-print for thermal printer
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+
+            // Restore button
+            printBtn.innerHTML = originalContent;
+            printBtn.disabled = false;
+
+            // Show success message
+            toastr.success('Receipt sent to printer');
+
+        }, 100);
+
+    } catch (error) {
+        console.error('Print error:', error);
+        toastr.error('Failed to print receipt: ' + error.message);
+
+        // Restore button on error
+        const printBtn = document.querySelector(`button[onclick="printReceipt(${paymentId})"]`);
+        if (printBtn) {
+            printBtn.innerHTML = '<i class="fas fa-print"></i> Print';
+            printBtn.disabled = false;
+        }
+    }
+}
+
+// Populate receipt template with data
+function populateReceiptTemplate(payment, student, course, branch) {
+    const now = new Date();
+
+    // Format currency
+    const formatCurrency = (amount) => {
+        return 'KSh ' + parseFloat(amount).toLocaleString('en-KE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
+    // Calculate previous balance
+    const previousBalance = parseFloat(payment.balance) + parseFloat(payment.amount);
+
+    // Populate receipt fields
+    document.getElementById('receiptRefNo').textContent = payment.reference || `PAY-${payment.id}`;
+    document.getElementById('receiptDate').textContent = now.toLocaleDateString('en-KE');
+    document.getElementById('receiptTime').textContent = now.toLocaleTimeString('en-KE', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    document.getElementById('receiptStudentName').textContent = student.name;
+    document.getElementById('receiptStudentId').textContent = student.id_no;
+    document.getElementById('receiptEfNo').textContent = student.ef_no;
+    document.getElementById('receiptCourse').textContent = course.course;
+    document.getElementById('receiptBranch').textContent = branch.name;
+    document.getElementById('receiptMethod').textContent = payment.payment_method.toUpperCase();
+    document.getElementById('receiptReference').textContent = payment.reference || 'N/A';
+    document.getElementById('receiptAmount').textContent = formatCurrency(payment.amount);
+    document.getElementById('receiptOldBalance').textContent = formatCurrency(previousBalance);
+    document.getElementById('receiptNewBalance').textContent = formatCurrency(payment.balance);
+    document.getElementById('receiptTotalFee').textContent = formatCurrency(course.total_amount || 0);
+    document.getElementById('receiptTotalPaid').textContent = formatCurrency(student.paid_amount || 0);
+    document.getElementById('receiptRemaining').textContent = formatCurrency(payment.balance);
+}
+
+// Quick Print Function (for already loaded payments)
+function quickPrint(paymentData) {
+    const receiptWindow = window.open('', '_blank', 'width=80mm,height=600');
+
+    receiptWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Payment Receipt</title>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 2mm;
+                    font-family: 'Courier New', monospace;
+                    font-size: 10px;
+                    line-height: 1.2;
+                    width: 80mm;
+                }
+                .header { text-align: center; }
+                .title { font-weight: bold; font-size: 12px; }
+                .line { border-bottom: 1px dashed #000; margin: 2mm 0; }
+                .row { display: flex; justify-content: space-between; margin: 1mm 0; }
+                .label { font-weight: bold; }
+                .value { text-align: right; }
+                .center { text-align: center; }
+                .right { text-align: right; }
+                .bold { font-weight: bold; }
+                .divider { border-bottom: 2px double #000; margin: 2mm 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="title">PACE DRIVING SCHOOL</div>
+                <div>Professional Driving Training</div>
+                <div>+254 728 725 559</div>
+            </div>
+            <div class="line"></div>
+            <div class="row">
+                <div class="label">Receipt:</div>
+                <div>${paymentData.reference}</div>
+            </div>
+            <div class="row">
+                <div>Date:</div>
+                <div>${new Date().toLocaleDateString()}</div>
+            </div>
+            <div class="divider"></div>
+            <div class="row">
+                <div>Student:</div>
+                <div>${paymentData.studentName}</div>
+            </div>
+            <div class="row">
+                <div>EF No:</div>
+                <div>${paymentData.efNumber}</div>
+            </div>
+            <div class="row">
+                <div>Course:</div>
+                <div>${paymentData.courseName}</div>
+            </div>
+            <div class="divider"></div>
+            <div class="row bold">
+                <div>Amount Paid:</div>
+                <div>KSh ${parseFloat(paymentData.amount).toFixed(2)}</div>
+            </div>
+            <div class="row">
+                <div>Method:</div>
+                <div>${paymentData.method}</div>
+            </div>
+            <div class="divider"></div>
+            <div class="center">
+                <div>*** THANK YOU ***</div>
+
+            </div>
+        </body>
+        </html>
+    `);
+
+    receiptWindow.document.close();
+
+    // Auto print after a short delay
+    setTimeout(() => {
+        receiptWindow.print();
+        receiptWindow.close();
+    }, 500);
+}
+</script>
+<!-- Receipt Template for Thermal Printer -->
+<div id="receiptTemplate" class="hidden">
+    <div class="receipt-container">
+        <!-- School Header -->
+        <div class="receipt-header">
+            <div class="receipt-title">PACE DRIVING SCHOOL</div>
+            <div>Professional Driving & Computer Training</div>
+            <div>{{ config('app.address', 'Nairobi, Kenya') }}</div>
+            <div>Tel: +254 728 725 559</div>
+            <div>Email: info@pacedriving.com</div>
+        </div>
+
+        <div class="receipt-line"></div>
+
+        <!-- Receipt Info -->
+        <div class="receipt-detail">
+            <div class="receipt-label">RECEIPT NO:</div>
+            <div class="receipt-value" id="receiptRefNo">-</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div class="receipt-label">DATE:</div>
+            <div class="receipt-value" id="receiptDate">-</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div class="receipt-label">TIME:</div>
+            <div class="receipt-value" id="receiptTime">-</div>
+        </div>
+
+        <div class="double-line"></div>
+
+        <!-- Student Details -->
+        <div class="text-center bold underline">STUDENT DETAILS</div>
+
+        <div class="receipt-detail">
+            <div>Name:</div>
+            <div class="text-right" id="receiptStudentName">-</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div>ID No:</div>
+            <div class="text-right" id="receiptStudentId">-</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div>EF Number:</div>
+            <div class="text-right" id="receiptEfNo">-</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div>Course:</div>
+            <div class="text-right" id="receiptCourse">-</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div>Branch:</div>
+            <div class="text-right" id="receiptBranch">-</div>
+        </div>
+
+        <div class="double-line"></div>
+
+        <!-- Payment Details -->
+        <div class="text-center bold underline">PAYMENT DETAILS</div>
+
+        <div class="receipt-detail">
+            <div>Payment Method:</div>
+            <div class="text-right" id="receiptMethod">-</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div>Reference:</div>
+            <div class="text-right" id="receiptReference">-</div>
+        </div>
+
+        <div class="receipt-line"></div>
+
+        <!-- Amount Section -->
+        <div class="receipt-detail">
+            <div class="bold">AMOUNT PAID:</div>
+            <div class="text-right bold" id="receiptAmount">KSh 0.00</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div>Previous Balance:</div>
+            <div class="text-right" id="receiptOldBalance">KSh 0.00</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div>New Balance:</div>
+            <div class="text-right" id="receiptNewBalance">KSh 0.00</div>
+        </div>
+
+        <div class="double-line"></div>
+
+        <!-- Totals -->
+        <div class="receipt-detail">
+            <div class="bold">TOTAL FEE:</div>
+            <div class="text-right bold" id="receiptTotalFee">KSh 0.00</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div class="bold">TOTAL PAID:</div>
+            <div class="text-right bold" id="receiptTotalPaid">KSh 0.00</div>
+        </div>
+
+        <div class="receipt-detail">
+            <div class="bold">REMAINING BALANCE:</div>
+            <div class="text-right bold" id="receiptRemaining">KSh 0.00</div>
+        </div>
+
+        <div class="double-line"></div>
+
+        <!-- Footer -->
+        <div class="receipt-footer">
+            <div>*** THANK YOU FOR YOUR PAYMENT ***</div>
+            <div>This is a computer generated receipt</div>
+
+            <div>For queries call: +254 728 725 559</div>
+        </div>
+
+        <!-- Cut Line -->
+        <div style="text-align: center; margin-top: 5mm;">
+            - - - - - - - - - - - - - - - - - - - - - - - - -
+        </div>
+    </div>
+</div>
 @endsection
 @endcan

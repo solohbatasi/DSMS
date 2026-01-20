@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -590,5 +591,68 @@ class PaymentController extends Controller
             'payments' => $payments,
             'branch' => $branch
         ]);
+    }
+    /**
+     * Get receipt data for printing
+     */
+    public function getReceiptData($id)
+    {
+        $user = Auth::user();
+
+        try {
+            $payment = Payment::with(['efList.student', 'efList.course', 'efList.branch'])
+                ->findOrFail($id);
+
+            // Check if user can access this payment
+            if (!$user->isAdmin() && $payment->efList->branch_id != $user->branch_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to print this receipt.'
+                ], 403);
+            }
+
+            // Format the data for receipt
+            $receiptData = [
+                'payment' => [
+                    'id' => $payment->id,
+                    'reference' => $payment->reference,
+                    'amount' => $payment->amount,
+                    'balance' => $payment->balance,
+                    'payment_date' => $payment->payment_date,
+                    'payment_method' => $payment->payment_method,
+                    'payment_status' => $payment->payment_status
+                ],
+                'student' => [
+                    'name' => $payment->efList->student->name ?? 'Unknown',
+                    'id_no' => $payment->efList->student->id_no ?? 'N/A',
+                    'ef_no' => $payment->efList->ef_no,
+                    'paid_amount' => $payment->efList->paid_amount,
+                    'balance' => $payment->efList->balance
+                ],
+                'course' => [
+                    'course' => $payment->efList->course->course ?? 'Unknown Course',
+                    'total_amount' => $payment->efList->course->total_amount ?? 0
+                ],
+                'branch' => [
+                    'name' => $payment->efList->branch->name ?? 'Main Branch',
+                    'location' => $payment->efList->branch->location ?? 'N/A'
+                ]
+            ];
+
+            return response()->json([
+                'success' => true,
+                'payment' => $receiptData['payment'],
+                'student' => $receiptData['student'],
+                'course' => $receiptData['course'],
+                'branch' => $receiptData['branch']
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Receipt data error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load receipt data.'
+            ], 500);
+        }
     }
 }

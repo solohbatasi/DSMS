@@ -97,7 +97,7 @@ Route::get('/application-success/{applicationNumber}', [LessonApplicationControl
 
 Route::get('/driving-courses', [PageController::class, 'coursesIndex'])->name('pages.courses');
 
-
+Route::get('/payments/{id}/receipt-data', [PaymentController::class, 'getReceiptData'])->name('payments.receipt-data');
 
 /*
 |--------------------------------------------------------------------------

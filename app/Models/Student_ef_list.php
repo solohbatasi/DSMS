@@ -43,6 +43,10 @@ class Student_ef_list extends Model
     {
         return $this->belongsTo(Course::class, 'course_id');
     }
+    public function branch()
+    {
+        return $this->belongsTo(Course::class);
+    }
 
     /**
      * EF has many payments
