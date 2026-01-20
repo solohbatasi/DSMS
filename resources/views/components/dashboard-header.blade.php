@@ -141,8 +141,8 @@ function dashboardMenu() {
             @can('manage tickets')
             { name: 'Tickets', href: '{{ route("student.tickets") }}', type: 'primary', icon: 'fas fa-ticket-alt' },
             @endcan
-            @can('view reports')
-            { name: 'Reports', href: '#', type: 'secondary', icon: 'fas fa-chart-line' },
+            @can('view applications')
+            { name: 'Applications', href: '{{ route("admin.applications.index") }}', type: 'primary', icon: 'fas fa-chart-line' },
             @endcan
         ]
     }
