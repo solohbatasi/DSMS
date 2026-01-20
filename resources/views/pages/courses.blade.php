@@ -4,6 +4,7 @@
 
 @section('content')
 @php
+    use Illuminate\Support\Facades\Storage;
     use Illuminate\Support\Str;
 @endphp
 
@@ -653,22 +654,34 @@
                 data-level="beginner">
 
                 <div class="course-image">
-                    <div class="course-icon">
-                        @if(Str::contains(strtolower($course->course), 'motorcycle'))
-                            <i class="fas fa-motorcycle"></i>
-                        @elseif(Str::contains(strtolower($course->course), 'automatic'))
-                            <i class="fas fa-car-side"></i>
-                        @elseif(Str::contains(strtolower($course->course), 'manual'))
-                            <i class="fas fa-cog"></i>
-                        @elseif(Str::contains(strtolower($course->course), 'professional'))
-                            <i class="fas fa-truck"></i>
-                        @else
-                            <i class="fas fa-car"></i>
-                        @endif
-                    </div>
-                    <div class="course-badge">
-                        {{ $course->training_duration }}
-                    </div>
+                    @if($course->image && Storage::exists($course->image))
+                        <!-- Display actual course image from database -->
+                        <img src="{{ Storage::url($course->image) }}"
+                            alt="{{ $course->course }}"
+                            class="w-full h-full object-cover"
+                            onerror="this.style.display='none'; this.parentElement.innerHTML = getFallbackIcon('{{ strtolower($course->course) }}');">
+                        <div class="course-badge">
+                            {{ $course->training_duration }}
+                        </div>
+                    @else
+                        <!-- Fall back to icon if no image exists -->
+                        <div class="course-icon">
+                            @if(Str::contains(strtolower($course->course), 'motorcycle'))
+                                <i class="fas fa-motorcycle"></i>
+                            @elseif(Str::contains(strtolower($course->course), 'automatic'))
+                                <i class="fas fa-car-side"></i>
+                            @elseif(Str::contains(strtolower($course->course), 'manual'))
+                                <i class="fas fa-cog"></i>
+                            @elseif(Str::contains(strtolower($course->course), 'professional'))
+                                <i class="fas fa-truck"></i>
+                            @else
+                                <i class="fas fa-car"></i>
+                            @endif
+                        </div>
+                        <div class="course-badge">
+                            {{ $course->training_duration }}
+                        </div>
+                    @endif
                 </div>
 
                 <div class="course-content">
