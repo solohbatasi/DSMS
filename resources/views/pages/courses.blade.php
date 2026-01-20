@@ -724,7 +724,8 @@
                             @php
                                 $discounted = $course->total_amount;
                                 $markupPercent = $discounted <= 30000 ? 10 : 20;
-                                $original = $discounted * (1 + ($markupPercent / 100));
+                                $rawOriginal = $discounted * (1 + ($markupPercent / 100));
+                                $original = ceil($rawOriginal / 100) * 100; // round UP to next 100
                             @endphp
 
                             <div class="flex items-center justify-between mb-2">
@@ -746,8 +747,8 @@
                                 </div>
                             </div>
                         </div>
-
                     @endif
+
 
                     <div class="flex space-x-3 mt-auto">
                        <!-- Change this line in the course card -->
