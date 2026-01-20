@@ -654,12 +654,13 @@
                 data-level="beginner">
 
                 <div class="course-image">
-                    @if($course->image && Storage::exists($course->image))
+                    @if($course->image && file_exists(storage_path('app/public/' . $course->image)))
                         <!-- Display actual course image from database -->
-                        <img src="{{ Storage::url($course->image) }}"
+                        <img src="{{ asset('storage/' . $course->image) }}"
                             alt="{{ $course->course }}"
                             class="w-full h-full object-cover"
-                            onerror="this.style.display='none'; this.parentElement.innerHTML = getFallbackIcon('{{ strtolower($course->course) }}');">
+                            onerror="this.onerror=null; this.style.display='none';
+                                    this.parentElement.innerHTML = getFallbackIcon('{{ strtolower($course->course) }}');">
                         <div class="course-badge">
                             {{ $course->training_duration }}
                         </div>
