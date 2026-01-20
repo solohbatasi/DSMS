@@ -370,6 +370,9 @@ function branchSwitcher() {
                         <tr class="bg-gray-50">
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Application #</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                            @if(auth()->user()->isAdmin())
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+                            @endif
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applied On</th>
@@ -398,6 +401,12 @@ function branchSwitcher() {
                                     </div>
                                 </div>
                             </td>
+                            @if(auth()->user()->isAdmin())
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ $application->course->branch->name ?? ' ' }}</div>
+
+                            </td>
+                            @endif
                             <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900">{{ $application->course->course ?? 'N/A' }}</div>
                                 <div class="text-xs text-gray-500">{{ $application->course->branch->name ?? 'N/A' }}</div>
