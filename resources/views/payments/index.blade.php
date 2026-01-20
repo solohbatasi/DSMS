@@ -1802,10 +1802,12 @@ function quickPrint(paymentData) {
 <!-- Receipt Template for Thermal Printer -->
 <div id="receiptTemplate" class="hidden">
     <div class="receipt-container">
+        <div class="receipt-logo">
+            <img src="{{ asset('img/Logo.png') }}" style="max-width: 60mm; max-height: 20mm; display: block; margin: 0 auto;">
+        </div>
         <!-- School Header -->
         <div class="receipt-header">
             <div class="receipt-title">PACE DRIVING SCHOOL</div>
-            <div>Professional Driving & Computer Training</div>
             <div>{{ config('app.address', 'Nairobi, Kenya') }}</div>
             <div>Tel: +254 728 725 559</div>
             <div>Email: info@pacedriving.com</div>
