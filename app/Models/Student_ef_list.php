@@ -45,7 +45,7 @@ class Student_ef_list extends Model
     }
     public function branch()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Branch::class);
     }
 
     /**
