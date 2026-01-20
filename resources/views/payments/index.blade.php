@@ -1611,7 +1611,7 @@ async function printReceipt(paymentId) {
         // Print the receipt
         setTimeout(() => {
             const receiptDiv = document.getElementById('receiptTemplate');
-            const printWindow = window.open('', '_blank', 'width=80mm,height=600');
+            const printWindow = window.open('', '_blank');
 
             printWindow.document.write(`
                 <!DOCTYPE html>
@@ -1710,14 +1710,13 @@ function populateReceiptTemplate(payment, student, course, branch) {
     document.getElementById('receiptAmount').textContent = formatCurrency(payment.amount);
     document.getElementById('receiptOldBalance').textContent = formatCurrency(previousBalance);
     document.getElementById('receiptNewBalance').textContent = formatCurrency(payment.balance);
-    document.getElementById('receiptTotalFee').textContent = formatCurrency(student.total_fee || 0);
     document.getElementById('receiptTotalPaid').textContent = formatCurrency(student.paid_amount || 0);
     document.getElementById('receiptRemaining').textContent = formatCurrency(payment.balance);
 }
 
 // Quick Print Function (for already loaded payments)
 function quickPrint(paymentData) {
-    const receiptWindow = window.open('', '_blank', 'width=80mm,height=600');
+    const receiptWindow = window.open('', '_blank');
 
     receiptWindow.document.write(`
         <!DOCTYPE html>
@@ -1884,7 +1883,7 @@ function quickPrint(paymentData) {
         </div>
 
         <div class="receipt-detail">
-            <div>Previous Balance:</div>
+            <div>Total Payable:</div>
             <div class="text-right" id="receiptOldBalance">KSh 0.00</div>
         </div>
 
@@ -1896,10 +1895,6 @@ function quickPrint(paymentData) {
         <div class="double-line"></div>
 
         <!-- Totals -->
-        <div class="receipt-detail">
-            <div class="bold">TOTAL FEE:</div>
-            <div class="text-right bold" id="receiptTotalFee">KSh 0.00</div>
-        </div>
 
         <div class="receipt-detail">
             <div class="bold">TOTAL PAID:</div>
