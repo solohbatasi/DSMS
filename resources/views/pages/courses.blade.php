@@ -658,7 +658,7 @@
                         <!-- Display actual course image from database -->
                         <img src="{{ asset('storage/' . $course->image) }}"
                             alt="{{ $course->course }}"
-                            class="w-full h-full object-cover"
+                            class="w-full h-full object-contain"
                             onerror="this.onerror=null; this.style.display='none';
                                     this.parentElement.innerHTML = getFallbackIcon('{{ strtolower($course->course) }}');">
                         <div class="course-badge">
