@@ -772,16 +772,16 @@
         <div class="stats-grid">
             <div class="stat-item bg-white/10 backdrop-blur-sm">
                 <div class="stat-number text-white">{{ $stats['total_courses'] }}+</div>
-                <p class="text-blue-100">Professional Courses</p>
+                <p class="text-blue-600">Professional Courses</p>
             </div>
             <div class="stat-item bg-white/10 backdrop-blur-sm">
                 <div class="stat-number text-white">{{ $stats['total_branches'] }}+</div>
-                <p class="text-blue-100">Training Branches</p>
+                <p class="text-blue-600">Training Branches</p>
             </div>
 
             <div class="stat-item bg-white/10 backdrop-blur-sm">
                 <div class="stat-number text-white">95%</div>
-                <p class="text-blue-100">Success Rate</p>
+                <p class="text-blue-600">Success Rate</p>
             </div>
         </div>
     </div>
