@@ -505,7 +505,7 @@ function branchSwitcher() {
                         <h3 class="font-semibold text-gray-800">{{ $payment->efList->student->name ?? '' }}</h3>
                         <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Paid</span>
                     </div>
-                    <p class="text-sm text-gray-600 mb-2">EF No: {{ $payment->efList->ef_no }}</p>
+                    <p class="text-sm text-gray-600 mb-2">REG No: {{ $payment->efList->ef_no }}</p>
                     <div class="flex justify-between items-center text-sm">
                         <span class="text-blue-600 font-semibold">KSh {{ number_format($payment->amount, 2) }}</span>
                         <span class="text-gray-500">{{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y') : 'N/A' }}</span>
@@ -530,7 +530,7 @@ function branchSwitcher() {
                     <div class="relative">
                         <input type="text"
                         id="paymentSearch"
-                        placeholder="Search by student name, EF number, reference..."
+                        placeholder="Search by student name, REG number, reference..."
                         class="w-full border border-gray-300 rounded-lg px-4 py-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                         autocomplete="off">
 
@@ -588,7 +588,7 @@ function branchSwitcher() {
                     <thead>
                         <tr class="bg-gray-50">
                             <th class="px-4 py-3 text-left">Student</th>
-                            <th class="px-4 py-3 text-left">EF Number</th>
+                            <th class="px-4 py-3 text-left">REG Number</th>
                             <th class="px-4 py-3 text-left">Course</th>
                             <th class="px-4 py-3 text-left">Reference</th>
                             <th class="px-4 py-3 text-left">Amount</th>
@@ -699,7 +699,7 @@ function branchSwitcher() {
                     <input type="text"
                            id="studentSearch"
                            class="w-full border border-gray-300 rounded-lg px-4 py-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Search by student name, ID number, or EF number..."
+                           placeholder="Search by student name, ID number, or REG number..."
                            autocomplete="off">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3">
                         <i class="fas fa-search text-gray-400"></i>
@@ -717,7 +717,7 @@ function branchSwitcher() {
                         <div>
                             <h4 class="font-semibold text-gray-800" id="selectedStudentName"></h4>
                             <p class="text-sm text-gray-600">ID: <span id="selectedStudentId"></span></p>
-                            <p class="text-sm text-gray-600">EF Number: <span id="selectedEfNumber"></span></p>
+                            <p class="text-sm text-gray-600">REG Number: <span id="selectedEfNumber"></span></p>
                             <p class="text-sm text-gray-600">Course: <span id="selectedCourse"></span></p>
                         </div>
                         <button type="button" onclick="clearSelection()" class="text-red-600 hover:text-red-800">
@@ -1765,7 +1765,7 @@ function quickPrint(paymentData) {
                 <div>${paymentData.studentName}</div>
             </div>
             <div class="row">
-                <div>EF No:</div>
+                <div>REG No:</div>
                 <div>${paymentData.efNumber}</div>
             </div>
             <div class="row">
@@ -1847,7 +1847,7 @@ function quickPrint(paymentData) {
         </div>
 
         <div class="receipt-detail">
-            <div>EF Number:</div>
+            <div>REG Number:</div>
             <div class="text-right" id="receiptEfNo">-</div>
         </div>
 
