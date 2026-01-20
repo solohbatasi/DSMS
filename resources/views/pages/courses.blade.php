@@ -707,30 +707,40 @@
                         <i class="fas fa-clock mr-2"></i>
                         {{ $course->training_duration }} Days Training
                     </div>
-                    <!-- Simple Pricing Display -->
-                    <div class="mt-6 mb-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
-                        <div class="flex items-center justify-between mb-2">
-                            <div>
-                                <div class="text-sm text-gray-500">Original Price</div>
-                                <div class="text-xl font-bold text-red-500 line-through">
-                                    Ksh {{ number_format($course->total_amount) }}
-                                </div>
-                            </div>
-                            <div class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                                -{{ $course->total_amount <= 30000 ? '15%' : '20%' }}
-                            </div>
+                    <!-- Progress/Sessions Info -->
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm text-gray-600 mb-2">
+                            <span>Practical Sessions: {{ $course->practical_sessions }}</span>
+                            <span>Theory Classes: {{ $course->theoretical_sessions }}</span>
                         </div>
-
-                        <div class="mb-2">
-                            <div class="text-sm text-gray-500">Discounted Price</div>
-                            <div class="text-xl font-black text-blue-600">
-                                Ksh {{ number_format($course->total_amount * ($course->total_amount <= 30000 ? 0.85 : 0.80)) }}
-                            </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ (($course->practical_sessions + $course->theoretical_sessions) / 30) * 100 }}%"></div>
                         </div>
-
                     </div>
 
+                    @if($course->category && Str::contains(strtolower($course->category->name), 'computer'))
+                        <!-- Simple Pricing Display - ONLY FOR COMPUTER COURSES -->
+                        <div class="mt-6 mb-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <div class="text-sm text-gray-500">Original Price</div>
+                                    <div class="text-xl font-bold text-red-500 line-through">
+                                        Ksh {{ number_format($course->total_amount) }}
+                                    </div>
+                                </div>
+                                <div class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                                    -{{ $course->total_amount <= 30000 ? '15%' : '20%' }}
+                                </div>
+                            </div>
 
+                            <div class="mb-2">
+                                <div class="text-sm text-gray-500">Discounted Price</div>
+                                <div class="text-xl font-black text-blue-600">
+                                    Ksh {{ number_format($course->total_amount * ($course->total_amount <= 30000 ? 0.85 : 0.80)) }}
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="flex space-x-3 mt-auto">
                        <!-- Change this line in the course card -->
