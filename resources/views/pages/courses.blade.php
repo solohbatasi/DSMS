@@ -8,6 +8,115 @@
 @endphp
 
 <style>
+    /* Add these styles to your existing CSS */
+    .pricing-container {
+        margin: 20px 0;
+        padding: 15px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .original-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ef4444;
+        text-decoration: line-through;
+        margin-bottom: 5px;
+    }
+
+    .discounted-price {
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: #1e40af;
+        line-height: 1;
+        margin-bottom: 5px;
+    }
+
+    .discount-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .price-period {
+        font-size: 0.9rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .savings-text {
+        font-size: 0.85rem;
+        color: #059669;
+        font-weight: 600;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .countdown-timer {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 10px;
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    .countdown-text {
+        font-size: 0.8rem;
+        color: #92400e;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .countdown-numbers {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #dc2626;
+        letter-spacing: 1px;
+    }
+
+    .offer-tag {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(45deg, #ef4444, #f87171);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        z-index: 5;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        animation: shake 3s infinite;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+        20%, 40%, 60%, 80% { transform: translateX(2px); }
+    }
+
+    .pricing-comparison {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 10px;
+    }
     /* Professional Courses Styles */
     .description-bullets li {
         transition: all 0.3s ease;
@@ -487,15 +596,13 @@
                     </select>
                 </div>
 
-                <!-- Additional filters - Only enabled after branch selection -->
                 <div class="filter-group">
-                    <label for="courseType" class="block text-sm font-medium text-gray-700 mb-2">Course Type</label>
+                    <label for="courseType" class="block text-sm font-medium text-gray-700 mb-2">Course Category</label>
                     <select id="courseType" class="filter-select" disabled>
-                        <option value="all">All Courses</option>
-                        <option value="beginner">Beginner Programs</option>
-                        <option value="advanced">Advanced Driving</option>
-                        <option value="commercial">Commercial License</option>
-                        <option value="specialized">Specialized Training</option>
+                        <option value="all">All Categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -539,11 +646,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach($courses as $course)
             <div class="course-card {{ $loop->index == 1 ? 'popular' : '' }}"
-                 data-category="beginner"
-                 data-duration="medium"
-                 data-branch="{{ $course->branch_id ?? 'all' }}"
-                 data-price="{{ $course->total_amount <= 20000 ? 'budget' : ($course->total_amount <= 40000 ? 'standard' : 'premium') }}"
-                 data-level="beginner">
+                data-category="{{ $course->category_id ?? 'all' }}"
+                data-duration="medium"
+                data-branch="{{ $course->branch_id ?? 'all' }}"
+                data-price="{{ $course->total_amount <= 20000 ? 'budget' : ($course->total_amount <= 40000 ? 'standard' : 'premium') }}"
+                data-level="beginner">
 
                 <div class="course-image">
                     <div class="course-icon">
@@ -600,17 +707,30 @@
                         <i class="fas fa-clock mr-2"></i>
                         {{ $course->training_duration }} Days Training
                     </div>
+                    <!-- Simple Pricing Display -->
+                    <div class="mt-6 mb-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <div>
+                                <div class="text-sm text-gray-500">Original Price</div>
+                                <div class="text-xl font-bold text-red-500 line-through">
+                                    Ksh {{ number_format($course->total_amount) }}
+                                </div>
+                            </div>
+                            <div class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                                -{{ $course->total_amount <= 30000 ? '15%' : '20%' }}
+                            </div>
+                        </div>
 
-                    <!-- Progress/Sessions Info -->
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm text-gray-600 mb-2">
-                            <span>Practical Sessions: {{ $course->practical_sessions }}</span>
-                            <span>Theory Classes: {{ $course->theoretical_sessions }}</span>
+                        <div class="mb-2">
+                            <div class="text-sm text-gray-500">Discounted Price</div>
+                            <div class="text-xl font-black text-blue-600">
+                                Ksh {{ number_format($course->total_amount * ($course->total_amount <= 30000 ? 0.85 : 0.80)) }}
+                            </div>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: {{ (($course->practical_sessions + $course->theoretical_sessions) / 30) * 100 }}%"></div>
-                        </div>
+
                     </div>
+
+
 
                     <div class="flex space-x-3 mt-auto">
                        <!-- Change this line in the course card -->
@@ -650,6 +770,51 @@
 </section>
 
 <script>
+    // Countdown Timer Functionality
+function updateCountdownTimers() {
+    const countdownElements = document.querySelectorAll('.countdown-numbers');
+
+    countdownElements.forEach(element => {
+        const endTime = new Date(element.getAttribute('data-countdown')).getTime();
+        const now = new Date().getTime();
+        const distance = endTime - now;
+
+        if (distance < 0) {
+            element.textContent = "OFFER EXPIRED";
+            element.style.color = "#ef4444";
+            return;
+        }
+
+        // Calculate days, hours, minutes, seconds
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        // Format as DD : HH : MM : SS
+        element.textContent =
+            `${days.toString().padStart(2, '0')} : ${hours.toString().padStart(2, '0')} : ${minutes.toString().padStart(2, '0')} : ${seconds.toString().padStart(2, '0')}`;
+    });
+}
+
+// Initialize countdown timers
+document.addEventListener('DOMContentLoaded', function() {
+    // Update countdown every second
+    setInterval(updateCountdownTimers, 1000);
+    updateCountdownTimers();
+
+    // Also add hover effect to pricing containers
+    document.querySelectorAll('.pricing-container').forEach(container => {
+        container.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.02)';
+            this.style.transition = 'transform 0.3s ease';
+        });
+
+        container.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
 document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     const branchSelect = document.getElementById('branch');
@@ -708,6 +873,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show/hide cards based on filters
         courseCards.forEach(card => {
             const cardBranch = card.getAttribute('data-branch');
+            // In your filterCourses() function, update this part:
             const cardType = card.getAttribute('data-category');
             const cardDuration = card.getAttribute('data-duration');
             const cardLevel = card.getAttribute('data-level');

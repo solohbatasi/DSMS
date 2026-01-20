@@ -50,7 +50,7 @@ class PageController extends Controller
 
         $courses = $query->get();
 
-        // Get all categories for filter
+        // Get all categories for filter - FETCH FROM DB
         $categories = CourseCategory::where('status', 1)
             ->withCount(['courses' => function($query) {
                 $query->where('status', 1);
@@ -87,7 +87,7 @@ class PageController extends Controller
             'courses',
             'coursesByCategory',
             'popularCourses',
-            'categories',
+            'categories',  // This is now passed to the view
             'branches',
             'stats'
         ));
