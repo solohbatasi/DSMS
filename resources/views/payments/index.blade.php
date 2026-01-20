@@ -1710,7 +1710,7 @@ function populateReceiptTemplate(payment, student, course, branch) {
     document.getElementById('receiptAmount').textContent = formatCurrency(payment.amount);
     document.getElementById('receiptOldBalance').textContent = formatCurrency(previousBalance);
     document.getElementById('receiptNewBalance').textContent = formatCurrency(payment.balance);
-    document.getElementById('receiptTotalFee').textContent = formatCurrency(course.total_amount || 0);
+    document.getElementById('receiptTotalFee').textContent = formatCurrency(student.total_fee || 0);
     document.getElementById('receiptTotalPaid').textContent = formatCurrency(student.paid_amount || 0);
     document.getElementById('receiptRemaining').textContent = formatCurrency(payment.balance);
 }
