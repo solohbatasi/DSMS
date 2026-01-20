@@ -45,4 +45,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Bill::class);
     }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }
