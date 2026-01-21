@@ -737,7 +737,7 @@
                         <div class="mt-6 mb-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
                             @php
                                 $discounted = $course->total_amount;
-                                $markupPercent = $discounted <= 30000 ? 10 : 20;
+                                $markupPercent = $discounted <= 30000 ? 20 : 20;
                                 $rawOriginal = $discounted * (1 + ($markupPercent / 100));
                                 $original = ceil($rawOriginal / 100) * 100; // round UP to next 100
                             @endphp
