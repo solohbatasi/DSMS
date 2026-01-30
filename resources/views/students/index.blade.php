@@ -506,10 +506,9 @@ function branchSwitcher() {
                             @if(auth()->user()->isAdmin())
                             <th class="px-4 py-2">Branch</th>
                             @endif
-                            <th class="px-4 py-2">Course</th>
+                            <th class="px4 py-2">Course</th>
                             <th class="px-4 py-2">Reg No</th>
                             <th class="px-4 py-2">Fees</th>
-
                             <th class="px-4 py-2">Actions</th>
                         </tr>
                     </thead>
@@ -519,14 +518,28 @@ function branchSwitcher() {
                         @php
                             $totalPaid = $ef->payments->sum('amount');
                             $balance = $ef->total_fee - $totalPaid;
+
+                            // Get student email from user relationship
+                            $studentEmail = $ef->student->user->email ?? ($ef->student->email ?? '');
                         @endphp
                         <tr class="border-b">
-                            <td class="px-4 py-2">{{ $ef->student->name ?? ' '}}</td>
+                            <td class="px-4 py-2">
+                                <div class="flex flex-col">
+                                    <span class="font-medium text-gray-900">{{ $ef->student->name ?? 'N/A' }}</span>
+                                    @if($studentEmail)
+                                    <span class="text-xs text-gray-500 mt-1">{{ $studentEmail }}</span>
+                                    @else
+                                    <span class="text-xs text-gray-400 italic mt-1">No email</span>
+                                    @endif
+                                </div>
+                            </td>
+
                             @if(auth()->user()->isAdmin())
                             <td class="px-4 py-2">
                                 {{ $ef->student->branch->name ?? '-' }}
                             </td>
                             @endif
+
                             <td class="px-4 py-2">{{ $ef->course->course }}</td>
                             <td class="px-4 py-2">{{ $ef->ef_no }}</td>
                             <td class="px-4 py-2">
@@ -546,13 +559,13 @@ function branchSwitcher() {
                                     class="text-blue-600 hover:text-blue-800">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
-
-                                
                                 @endcan
+
                                 <a href="{{ route('admin.students.tickets', ['student' => $ef->student->id]) }}"
                                     class="text-green-600 hover:text-green-800">
                                     <i class="fas fa-ticket-alt"></i> Tickets
                                 </a>
+
                                 @can('delete students')
                                 <button onclick="openDeleteModal({{ $ef->id }})"
                                     class="text-red-600 hover:text-red-800">
@@ -560,7 +573,6 @@ function branchSwitcher() {
                                 </button>
                                 @endcan
                             </td>
-
                         </tr>
                         @endforeach
                     </tbody>
@@ -569,9 +581,7 @@ function branchSwitcher() {
                 <div class="mt-4">
                     {{ $students->links() }}
                 </div>
-
             </div>
-
 
         </div>
     </div>
@@ -1100,7 +1110,21 @@ function renderStudents(students, canEdit, canDelete) {
     students.forEach(s => {
         tbody.innerHTML += `
             <tr class="border-b">
-                <td class="px-4 py-2">${s.student_name}</td>
+                <td class="px-4 py-2">
+                    <div class="flex flex-col">
+                        <span class="font-medium text-gray-900">${s.student_name}</span>
+                        ${s.email ? `
+                        <span class="text-xs text-gray-500 mt-1">${s.email}</span>
+                        ` : `
+                        <span class="text-xs text-gray-400 italic mt-1">No email</span>
+                        `}
+                    </div>
+                </td>
+
+                ${s.branch_name && {{ auth()->user()->isAdmin() ? 'true' : 'false' }} ? `
+                <td class="px-4 py-2">${s.branch_name}</td>
+                ` : ''}
+
                 <td class="px-4 py-2">${s.course_name}</td>
                 <td class="px-4 py-2">${s.ef_no}</td>
                 <td class="px-4 py-2">

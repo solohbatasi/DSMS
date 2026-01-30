@@ -24,7 +24,7 @@ class StudentController extends Controller
         $user = Auth::user();
 
         // Base query with branch filtering
-        $query = Student_ef_list::with(['student', 'course', 'payments']);
+        $query = Student_ef_list::with(['student.user', 'course', 'payments']);
 
         // Apply branch filtering based on user role and branch selection
         if ($user->isAdmin()) {
@@ -525,9 +525,12 @@ class StudentController extends Controller
                     return null; // Skip students from other branches for non-admin users
                 }
 
+                $email = $ef->student->user->email ?? ($ef->student->email ?? '');
+
                 return [
                     'id' => $ef->id,
                     'student_name' => $ef->student->name ?? 'Unknown',
+                    'email' => $email,
                     'course_name' => $ef->course->course ?? '-',
                     'ef_no' => $ef->ef_no,
                     'total_fee' => number_format($ef->total_fee, 2),
