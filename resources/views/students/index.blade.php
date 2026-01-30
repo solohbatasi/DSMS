@@ -547,11 +547,12 @@ function branchSwitcher() {
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
 
+                                
+                                @endcan
                                 <a href="{{ route('admin.students.tickets', ['student' => $ef->student->id]) }}"
                                     class="text-green-600 hover:text-green-800">
                                     <i class="fas fa-ticket-alt"></i> Tickets
                                 </a>
-                                @endcan
                                 @can('delete students')
                                 <button onclick="openDeleteModal({{ $ef->id }})"
                                     class="text-red-600 hover:text-red-800">
