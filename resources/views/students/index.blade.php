@@ -1142,10 +1142,10 @@ function renderStudents(students, canEdit, canDelete) {
                             <i class="fas fa-edit"></i> Edit
                         </button>` : ''}
 
-                    ${canEdit ? `
+
                         <a href="/admin/students/${s.id}/tickets" class="text-green-600 hover:text-green-800">
                             <i class="fas fa-ticket-alt"></i> Tickets
-                        </a>` : ''}
+                        </a>
 
                     ${canDelete ? `
                         <button onclick="openDeleteModal(${s.id})" class="text-red-600 hover:text-red-800">
