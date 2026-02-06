@@ -186,7 +186,7 @@ class PaymentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Payment store error: ' . $e->getMessage());
+            Log::error('Payment store error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Something went wrong. Try again.',
@@ -283,7 +283,7 @@ class PaymentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Payment update error: ' . $e->getMessage());
+            Log::error('Payment update error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'An unexpected error occurred.',
@@ -328,7 +328,7 @@ class PaymentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Payment delete error: ' . $e->getMessage());
+            Log::error('Payment delete error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete payment. ' . $e->getMessage()
@@ -466,7 +466,7 @@ class PaymentController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Payment search error: ' . $e->getMessage());
+            Log::error('Payment search error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Search failed: ' . $e->getMessage(),
@@ -557,7 +557,7 @@ class PaymentController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Student search error: ' . $e->getMessage());
+            Log::error('Student search error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Search failed',
