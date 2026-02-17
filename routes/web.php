@@ -189,9 +189,8 @@ Route::get('/admin/students/{student}/tickets', [App\Http\Controllers\AdminTicke
 Route::post('/admin/students/{student}/tickets/download', [App\Http\Controllers\AdminTicketController::class, 'downloadTicketForStudent'])->name('admin.students.tickets.download');
 Route::post('/admin/tickets/{ticket}/redownload', [App\Http\Controllers\AdminTicketController::class, 'redownloadTicket'])->name('admin.tickets.redownload');
 Route::get('/admin/tickets/{ticket}/preview', [App\Http\Controllers\AdminTicketController::class, 'previewTicket'])->name('admin.tickets.preview');
-
 Route::post('/admin/students/{student}/tickets/add-previous', [AdminTicketController::class, 'addPreviousClasses'])
-    ->name('admin.students.tickets.add-previous');// Instructor Routes
+    ->name('admin.students.tickets.add-previous');
 // Instructor Routes
 Route::prefix('instructor')->group(function () {
     Route::get('/qr-verify', [App\Http\Controllers\InstructorController::class, 'showQRVerify'])->name('instructor.qr-verify');

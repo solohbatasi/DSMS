@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
-use App\Models\Student_ef_list;
-use App\Models\TicketDownload;
 use App\Models\Course;
+use App\Models\Student_ef_list;
+use App\Models\Student;
+use App\Models\TicketDownload;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class AdminTicketController extends Controller
 {
@@ -321,164 +322,192 @@ class AdminTicketController extends Controller
      * Add previous unrecorded classes for a student
      * Distributes classes across valid dates: 1 on current day, rest on previous days (excluding Sundays and before enrollment)
      */
-    public function addPreviousClasses(Request $request, $studentId)
-    {
-        $request->validate([
-            'ef_id' => 'required|exists:student_ef_lists,id',
-            'session_type' => 'required|in:practical,theoretical',
-            'course_id' => 'required|exists:courses,id',
-            'previous_classes_count' => 'required|integer|min:1|max:100',
-            'notes' => 'nullable|string|max:500'
-        ]);
+   /**
+ * Add previous unrecorded classes for a student
+ * Distributes classes across valid dates: 1 on current day, rest on previous days (excluding Sundays and before enrollment)
+ */
+public function addPreviousClasses(Request $request, $studentId)
+{
+    $request->validate([
+        'ef_id' => 'required|exists:student_ef_lists,id',
+        'session_type' => 'required|in:practical,theoretical',
+        'course_id' => 'required|exists:courses,id',
+        'previous_classes_count' => 'required|integer|min:1|max:100',
+        'notes' => 'nullable|string|max:500'
+    ]);
 
-        $student = Student::findOrFail($studentId);
+    $student = Student::findOrFail($studentId);
 
-        // Check if student owns this EF list
-        $ef_list = Student_ef_list::where('id', $request->ef_id)
-            ->where('student_id', $student->id)
-            ->with('course')
-            ->first();
+    // Check if student owns this EF list
+    $ef_list = Student_ef_list::where('id', $request->ef_id)
+        ->where('student_id', $student->id)
+        ->with('course')
+        ->first();
 
-        if (!$ef_list) {
-            return back()->with('error', 'Invalid course selection.');
-        }
+    if (!$ef_list) {
+        return back()->with('error', 'Invalid course selection.');
+    }
 
-        $course = $ef_list->course;
-        if (!$course) {
-            return back()->with('error', 'Course not found.');
-        }
+    $course = $ef_list->course;
+    if (!$course) {
+        return back()->with('error', 'Course not found.');
+    }
 
-        // Check remaining sessions
-        $remaining = $request->session_type === 'practical'
-            ? $ef_list->remaining_practical
-            : $ef_list->remaining_theoretical;
+    // Check remaining sessions
+    $remaining = $request->session_type === 'practical'
+        ? $ef_list->remaining_practical
+        : $ef_list->remaining_theoretical;
 
-        if ($remaining < $request->previous_classes_count) {
-            return back()->with('error', "Cannot add {$request->previous_classes_count} classes. Only {$remaining} sessions remaining.");
-        }
+    if ($remaining < $request->previous_classes_count) {
+        return back()->with('error', "Cannot add {$request->previous_classes_count} classes. Only {$remaining} sessions remaining.");
+    }
 
-        // Use database transaction
-        DB::beginTransaction();
+    // Use database transaction
+    DB::beginTransaction();
 
-        try {
-            $today = Carbon::today();
-            $enrollmentDate = Carbon::parse($ef_list->created_at)->startOfDay();
+    try {
+        $today = Carbon::today();
+        $enrollmentDate = Carbon::parse($ef_list->created_at)->startOfDay();
 
-            // Calculate how many days we need to go back
-            $classesToAdd = $request->previous_classes_count;
-            $dates = [];
+        // Calculate how many days we need to go back
+        $classesToAdd = $request->previous_classes_count;
+        $dates = [];
+        $debugInfo = [];
 
-            // Always put 1 class on today (current day)
-            $dates[] = $today->copy()->setTime(rand(9, 17), rand(0, 59), rand(0, 59));
-            $classesToAdd--;
+        $debugInfo[] = "Starting with {$classesToAdd} classes to add";
+        $debugInfo[] = "Enrollment date: " . $enrollmentDate->format('Y-m-d');
+        $debugInfo[] = "Today: " . $today->format('Y-m-d');
 
-            // If we need to add more classes, distribute them on previous valid days
-            if ($classesToAdd > 0) {
-                $currentDate = $today->copy()->subDay(); // Start from yesterday
-                $attempts = 0;
-                $maxAttempts = 365; // Prevent infinite loop (max 1 year back)
+        // Always put 1 class on today (current day)
+        $todayTicket = $today->copy()->setTime(rand(9, 17), rand(0, 59), rand(0, 59));
+        $dates[] = $todayTicket;
+        $classesToAdd--;
 
-                while ($classesToAdd > 0 && $attempts < $maxAttempts) {
-                    $attempts++;
+        $debugInfo[] = "Added today's ticket: " . $todayTicket->format('Y-m-d H:i:s');
 
-                    // Skip if date is before enrollment
-                    if ($currentDate->lt($enrollmentDate)) {
-                        $currentDate->subDay();
-                        continue;
-                    }
+        // If we need to add more classes, distribute them on previous valid days
+        if ($classesToAdd > 0) {
+            $currentDate = $today->copy()->subDay(); // Start from yesterday
+            $attempts = 0;
+            $maxAttempts = 365; // Prevent infinite loop (max 1 year back)
+            $foundDates = [];
 
-                    // Skip Sundays (Carbon: 0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-                    if ($currentDate->dayOfWeek === 0) { // Sunday
-                        $currentDate->subDay();
-                        continue;
-                    }
+            $debugInfo[] = "Looking for {$classesToAdd} more dates...";
 
-                    // Check if there's already a ticket for this session type on this date
-                    $existingTicket = TicketDownload::where('student_id', $student->id)
-                        ->where('ef_id', $request->ef_id)
-                        ->where('session_type', $request->session_type)
-                        ->whereDate('session_date', $currentDate)
-                        ->exists();
+            while ($classesToAdd > 0 && $attempts < $maxAttempts) {
+                $attempts++;
 
-                    if (!$existingTicket) {
-                        // Add ticket with random time
-                        $dates[] = $currentDate->copy()->setTime(rand(9, 17), rand(0, 59), rand(0, 59));
-                        $classesToAdd--;
-                    }
-
-                    // Move to previous day
+                // Skip if date is before enrollment
+                if ($currentDate->lt($enrollmentDate)) {
+                    $debugInfo[] = "Attempt {$attempts}: Date {$currentDate->format('Y-m-d')} is before enrollment, skipping";
                     $currentDate->subDay();
+                    continue;
                 }
 
-                // If we couldn't find enough valid dates, throw an error
-                if ($classesToAdd > 0) {
-                    DB::rollback();
-                    $availableDays = $this->countAvailableDays($enrollmentDate, $today, $student, $ef_list, $request->session_type);
-                    return back()->with('error', "Cannot add {$request->previous_classes_count} classes. Only {$availableDays} available days found between enrollment and today (excluding Sundays and days with existing tickets).");
+                // Skip Sundays (Carbon: 0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+                if ($currentDate->dayOfWeek === 0) {
+                    $debugInfo[] = "Attempt {$attempts}: Date {$currentDate->format('Y-m-d')} is Sunday, skipping";
+                    $currentDate->subDay();
+                    continue;
                 }
-            }
 
-            // Sort dates chronologically
-            sort($dates);
-
-            // Create ticket records
-            $createdTickets = [];
-            foreach ($dates as $dateTime) {
-                // Check if this specific datetime already has a ticket (avoid duplicates)
-                $existingAtTime = TicketDownload::where('student_id', $student->id)
+                // Check if there's already a ticket for this session type on this date
+                $existingTicket = TicketDownload::where('student_id', $student->id)
                     ->where('ef_id', $request->ef_id)
                     ->where('session_type', $request->session_type)
-                    ->where('download_time', $dateTime)
+                    ->whereDate('session_date', $currentDate)
                     ->exists();
 
-                if ($existingAtTime) {
-                    // Adjust time by adding a few seconds to avoid collision
-                    $dateTime->addSeconds(rand(1, 59));
+                if (!$existingTicket) {
+                    // Add ticket with random time
+                    $ticketTime = $currentDate->copy()->setTime(rand(9, 17), rand(0, 59), rand(0, 59));
+                    $dates[] = $ticketTime;
+                    $foundDates[] = $currentDate->format('Y-m-d');
+                    $classesToAdd--;
+
+                    $debugInfo[] = "Attempt {$attempts}: Added ticket for {$currentDate->format('Y-m-d')} at " . $ticketTime->format('H:i:s') . ". Remaining: {$classesToAdd}";
+                } else {
+                    $debugInfo[] = "Attempt {$attempts}: Date {$currentDate->format('Y-m-d')} already has a ticket, skipping";
                 }
 
-                $ticket = TicketDownload::create([
-                    'student_id' => $student->id,
-                    'ef_id' => $request->ef_id,
-                    'download_time' => $dateTime,
-                    'session_type' => $request->session_type,
-                    'downloaded_by' => Auth::user()->id,
-                    'downloaded_by_role' => Auth::user()->role . ' (bulk add)',
-                    'session_date' => $dateTime->copy()->startOfDay(),
-                    'notes' => $request->notes ?: 'Previous unrecorded classes added',
-                    'is_bulk_add' => true
-                ]);
-
-                $createdTickets[] = $ticket;
+                // Move to previous day
+                $currentDate->subDay();
             }
 
-            // Update attendance counts
-            if ($request->session_type === 'practical') {
-                $ef_list->update([
-                    'attended_practical' => $ef_list->attended_practical + $request->previous_classes_count,
-                    'remaining_practical' => $ef_list->remaining_practical - $request->previous_classes_count
-                ]);
-            } else {
-                $ef_list->update([
-                    'attended_theoretical' => $ef_list->attended_theoretical + $request->previous_classes_count,
-                    'remaining_theoretical' => $ef_list->remaining_theoretical - $request->previous_classes_count
-                ]);
+            $debugInfo[] = "Found dates: " . implode(', ', $foundDates);
+
+            // If we couldn't find enough valid dates, throw an error
+            if ($classesToAdd > 0) {
+                DB::rollback();
+                $availableDays = $this->countAvailableDays($enrollmentDate, $today, $student, $ef_list, $request->session_type);
+                $debugInfo[] = "ERROR: Not enough dates. Needed {$request->previous_classes_count}, found " . count($dates);
+
+                return back()->with('error', "Cannot add {$request->previous_classes_count} classes. Only {$availableDays} available days found. Debug: " . implode(' | ', $debugInfo));
             }
-
-            DB::commit();
-
-            // Format dates for success message
-            $dateRanges = $this->formatDateRanges($createdTickets);
-
-            return redirect()->route('admin.students.tickets.manage', ['student' => $student->id])
-                ->with('success', "Successfully added {$request->previous_classes_count} previous {$request->session_type} " .
-                    Str::plural('class', $request->previous_classes_count) . " for {$student->name}. " . $dateRanges);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            logger()->error('Add previous classes failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to add previous classes. Please try again.');
         }
+
+        // Sort dates chronologically
+        sort($dates);
+
+        // Create ticket records
+        $createdTickets = [];
+        foreach ($dates as $index => $dateTime) {
+            // Check if this specific datetime already has a ticket (avoid duplicates)
+            $existingAtTime = TicketDownload::where('student_id', $student->id)
+                ->where('ef_id', $request->ef_id)
+                ->where('session_type', $request->session_type)
+                ->where('download_time', $dateTime)
+                ->exists();
+
+            if ($existingAtTime) {
+                // Adjust time by adding a few seconds to avoid collision
+                $dateTime->addSeconds(rand(1, 59));
+            }
+
+            $ticket = TicketDownload::create([
+                'student_id' => $student->id,
+                'ef_id' => $request->ef_id,
+                'download_time' => $dateTime,
+                'session_type' => $request->session_type,
+                'downloaded_by' => Auth::user()->id,
+                'downloaded_by_role' => Auth::user()->role . ' (bulk add)',
+                'session_date' => $dateTime->copy()->startOfDay(),
+                'notes' => $request->notes ?: 'Previous unrecorded classes added',
+                'is_bulk_add' => true
+            ]);
+
+            $createdTickets[] = $ticket;
+        }
+
+        // Update attendance counts
+        if ($request->session_type === 'practical') {
+            $ef_list->update([
+                'attended_practical' => $ef_list->attended_practical + $request->previous_classes_count,
+                'remaining_practical' => $ef_list->remaining_practical - $request->previous_classes_count
+            ]);
+        } else {
+            $ef_list->update([
+                'attended_theoretical' => $ef_list->attended_theoretical + $request->previous_classes_count,
+                'remaining_theoretical' => $ef_list->remaining_theoretical - $request->previous_classes_count
+            ]);
+        }
+
+        DB::commit();
+
+        // Format dates for success message
+        $dateRanges = $this->formatDateRanges($createdTickets);
+
+        // Add debug info to success message temporarily
+        $debug_message = " Debug: " . implode(' | ', $debugInfo);
+
+        return back()->with('success', "Successfully added {$request->previous_classes_count} previous {$request->session_type} " .
+        Str::plural('class', $request->previous_classes_count) . " for {$student->name}. " . $dateRanges);
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        return back()->with('error', 'Failed to add previous classes: ' . $e->getMessage());
     }
+}
 
     /**
      * Helper method to count available days between enrollment and today
