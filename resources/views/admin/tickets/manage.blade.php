@@ -95,9 +95,20 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- Practical Session -->
                                 <label class="relative flex cursor-pointer">
-                                    <input type="radio" name="session_type" value="practical" class="sr-only" required>
-                                    <div class="flex-1 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-300 transition-colors duration-200 session-option">
-                                        <div class="flex items-center">
+                                        <input type="radio" name="session_type" value="practical" class="sr-only" required>
+
+                                        <div class="flex-1 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-300 transition-colors duration-200 session-option relative">
+
+                                            <!-- ✅ Check Icon (Top Left) -->
+                                            <div class="check-icon absolute top-2 left-2 hidden">
+                                                <div class="w-5 h-5 bg-blue-600 rounded flex items-center justify-center">
+                                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center">
                                             <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
                                                 <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -117,8 +128,20 @@
                                 <!-- Theoretical Session -->
                                 <label class="relative flex cursor-pointer">
                                     <input type="radio" name="session_type" value="theoretical" class="sr-only" required>
-                                    <div class="flex-1 p-4 border-2 border-gray-200 rounded-lg hover:border-green-300 transition-colors duration-200 session-option">
+
+                                    <div class="flex-1 p-4 border-2 border-gray-200 rounded-lg hover:border-green-300 transition-colors duration-200 session-option relative">
+
+                                        <!-- ✅ Check Icon (Top Left) -->
+                                        <div class="check-icon absolute top-2 left-2 hidden">
+                                            <div class="w-5 h-5 bg-green-600 rounded flex items-center justify-center">
+                                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+
                                         <div class="flex items-center">
+
                                             <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
                                                 <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
@@ -292,6 +315,29 @@ document.addEventListener('DOMContentLoaded', function() {
         @endforeach
     };
 
+    function selectSession(type) {
+        sessionOptions.forEach(option => {
+            const radio = option.parentElement.querySelector('input[type="radio"]');
+            const checkIcon = option.querySelector('.check-icon');
+
+            // Reset all
+            option.classList.remove('border-blue-500', 'border-green-500', 'bg-blue-50', 'bg-green-50');
+            if (checkIcon) checkIcon.classList.add('hidden');
+
+            if (radio.value === type) {
+                radio.checked = true;
+
+                if (type === 'practical') {
+                    option.classList.add('border-blue-500', 'bg-blue-50');
+                } else {
+                    option.classList.add('border-green-500', 'bg-green-50');
+                }
+
+                if (checkIcon) checkIcon.classList.remove('hidden');
+            }
+        });
+    }
+
     function updateSessionInfo() {
         const selectedValue = efSelect.value;
         const sessionDate = sessionDateInput.value;
@@ -318,6 +364,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.course_id) {
                 courseIdInput.value = data.course_id;
             }
+            // Auto-select practical by default
+            selectSession('practical');
+
         } else {
             practicalSessions.textContent = '-';
             theoreticalSessions.textContent = '-';
@@ -325,6 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
             courseHelpText.textContent = '';
             downloadBtn.disabled = true;
         }
+
     }
 
     function updateDateValidation() {
@@ -358,23 +408,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Style session type selection
     sessionOptions.forEach(option => {
-        const radio = option.querySelector('input[type="radio"]');
+        const radio = option.parentElement.querySelector('input[type="radio"]');
         const label = option.closest('label');
+        const checkIcon = option.querySelector('.check-icon');
 
-        label.addEventListener('click', function() {
-            // Remove selected styles from all options
+        label.addEventListener('click', function () {
+
+            // Reset all options
             sessionOptions.forEach(opt => {
                 opt.classList.remove('border-blue-500', 'border-green-500', 'bg-blue-50', 'bg-green-50');
+
+                const icon = opt.querySelector('.check-icon');
+                if (icon) icon.classList.add('hidden');
             });
 
-            // Add selected style to clicked option
+            // Style selected
             if (radio.value === 'practical') {
                 option.classList.add('border-blue-500', 'bg-blue-50');
             } else {
                 option.classList.add('border-green-500', 'bg-green-50');
             }
+
+            // ✅ Show check icon
+            if (checkIcon) {
+                checkIcon.classList.remove('hidden');
+            }
         });
     });
+
 
     // Initialize
     updateDateValidation();
