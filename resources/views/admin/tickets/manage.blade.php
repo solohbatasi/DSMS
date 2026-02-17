@@ -95,20 +95,20 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- Practical Session -->
                                 <label class="relative flex cursor-pointer">
-                                        <input type="radio" name="session_type" value="practical" class="sr-only" required>
+                                    <input type="radio" name="session_type" value="practical" class="sr-only" required>
 
-                                        <div class="flex-1 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-300 transition-colors duration-200 session-option relative">
+                                    <div class="flex-1 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-300 transition-colors duration-200 session-option relative">
 
-                                            <!-- ✅ Check Icon (Top Left) -->
-                                            <div class="check-icon absolute top-2 left-2 hidden">
-                                                <div class="w-5 h-5 bg-blue-600 rounded flex items-center justify-center">
-                                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                                    </svg>
-                                                </div>
+                                        <!-- ✅ Check Icon (Top Left) -->
+                                        <div class="check-icon absolute top-2 left-2 hidden">
+                                            <div class="w-5 h-5 bg-blue-600 rounded flex items-center justify-center">
+                                                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                                </svg>
                                             </div>
+                                        </div>
 
-                                            <div class="flex items-center">
+                                        <div class="flex items-center">
                                             <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
                                                 <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -118,7 +118,12 @@
                                             <div>
                                                 <div class="font-medium text-gray-900">Practical Session</div>
                                                 <div class="text-sm text-gray-500 mt-1">
-                                                    <span id="practical-sessions">-</span> sessions remaining
+                                                    <span id="practical-attended">-</span> attended |
+                                                    <span id="practical-remaining">-</span> remaining
+                                                </div>
+                                                <!-- Optional: Show progress bar -->
+                                                <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                                                    <div id="practical-progress" class="bg-blue-600 h-1.5 rounded-full" style="width: 0%"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -141,7 +146,6 @@
                                         </div>
 
                                         <div class="flex items-center">
-
                                             <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
                                                 <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
@@ -150,7 +154,12 @@
                                             <div>
                                                 <div class="font-medium text-gray-900">Theoretical Session</div>
                                                 <div class="text-sm text-gray-500 mt-1">
-                                                    <span id="theoretical-sessions">-</span> sessions remaining
+                                                    <span id="theoretical-attended">-</span> attended |
+                                                    <span id="theoretical-remaining">-</span> remaining
+                                                </div>
+                                                <!-- Optional: Show progress bar -->
+                                                <div class="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                                                    <div id="theoretical-progress" class="bg-green-600 h-1.5 rounded-full" style="width: 0%"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -159,16 +168,139 @@
                             </div>
                         </div>
 
-                        <!-- Download Button -->
-                        <div class="flex justify-end">
-                            <button type="submit"
-                                    class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    id="downloadBtn">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                Create Ticket
-                            </button>
+                        <!-- Previous Classes Modal -->
+                        <div id="previousClassesModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                                <!-- Background overlay -->
+                                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closePreviousClassesModal()"></div>
+
+                                <!-- Modal panel -->
+                                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                    <form action="{{ route('admin.students.tickets.add-previous', ['student' => $student->id]) }}" method="POST" id="previousClassesForm">
+                                        @csrf
+                                        <input type="hidden" name="ef_id" id="modal_ef_id">
+                                        <input type="hidden" name="session_type" id="modal_session_type">
+                                        <input type="hidden" name="course_id" id="modal_course_id">
+
+                                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                            <div class="sm:flex sm:items-start">
+                                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                                    <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                    </svg>
+                                                </div>
+                                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                                        Record Previous Classes
+                                                    </h3>
+                                                    <div class="mt-2">
+                                                        <p class="text-sm text-gray-500" id="modalDescription">
+                                                            Add attendance for classes that were conducted but not recorded.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Course and Session Info -->
+                                            <div class="mt-4 bg-gray-50 p-4 rounded-lg">
+                                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                                    <div>
+                                                        <span class="text-gray-500">Course:</span>
+                                                        <span class="font-medium text-gray-900 block" id="modal_course_name"></span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-gray-500">Session Type:</span>
+                                                        <span class="font-medium text-gray-900 block" id="modal_session_type_display"></span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-gray-500">Current Attended:</span>
+                                                        <span class="font-medium text-gray-900 block" id="modal_current_attended">0</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-gray-500">Remaining:</span>
+                                                        <span class="font-medium text-gray-900 block" id="modal_current_remaining">0</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Number of Classes Input -->
+                                            <div class="mt-4">
+                                                <label for="previous_classes_count" class="block text-sm font-medium text-gray-700">
+                                                    Number of Previous Classes to Add
+                                                </label>
+                                                <div class="mt-1">
+                                                    <input type="number"
+                                                        name="previous_classes_count"
+                                                        id="previous_classes_count"
+                                                        min="1"
+                                                        max="100"
+                                                        required
+                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                                </div>
+                                                <p class="mt-1 text-xs text-gray-500" id="maxClassesHint">
+                                                    Maximum: <span id="maxClassesValue">0</span> classes (based on remaining sessions)
+                                                </p>
+                                            </div>
+
+                                            <!-- Reason/Notes -->
+                                            <div class="mt-4">
+                                                <label for="notes" class="block text-sm font-medium text-gray-700">
+                                                    Reason/Notes (Optional)
+                                                </label>
+                                                <textarea name="notes"
+                                                        id="notes"
+                                                        rows="2"
+                                                        placeholder="e.g., Missed recordings from previous sessions"
+                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                            <button type="submit"
+                                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                                Add Classes
+                                            </button>
+                                            <button type="button"
+                                                    onclick="closePreviousClassesModal()"
+                                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <!-- Previous Classes Button (Left Side) -->
+                            <div id="previousClassesSection" style="display: none;">
+                                <button type="button"
+                                        onclick="openPreviousClassesModal()"
+                                        class="inline-flex items-center px-4 py-3 bg-green-700 text-white border border-gray-300 shadow-sm text-base font-medium rounded-lg  hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-5 h-5 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Record Previous Classes
+                                </button>
+                            </div>
+
+                            <!-- Download Button (Right Side) -->
+                            <div class="flex justify-end flex-1">
+                                <button type="submit"
+                                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        id="downloadBtn">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                    Create Ticket
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Help text for previous classes (appears below buttons when button is visible) -->
+                        <div id="previousClassesHelp" class="mt-2 text-xs text-gray-500" style="display: none;">
+                            <span>Use this to add attendance for classes that were conducted but not recorded in the system.</span>
                         </div>
                     </form>
                     @else
@@ -295,8 +427,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const sessionDateInput = document.getElementById('session_date');
     const efSelect = document.getElementById('ef_id');
     const courseIdInput = document.getElementById('course_id');
-    const practicalSessions = document.getElementById('practical-sessions');
-    const theoreticalSessions = document.getElementById('theoretical-sessions');
+    const practicalAttended = document.getElementById('practical-attended');
+    const practicalRemaining = document.getElementById('practical-remaining');
+    const theoreticalAttended = document.getElementById('theoretical-attended');
+    const theoreticalRemaining = document.getElementById('theoretical-remaining');
+    const practicalProgress = document.getElementById('practical-progress');
+    const theoreticalProgress = document.getElementById('theoretical-progress');
     const sessionOptions = document.querySelectorAll('.session-option');
     const downloadBtn = document.getElementById('downloadBtn');
     const courseHelpText = document.getElementById('courseHelpText');
@@ -306,8 +442,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const efData = {
         @foreach($ef_lists as $ef)
             '{{ $ef->id }}': {
-                practical: '{{ $ef->remaining_practical }}',
-                theoretical: '{{ $ef->remaining_theoretical }}',
+                practical_attended: '{{ $ef->attended_practical }}',
+                practical_remaining: '{{ $ef->remaining_practical }}',
+                theoretical_attended: '{{ $ef->attended_theoretical }}',
+                theoretical_remaining: '{{ $ef->remaining_theoretical }}',
+                total_practical: '{{ $ef->total_class ?? ($ef->course->practical_sessions ?? 0) }}',
+                total_theoretical: '{{ $ef->course->theoretical_sessions ?? 0 }}',
                 course_id: '{{ $ef->course_id }}',
                 enrollment_date: '{{ $ef->created_at->format("Y-m-d") }}',
                 ef_no: '{{ $ef->ef_no }}'
@@ -338,43 +478,194 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function updateSessionInfo() {
-        const selectedValue = efSelect.value;
-        const sessionDate = sessionDateInput.value;
+    function calculateProgress(attended, total) {
+        if (total == 0) return 0;
+        return Math.min((attended / total) * 100, 100);
+    }
 
-        if (selectedValue && efData[selectedValue] && sessionDate) {
-            const data = efData[selectedValue];
-            const enrollmentDate = data.enrollment_date;
+    // Function to open modal with current selection
+    window.openPreviousClassesModal = function() {
+        const efSelect = document.getElementById('ef_id');
+        const selectedEfId = efSelect.value;
+        const sessionType = document.querySelector('input[name="session_type"]:checked')?.value;
 
-            // Check if session date is before enrollment
-            if (sessionDate < enrollmentDate) {
-                courseHelpText.innerHTML = `<span class="text-red-600">Warning: Selected date is before enrollment (${enrollmentDate}). Choose a date on or after enrollment.</span>`;
-                downloadBtn.disabled = true;
-                downloadBtn.title = "Session date cannot be before enrollment";
-            } else {
-                courseHelpText.innerHTML = `Enrollment date: ${enrollmentDate}`;
-                downloadBtn.disabled = false;
-                downloadBtn.title = "";
-            }
-
-            practicalSessions.textContent = data.practical;
-            theoreticalSessions.textContent = data.theoretical;
-
-            // Set course_id
-            if (data.course_id) {
-                courseIdInput.value = data.course_id;
-            }
-            // Auto-select practical by default
-            selectSession('practical');
-
-        } else {
-            practicalSessions.textContent = '-';
-            theoreticalSessions.textContent = '-';
-            courseIdInput.value = '';
-            courseHelpText.textContent = '';
-            downloadBtn.disabled = true;
+        if (!selectedEfId || !sessionType) {
+            alert('Please select both a course and session type first.');
+            return;
         }
 
+        const efData = window.efData || {};
+        const data = efData[selectedEfId];
+
+        if (!data) return;
+
+        // Set modal fields
+        document.getElementById('modal_ef_id').value = selectedEfId;
+        document.getElementById('modal_session_type').value = sessionType;
+        document.getElementById('modal_course_id').value = data.course_id;
+
+        // Get course name from select option
+        const selectedOption = efSelect.options[efSelect.selectedIndex];
+        const courseName = selectedOption.text.split(' - ')[1]?.split(' (')[0] || 'Unknown Course';
+        document.getElementById('modal_course_name').textContent = courseName;
+
+        // Set session type display
+        const sessionDisplay = sessionType === 'practical' ? 'Practical' : 'Theoretical';
+        document.getElementById('modal_session_type_display').textContent = sessionDisplay;
+
+        // Set current counts
+        const attended = sessionType === 'practical' ? data.practical_attended : data.theoretical_attended;
+        const remaining = sessionType === 'practical' ? data.practical_remaining : data.theoretical_remaining;
+
+        document.getElementById('modal_current_attended').textContent = attended;
+        document.getElementById('modal_current_remaining').textContent = remaining;
+
+        // Set max classes hint
+        const maxClasses = parseInt(remaining);
+        document.getElementById('maxClassesValue').textContent = maxClasses;
+        const countInput = document.getElementById('previous_classes_count');
+        countInput.max = maxClasses;
+        countInput.value = ''; // Clear previous value
+
+        // Show modal
+        document.getElementById('previousClassesModal').classList.remove('hidden');
+    }
+
+    // Function to close modal
+    window.closePreviousClassesModal = function() {
+        document.getElementById('previousClassesModal').classList.add('hidden');
+        document.getElementById('previousClassesForm').reset();
+    }
+
+    function updateSessionInfo() {
+    const selectedValue = efSelect.value;
+    const sessionDate = sessionDateInput.value;
+
+    // Check if a session type is selected OR if we should auto-select practical
+    let selectedSessionType = document.querySelector('input[name="session_type"]:checked')?.value;
+
+    // If no session type is selected but we have a selected course, we should show the button
+    // because practical will be auto-selected
+    const hasValidSelection = selectedValue && sessionDate;
+
+    if (selectedValue && efData[selectedValue] && sessionDate) {
+        const data = efData[selectedValue];
+        const enrollmentDate = data.enrollment_date;
+
+        // Parse values as integers
+        const pracAttended = parseInt(data.practical_attended) || 0;
+        const pracRemaining = parseInt(data.practical_remaining) || 0;
+        const theoAttended = parseInt(data.theoretical_attended) || 0;
+        const theoRemaining = parseInt(data.theoretical_remaining) || 0;
+        const totalPrac = parseInt(data.total_practical) || 0;
+        const totalTheo = parseInt(data.total_theoretical) || 0;
+
+        // Calculate total sessions (attended + remaining)
+        const pracTotal = pracAttended + pracRemaining;
+        const theoTotal = theoAttended + theoRemaining;
+
+        // Update text displays
+        practicalAttended.textContent = pracAttended;
+        practicalRemaining.textContent = pracRemaining;
+        theoreticalAttended.textContent = theoAttended;
+        theoreticalRemaining.textContent = theoRemaining;
+
+        // Update progress bars
+        if (practicalProgress) {
+            const pracProgress = calculateProgress(pracAttended, totalPrac);
+            practicalProgress.style.width = pracProgress + '%';
+        }
+
+        if (theoreticalProgress) {
+            const theoProgress = calculateProgress(theoAttended, totalTheo);
+            theoreticalProgress.style.width = theoProgress + '%';
+        }
+
+        // Check if session date is before enrollment
+        if (sessionDate < enrollmentDate) {
+            courseHelpText.innerHTML = `<span class="text-red-600">Warning: Selected date is before enrollment (${enrollmentDate}). Choose a date on or after enrollment.</span>`;
+            downloadBtn.disabled = true;
+            downloadBtn.title = "Session date cannot be before enrollment";
+        } else {
+            // Check if there are remaining sessions
+            const remainingPrac = parseInt(data.practical_remaining);
+            const remainingTheo = parseInt(data.theoretical_remaining);
+
+            // Disable/enable based on remaining sessions
+            const radioPractical = document.querySelector('input[value="practical"]');
+            const radioTheoretical = document.querySelector('input[value="theoretical"]');
+
+            if (remainingPrac <= 0) {
+                radioPractical.disabled = true;
+                radioPractical.closest('label').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                radioPractical.disabled = false;
+                radioPractical.closest('label').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            if (remainingTheo <= 0) {
+                radioTheoretical.disabled = true;
+                radioTheoretical.closest('label').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                radioTheoretical.disabled = false;
+                radioTheoretical.closest('label').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            courseHelpText.innerHTML = `Enrollment date: ${enrollmentDate} | Total Practical: ${totalPrac} | Total Theoretical: ${totalTheo}`;
+            downloadBtn.disabled = false;
+            downloadBtn.title = "";
+        }
+
+        // Set course_id
+        if (data.course_id) {
+            courseIdInput.value = data.course_id;
+        }
+
+        // Auto-select practical by default if no session type is selected
+        if (!selectedSessionType) {
+            const practicalRadio = document.querySelector('input[value="practical"]');
+            if (practicalRadio && !practicalRadio.disabled) {
+                selectSession('practical');
+                selectedSessionType = 'practical'; // Update for button visibility
+            } else if (radioTheoretical && !radioTheoretical.disabled) {
+                selectSession('theoretical');
+                selectedSessionType = 'theoretical'; // Update for button visibility
+            }
+        }
+
+        // Show previous classes button if we have a selected course AND (selected session type OR auto-selected practical)
+        const previousClassesSection = document.getElementById('previousClassesSection');
+
+        // Important: Show the button if we have a selected course, regardless of whether session type is explicitly selected
+        // Since we either have a selected session type OR we auto-selected practical above
+        if (selectedValue) {
+            previousClassesSection.style.display = 'block';
+        } else {
+            previousClassesSection.style.display = 'none';
+        }
+
+    } else {
+        practicalAttended.textContent = '-';
+        practicalRemaining.textContent = '-';
+        theoreticalAttended.textContent = '-';
+        theoreticalRemaining.textContent = '-';
+
+        if (practicalProgress) practicalProgress.style.width = '0%';
+        if (theoreticalProgress) theoreticalProgress.style.width = '0%';
+
+        courseIdInput.value = '';
+        courseHelpText.textContent = '';
+        downloadBtn.disabled = true;
+
+        // Enable all radios but reset
+        document.querySelectorAll('input[name="session_type"]').forEach(radio => {
+            radio.disabled = false;
+                radio.closest('label').classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+
+            // Hide previous classes button
+            document.getElementById('previousClassesSection').style.display = 'none';
+        }
     }
 
     function updateDateValidation() {
@@ -412,12 +703,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const label = option.closest('label');
         const checkIcon = option.querySelector('.check-icon');
 
-        label.addEventListener('click', function () {
+        label.addEventListener('click', function (e) {
+            if (radio.disabled) {
+                e.preventDefault();
+                return;
+            }
 
             // Reset all options
             sessionOptions.forEach(opt => {
                 opt.classList.remove('border-blue-500', 'border-green-500', 'bg-blue-50', 'bg-green-50');
-
                 const icon = opt.querySelector('.check-icon');
                 if (icon) icon.classList.add('hidden');
             });
@@ -436,11 +730,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-
     // Initialize
     updateDateValidation();
     updateSessionInfo();
 });
+// Make efData globally accessible
+window.efData = {
+    @foreach($ef_lists as $ef)
+        '{{ $ef->id }}': {
+            practical_attended: {{ $ef->attended_practical ?? 0 }},
+            practical_remaining: {{ $ef->remaining_practical ?? 0 }},
+            theoretical_attended: {{ $ef->attended_theoretical ?? 0 }},
+            theoretical_remaining: {{ $ef->remaining_theoretical ?? 0 }},
+            total_practical: {{ $ef->total_class ?? ($ef->course->practical_sessions ?? 0) }},
+            total_theoretical: {{ $ef->course->theoretical_sessions ?? 0 }},
+            course_id: '{{ $ef->course_id }}',
+            enrollment_date: '{{ $ef->created_at->format("Y-m-d") }}',
+            ef_no: '{{ $ef->ef_no }}'
+        },
+    @endforeach
+};
 </script>
 
 <style>
