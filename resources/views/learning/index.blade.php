@@ -44,7 +44,7 @@
                     <h2 class="mt-1 text-xl font-semibold text-gray-900 group-hover:text-blue-700">{{ $course->course }}</h2>
                     <p class="mt-2 line-clamp-2 text-sm text-gray-600">{{ $course->description ?: 'Open this course to view its learning materials.' }}</p>
                     <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-                        <span>{{ $course->published_lessons_count }} {{ Str::plural('lesson', $course->published_lessons_count) }}</span>
+                        <span>{{ $course->published_lessons_count }} {{ \Illuminate\Support\Str::plural('lesson', $course->published_lessons_count) }}</span>
                         <span class="font-medium text-blue-700">Open course <i class="fas fa-arrow-right ml-1"></i></span>
                     </div>
                 </div>

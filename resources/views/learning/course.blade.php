@@ -14,7 +14,7 @@
                 <p class="mt-2 max-w-3xl text-gray-600">{{ $course->description }}</p>
             @endif
         </div>
-        <span class="shrink-0 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-800">{{ $lessons->count() }} {{ Str::plural('lesson', $lessons->count()) }}</span>
+        <span class="shrink-0 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-800">{{ $lessons->count() }} {{ \Illuminate\Support\Str::plural('lesson', $lessons->count()) }}</span>
     </div>
 
     @if(session('success'))
