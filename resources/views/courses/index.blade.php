@@ -706,7 +706,7 @@ function branchSwitcher() {
             <!-- Category Selection -->
             <div class="mb-4">
                 <label class="text-sm font-medium">Category *</label>
-                <select name="category_id" id="category_id"
+                <select name="category_id" id="edit_category_id"
                         class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500" required>
                     <option value="">Select Category</option>
                     @foreach($categories as $category)
