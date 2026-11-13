@@ -265,6 +265,14 @@ Route::get('/tickets/history', [TicketController::class, 'history'])->name('tick
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 Route::resource('courses', CourseController::class);
 
+Route::prefix('learning')->name('learning.')->group(function () {
+    Route::get('/', [App\Http\Controllers\LearningController::class, 'index'])->name('index');
+    Route::get('/courses/{course}', [App\Http\Controllers\LearningController::class, 'show'])->name('courses.show');
+    Route::post('/lessons', [App\Http\Controllers\LearningController::class, 'store'])->name('lessons.store');
+    Route::get('/lessons/{lesson}/file', [App\Http\Controllers\LearningController::class, 'file'])->name('lessons.file');
+    Route::delete('/lessons/{lesson}', [App\Http\Controllers\LearningController::class, 'destroy'])->name('lessons.destroy');
+});
+
 
 });
 

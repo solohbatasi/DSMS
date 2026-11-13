@@ -37,6 +37,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // Courses
             'add courses', 'view courses', 'edit courses', 'delete courses',
 
+            // Learning materials
+            'manage learning content',
+
             // Applications
             'add applications', 'view applications', 'edit applications', 'delete applications',
 
@@ -88,6 +91,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'add results', 'view results', 'edit results', 'delete results',
 
             'add courses', 'view courses', 'edit courses', 'delete courses',
+            'manage learning content',
 
             'add applications', 'view applications', 'edit applications', 'delete applications',
 
@@ -104,7 +108,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $instructor->syncPermissions([
 
             'add results', 'view results', 'edit results',
-            'view courses','print tickets'
+            'view courses', 'manage learning content', 'print tickets'
         ]);
 
         // Student → can view own info (minimal)
@@ -124,6 +128,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'add applications', 'view applications',
 
             'view courses','print tickets',
+            'manage learning content',
         ]);
 
         // Report user → only reports

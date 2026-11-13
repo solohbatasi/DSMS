@@ -138,9 +138,7 @@ function dashboardMenu() {
             @can('view expenses')
             { name: 'Expenditures', href: '{{ route("expenses.index") }}', type: 'primary', icon: 'fas fa-users' },
             @endcan
-            @can('manage tickets')
-            { name: 'Tickets', href: '{{ route("student.tickets") }}', type: 'primary', icon: 'fas fa-ticket-alt' },
-            @endcan
+            { name: 'Learning', href: '{{ route("learning.index") }}', type: 'primary', icon: 'fas fa-book-open' },
             @can('view applications')
             { name: 'Applications', href: '{{ route("admin.applications.index") }}', type: 'primary', icon: 'fas fa-chart-line' },
             @endcan

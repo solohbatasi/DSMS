@@ -77,6 +77,11 @@ class Course extends Model
     {
         return $this->hasMany(Student_ef_list::class, 'course_id');
     }
+
+    public function lessons(): HasMany
+    {
+        return $this->hasMany(CourseLesson::class)->orderBy('created_at');
+    }
     /**
      * Get practical sessions percentage
      *
